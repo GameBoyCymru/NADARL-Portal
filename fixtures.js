@@ -243,53 +243,80 @@ function renderSeasonFixtures() {
     const groupedFixtures = groupFixturesByDate(fixtures);
     
     Object.keys(groupedFixtures).sort().forEach(date => {
-        const dateRow = document.createElement('tr');
-        dateRow.className = 'date-row clickable';
-        dateRow.onclick = function() { toggleDateGroup(this, date); };
-        dateRow.innerHTML = `
-            <td colspan="4" class="date-cell">
-                <span class="date-text">${formatDate(date)}</span>
-                <span class="expand-icon">▼</span>
-            </td>
-        `;
-        tbody.appendChild(dateRow);
+        const formattedDate = formatDate(date);
         
-        const fixturesRow = document.createElement('tr');
-        fixturesRow.className = 'fixtures-row';
-        fixturesRow.id = `fixtures-${date.replace(/-/g, '')}`;
-        
-        let fixturesHtml = '<td colspan="4"><div class="fixtures-content">';
-        groupedFixtures[date].forEach(fixture => {
+        groupedFixtures[date].forEach((fixture, index) => {
             const isBye = fixture.awayTeam === 'BYE';
             const awayTeamDisplay = isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
             const venueDisplay = isBye ? '-' : fixture.venue;
             
-            fixturesHtml += `
-                <div class="table-fixture-item">
-                    <span class="fixture-team">${fixture.homeTeam}</span>
-                    <span class="fixture-vs">vs</span>
-                    <span class="fixture-team">${awayTeamDisplay}</span>
-                    <span class="fixture-venue">${venueDisplay}</span>
-                </div>
-            `;
+            const row = document.createElement('tr');
+            row.className = 'fixture-row';
+            
+            if (index === 0) {
+                row.innerHTML = `
+                    <td class="date-cell" rowspan="${groupedFixtures[date].length}">${formattedDate}</td>
+                    <td class="teams-cell">${fixture.homeTeam}</td>
+                    <td class="teams-cell">${awayTeamDisplay}</td>
+                    <td class="venue-cell">${venueDisplay}</td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td class="teams-cell">${fixture.homeTeam}</td>
+                    <td class="teams-cell">${awayTeamDisplay}</td>
+                    <td class="venue-cell">${venueDisplay}</td>
+                `;
+            }
+            
+            tbody.appendChild(row);
         });
-        fixturesHtml += '</div></td>';
-        fixturesRow.innerHTML = fixturesHtml;
-        tbody.appendChild(fixturesRow);
     });
 }
 
-// Toggle date group expansion for table
-function toggleDateGroup(dateRow, date) {
-    const fixturesRow = dateRow.nextElementSibling;
-    const icon = dateRow.querySelector('.expand-icon');
-    
-    fixturesRow.classList.toggle('expanded');
-    icon.classList.toggle('rotated');
+function renderMobileSeasonFixtures() {
+    const container = document.getElementById('mobileSeasonFixtures');
+    const groupedFixtures = groupFixturesByDate(fixtures);
+    let html = '';
+
+    Object.keys(groupedFixtures).sort().forEach(date => {
+        html += `<details class="mobile-fixture-group">`;
+        html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${groupedFixtures[date].length} fixture${groupedFixtures[date].length > 1 ? 's' : ''})</span></summary>`;
+        html += `<div class="mobile-fixture-content">`;
+
+        groupedFixtures[date].forEach(fixture => {
+            const isBye = fixture.awayTeam === 'BYE';
+            if (isBye) {
+                html += `
+                    <div class="mobile-fixture-item fixture-bye">
+                        <div class="mobile-fixture-teams">
+                            <span class="mobile-team">${fixture.homeTeam}</span>
+                            <span class="bye-badge">BYE</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="mobile-fixture-item">
+                        <div class="mobile-fixture-teams">
+                            <span class="mobile-team">${fixture.homeTeam}</span>
+                            <span class="mobile-vs">vs</span>
+                            <span class="mobile-team">${fixture.awayTeam}</span>
+                        </div>
+                        <div class="mobile-fixture-venue">${fixture.venue}</div>
+                    </div>
+                `;
+            }
+        });
+
+        html += `</div></details>`;
+    });
+
+    container.innerHTML = html;
 }
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
     renderTodayFixtures();
     renderSeasonFixtures();
+    renderMobileSeasonFixtures();
 });
