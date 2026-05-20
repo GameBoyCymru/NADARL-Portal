@@ -337,6 +337,10 @@ h1 {
         gap: 15px;
     }
 
+    .today-fixtures .fixture-teams {
+        flex-direction: row;
+    }
+
     .vs {
         margin: 5px 0;
     }
@@ -348,5 +352,15 @@ h1 {
     .fixture-content.expanded,
     .fixture-content.always-expanded {
         display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .today-fixtures .team-badge {
+        display: none;
+    }
+
+    .today-fixtures .fixture-teams {
+        flex-direction: column;
     }
 }
