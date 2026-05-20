@@ -299,7 +299,9 @@ function renderMobileSeasonFixtures() {
                     <div class="mobile-fixture-item">
                         <div class="mobile-fixture-teams">
                             <span class="mobile-team">${fixture.homeTeam}</span>
-                            <span class="mobile-vs">vs</span>
+                        </div>
+                        <div class="mobile-vs">vs</div>
+                        <div class="mobile-fixture-teams">
                             <span class="mobile-team">${fixture.awayTeam}</span>
                         </div>
                         <div class="mobile-fixture-venue">${fixture.venue}</div>
