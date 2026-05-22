@@ -3,42 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newport & District Air Rifle League - Fixtures</title>
+    <title>Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="CSS/index.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Newport & District Air Rifle League</h1>
-            <p class="subtitle">2026-27 Season Fixtures</p>
+            <p class="subtitle">Celebrating Excellence in Target Shooting Since 1907</p>
         </header>
 
         <section class="section">
-            <h2 class="section-title">Today's Fixtures</h2>
-            <div class="today-fixtures" id="todayFixtures">
-                <!-- Today's fixtures will be loaded here -->
-            </div>
+            <h2 class="section-title">Welcome</h2>
+            <p class="intro-text">
+                Welcome to the Newport & District Air Rifle League, a competitive shooting league 
+                bringing together teams from across South Wales. We're passionate about promoting 
+                marksmanship, sportsmanship, and camaraderie through the sport of air rifle shooting.
+            </p>
+            <p class="intro-text">
+                Whether you're an experienced shooter looking to join a team or someone interested 
+                in learning more about our league, we invite you to explore our site and get in touch.
+            </p>
         </section>
 
         <section class="section">
-            <h2 class="section-title">Season Fixtures</h2>
-            <table class="fixture-table desktop-fixtures">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Home Team</th>
-                        <th>Away Team</th>
-                        <th>Venue</th>
-                    </tr>
-                </thead>
-                <tbody id="seasonFixtures">
-                </tbody>
-            </table>
-            <div class="mobile-fixtures" id="mobileSeasonFixtures">
+            <h2 class="section-title">Quick Links</h2>
+            <div class="nav-grid">
+                <a href="HTML/fixtures.html" class="nav-card">
+                    <div class="nav-icon">🎯</div>
+                    <h3 class="nav-title">Fixtures</h3>
+                    <p class="nav-description">View upcoming matches and events in the season schedule</p>
+                </a>
+
+                <a href="HTML/teams.html" class="nav-card">
+                    <div class="nav-icon">👥</div>
+                    <h3 class="nav-title">Teams</h3>
+                    <p class="nav-description">Meet all the teams competing in this season's league</p>
+                </a>
+
+                <a href="HTML/table.html" class="nav-card">
+                    <div class="nav-icon">📊</div>
+                    <h3 class="nav-title">League Table</h3>
+                    <p class="nav-description">Current standings and match results for the season</p>
+                </a>
+
+                <a href="HTML/gallery.html" class="nav-card">
+                    <div class="nav-icon">📸</div>
+                    <h3 class="nav-title">Gallery</h3>
+                    <p class="nav-description">Photos from matches, events, and league activities</p>
+                </a>
+
+                <a href="HTML/history.html" class="nav-card">
+                    <div class="nav-icon">📜</div>
+                    <h3 class="nav-title">History</h3>
+                    <p class="nav-description">Learn about our league's heritage and achievements</p>
+                </a>
+
+                <a href="HTML/committee.html" class="nav-card">
+                    <div class="nav-icon">🏛️</div>
+                    <h3 class="nav-title">Committee</h3>
+                    <p class="nav-description">Meet the volunteers who run our league</p>
+                </a>
+
+                <a href="HTML/join.html" class="nav-card nav-card-highlight">
+                    <div class="nav-icon">🤝</div>
+                    <h3 class="nav-title">Join Our League</h3>
+                    <p class="nav-description">Find out how to become a member or start a new team</p>
+                </a>
             </div>
         </section>
-    </div>
 
-    <script src="fixtures.js"></script>
+        <footer class="footer">
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> Newport & District Air Rifle League</p>
+        </footer>
+    </div>
 </body>
 </html>
