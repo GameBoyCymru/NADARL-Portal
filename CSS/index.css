@@ -9,35 +9,50 @@
     margin-bottom: 0;
 }
 
+.intro-small {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #808080;
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .nav-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 20px;
 }
 
 .nav-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(#18181b, #18181b) padding-box,
+                linear-gradient(135deg, rgba(196, 30, 58, 0.5), rgba(212, 160, 23, 0.5)) border-box;
+    border: 2px solid transparent;
     border-radius: 12px;
     padding: 25px;
     text-decoration: none;
     color: #ffffff;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    width: calc((100% - 40px) / 3);
+    min-width: 280px;
 }
 
 .nav-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(196, 30, 58, 0.2);
-    border-color: rgba(196, 30, 58, 0.4);
+    box-shadow: 0 10px 30px rgba(212, 160, 23, 0.25);
+    background: linear-gradient(#1e1e24, #1e1e24) padding-box,
+                linear-gradient(135deg, rgba(196, 30, 58, 0.8), rgba(212, 160, 23, 0.8)) border-box;
 }
 
 .nav-card-highlight {
-    background: linear-gradient(135deg, rgba(196, 30, 58, 0.15), rgba(212, 160, 23, 0.15));
-    border-color: rgba(196, 30, 58, 0.3);
+    background: linear-gradient(#18181b, #18181b) padding-box,
+                linear-gradient(135deg, #c41e3a, #d4a017) border-box;
+    box-shadow: 0 0 20px rgba(212, 160, 23, 0.15);
 }
 
 .nav-icon {
@@ -49,23 +64,24 @@
     font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
-    color: #c41e3a;
+    color: #d4a017;
 }
 
 .nav-description {
     font-size: 0.95rem;
     line-height: 1.5;
-    color: #a0a0a0;
+    color: #c8c8c8;
 }
 
 @media (max-width: 480px) {
     .nav-grid {
-        grid-template-columns: 1fr;
         gap: 15px;
     }
 
     .nav-card {
         padding: 20px;
+        width: 100%;
+        min-width: unset;
     }
 
     .nav-icon {
