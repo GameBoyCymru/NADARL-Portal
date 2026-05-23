@@ -56,12 +56,15 @@
 }
 
 .fixture-item {
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .fixture-item:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .fixture-bye {
@@ -250,6 +253,16 @@
     margin-top: 4px;
 }
 
+.fixture-venue {
+    display: block;
+    text-align: center;
+    color: #4ecdc4;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .no-fixtures {
     text-align: center;
     padding: 40px;
@@ -281,6 +294,14 @@
 
     .vs {
         margin: 5px 0;
+    }
+
+    .fixture-item .team .venue-cell {
+        display: none;
+    }
+
+    .fixture-venue {
+        display: block;
     }
 
     .fixture-content {

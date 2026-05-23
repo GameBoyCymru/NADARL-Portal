@@ -203,6 +203,7 @@ function createFixtureCard(fixture) {
                     <div class="venue-cell">Away</div>
                 </div>
             </div>
+            <div class="fixture-venue">${fixture.venue}</div>
         </div>
     `;
 }
