@@ -1,0 +1,116 @@
+.history-intro {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #d0d0d0;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #e94560, rgba(233, 69, 96, 0.2));
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 40px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -33px;
+    top: 8px;
+    width: 16px;
+    height: 16px;
+    background: #e94560;
+    border-radius: 50%;
+    border: 3px solid #1a1a2e;
+    box-shadow: 0 0 0 3px #e94560;
+    z-index: 1;
+}
+
+.timeline-content {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.3s ease;
+}
+
+.timeline-content:hover {
+    border-color: rgba(233, 69, 96, 0.3);
+}
+
+.timeline-image-wrapper {
+    margin-bottom: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.timeline-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    opacity: 0.85;
+    transition: opacity 0.3s ease;
+}
+
+.timeline-content:hover .timeline-image {
+    opacity: 1;
+}
+
+.timeline-year {
+    display: inline-block;
+    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    color: #ffffff;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.timeline-heading {
+    font-size: 1.2rem;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.timeline-text {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #b0b0b0;
+}
+
+@media (max-width: 600px) {
+    .timeline {
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        left: 10px;
+    }
+
+    .timeline-marker {
+        left: -28px;
+        width: 14px;
+        height: 14px;
+    }
+
+    .timeline-content {
+        padding: 16px;
+    }
+}
