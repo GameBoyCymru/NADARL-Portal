@@ -140,16 +140,16 @@
 }
 
 .fixture-table th {
-    background: rgba(212, 160, 23, 0.15);
+    background: rgba(196, 30, 58, 0.35);
     font-weight: bold;
-    color: #d4a017;
+    color: #ffffff;
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 1px;
 }
 
 .fixture-table .fixture-row td {
-    background: rgba(196, 30, 58, 0.08);
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.06), rgba(196, 30, 58, 0.12));
 }
 
 .fixture-table tr:hover td:not(.date-cell) {
@@ -157,7 +157,7 @@
 }
 
 .fixture-table .fixture-row-alt td {
-    background: rgba(196, 30, 58, 0.18);
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.14), rgba(196, 30, 58, 0.22));
 }
 
 .fixture-row-alt:hover td:not(.date-cell) {
@@ -185,8 +185,8 @@
 }
 
 .bye-badge {
-    background: rgba(196, 30, 58, 0.3);
-    color: #c41e3a;
+    background: rgba(212, 160, 23, 0.3);
+    color: #d4a017;
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 0.85rem;
