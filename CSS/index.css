@@ -12,7 +12,8 @@
 .intro-small {
     font-size: 0.8rem;
     line-height: 1.6;
-    color: #808080;
+    color: #a0a0a0;
+    font-style: italic;
     margin-top: 15px;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
