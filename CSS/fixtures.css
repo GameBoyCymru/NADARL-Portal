@@ -124,7 +124,6 @@
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid rgba(212, 160, 23, 0.3);
-    background: linear-gradient(135deg, rgba(196, 30, 58, 0.2), rgba(212, 160, 23, 0.2));
 }
 
 .fixture-table th,
@@ -149,12 +148,16 @@
     letter-spacing: 1px;
 }
 
+.fixture-table .fixture-row td {
+    background: rgba(196, 30, 58, 0.08);
+}
+
 .fixture-table tr:hover td:not(.date-cell) {
     background: rgba(255, 255, 255, 0.05);
 }
 
-.fixture-row-alt td {
-    background: rgba(0, 0, 0, 0.1);
+.fixture-table .fixture-row-alt td {
+    background: rgba(196, 30, 58, 0.18);
 }
 
 .fixture-row-alt:hover td:not(.date-cell) {
@@ -210,9 +213,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(196, 30, 58, 0.1);
+    background: rgba(196, 30, 58, 0.08);
     list-style: none;
     user-select: none;
+}
+
+.mobile-fixture-group-alt .mobile-fixture-summary {
+    background: rgba(196, 30, 58, 0.18);
 }
 
 .mobile-fixture-summary::-webkit-details-marker {

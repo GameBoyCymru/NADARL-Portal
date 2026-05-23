@@ -280,8 +280,9 @@ function renderMobileSeasonFixtures() {
     const groupedFixtures = groupFixturesByDate(fixtures);
     let html = '';
 
-    Object.keys(groupedFixtures).sort().forEach(date => {
-        html += `<details class="mobile-fixture-group">`;
+    Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
+        const altClass = dateIndex % 2 === 1 ? ' mobile-fixture-group-alt' : '';
+        html += `<details class="mobile-fixture-group${altClass}">`;
         html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${groupedFixtures[date].length} fixture${groupedFixtures[date].length > 1 ? 's' : ''})</span></summary>`;
         html += `<div class="mobile-fixture-content">`;
 
