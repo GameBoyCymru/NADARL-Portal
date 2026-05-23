@@ -211,11 +211,20 @@
     font-size: 1rem;
     cursor: pointer;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     background: rgba(196, 30, 58, 0.08);
     list-style: none;
     user-select: none;
+    gap: 12px;
+}
+
+.mobile-fixture-count {
+    font-weight: normal;
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .mobile-fixture-group-alt .mobile-fixture-summary {
