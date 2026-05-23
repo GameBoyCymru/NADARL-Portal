@@ -86,7 +86,7 @@
     }
 
     .nav-icon {
-        font-size: 2rem;
+        display: none;
     }
 
     .nav-title {
