@@ -243,8 +243,9 @@ function renderSeasonFixtures() {
     const tbody = document.getElementById('seasonFixtures');
     const groupedFixtures = groupFixturesByDate(fixtures);
     
-    Object.keys(groupedFixtures).sort().forEach(date => {
+    Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const formattedDate = formatDate(date);
+        const rowClass = dateIndex % 2 === 0 ? 'fixture-row' : 'fixture-row fixture-row-alt';
         
         groupedFixtures[date].forEach((fixture, index) => {
             const isBye = fixture.awayTeam === 'BYE';
@@ -252,7 +253,7 @@ function renderSeasonFixtures() {
             const venueDisplay = isBye ? '-' : fixture.venue;
             
             const row = document.createElement('tr');
-            row.className = 'fixture-row';
+            row.className = rowClass;
             
             if (index === 0) {
                 row.innerHTML = `

@@ -119,7 +119,12 @@
 
 .fixture-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.2), rgba(212, 160, 23, 0.2));
 }
 
 .fixture-table th,
@@ -127,18 +132,32 @@
     padding: 15px;
     text-align: left;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fixture-table th:last-child,
+.fixture-table td:last-child {
+    border-right: none;
 }
 
 .fixture-table th {
-    background: rgba(196, 30, 58, 0.2);
+    background: rgba(212, 160, 23, 0.15);
     font-weight: bold;
-    color: #c41e3a;
+    color: #d4a017;
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 1px;
 }
 
 .fixture-table tr:hover td:not(.date-cell) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.fixture-row-alt td {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.fixture-row-alt:hover td:not(.date-cell) {
     background: rgba(255, 255, 255, 0.05);
 }
 
@@ -149,6 +168,8 @@
 .date-cell {
     color: #a0a0a0;
     font-size: 0.9rem;
+    width: 1%;
+    white-space: nowrap;
 }
 
 .teams-cell {
