@@ -16,7 +16,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: linear-gradient(180deg, #e94560, rgba(233, 69, 96, 0.2));
+    background: linear-gradient(180deg, #c41e3a, rgba(196, 30, 58, 0.2));
 }
 
 .timeline-item {
@@ -34,10 +34,10 @@
     top: 8px;
     width: 16px;
     height: 16px;
-    background: #e94560;
+    background: #c41e3a;
     border-radius: 50%;
-    border: 3px solid #1a1a2e;
-    box-shadow: 0 0 0 3px #e94560;
+    border: 3px solid #18181b;
+    box-shadow: 0 0 0 3px #c41e3a;
     z-index: 1;
 }
 
@@ -50,7 +50,7 @@
 }
 
 .timeline-content:hover {
-    border-color: rgba(233, 69, 96, 0.3);
+    border-color: rgba(196, 30, 58, 0.3);
 }
 
 .timeline-image-wrapper {
@@ -74,7 +74,7 @@
 
 .timeline-year {
     display: inline-block;
-    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    background: linear-gradient(135deg, #c41e3a, #d4a017);
     color: #ffffff;
     padding: 4px 14px;
     border-radius: 20px;

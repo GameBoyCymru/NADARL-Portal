@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, #18181b 0%, #222229 100%);
     color: #ffffff;
     min-height: 100vh;
     padding: 20px;
@@ -18,20 +18,20 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #1a1a2e;
+    background: #18181b;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(233, 69, 96, 0.4);
+    background: rgba(196, 30, 58, 0.4);
     border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(233, 69, 96, 0.7);
+    background: rgba(196, 30, 58, 0.7);
 }
 
 html {
-    scrollbar-color: rgba(233, 69, 96, 0.4) #1a1a2e;
+    scrollbar-color: rgba(196, 30, 58, 0.4) #18181b;
     scrollbar-width: thin;
 }
 
@@ -55,20 +55,20 @@ header {
 }
 
 .back-link:hover {
-    color: #e94560;
+    color: #c41e3a;
 }
 
 h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    background: linear-gradient(90deg, #e94560, #ff6b6b);
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .subtitle {
-    color: #a0a0a0;
+    color: #e0d6c8;
     font-size: 1.1rem;
 }
 
@@ -84,7 +84,7 @@ h1 {
 .section-title {
     font-size: 1.5rem;
     margin-bottom: 20px;
-    color: #e94560;
+    color: #c41e3a;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -94,7 +94,7 @@ h1 {
     content: '';
     width: 4px;
     height: 25px;
-    background: #e94560;
+    background: #c41e3a;
     border-radius: 2px;
 }
 
@@ -106,8 +106,36 @@ h1 {
     margin-top: 40px;
 }
 
+.welcome-content {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.welcome-logo {
+    flex-shrink: 0;
+}
+
+.welcome-logo img {
+    width: 180px;
+    height: auto;
+    border-radius: 50%;
+    mix-blend-mode: screen;
+}
+
+.welcome-text {
+    flex: 1;
+}
+
 @media (max-width: 1024px) {
     h1 {
         font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .welcome-content {
+        flex-direction: column;
+        text-align: center;
     }
 }

@@ -31,13 +31,13 @@
 
 .nav-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
-    border-color: rgba(233, 69, 96, 0.4);
+    box-shadow: 0 10px 30px rgba(196, 30, 58, 0.2);
+    border-color: rgba(196, 30, 58, 0.4);
 }
 
 .nav-card-highlight {
-    background: linear-gradient(135deg, rgba(233, 69, 96, 0.15), rgba(255, 107, 107, 0.15));
-    border-color: rgba(233, 69, 96, 0.3);
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.15), rgba(212, 160, 23, 0.15));
+    border-color: rgba(196, 30, 58, 0.3);
 }
 
 .nav-icon {
@@ -49,7 +49,7 @@
     font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 10px;
-    color: #e94560;
+    color: #c41e3a;
 }
 
 .nav-description {

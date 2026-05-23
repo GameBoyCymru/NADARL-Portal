@@ -25,15 +25,15 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #e94560, #ff6b6b);
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
     opacity: 0;
     transition: opacity 0.4s ease;
 }
 
 .committee-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 15px 40px rgba(233, 69, 96, 0.25);
-    border-color: rgba(233, 69, 96, 0.5);
+    box-shadow: 0 15px 40px rgba(196, 30, 58, 0.25);
+    border-color: rgba(196, 30, 58, 0.5);
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
 }
 
@@ -45,7 +45,7 @@
     font-size: 0.9rem;
     font-weight: 700;
     margin-bottom: 20px;
-    color: #e94560;
+    color: #c41e3a;
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }

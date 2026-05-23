@@ -4,16 +4,16 @@
 }
 
 .fixture-card {
-    background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(255, 107, 107, 0.1));
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.1), rgba(212, 160, 23, 0.1));
     border-radius: 12px;
     padding: 20px;
-    border: 1px solid rgba(233, 69, 96, 0.3);
+    border: 1px solid rgba(196, 30, 58, 0.3);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .fixture-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+    box-shadow: 0 10px 30px rgba(196, 30, 58, 0.2);
 }
 
 .fixture-header {
@@ -40,7 +40,7 @@
 .expand-icon {
     transition: transform 0.3s ease;
     font-size: 0.8rem;
-    color: #e94560;
+    color: #c41e3a;
 }
 
 .expand-icon.rotated {
@@ -78,7 +78,7 @@
 
 .fixture-time {
     font-weight: bold;
-    color: #e94560;
+    color: #c41e3a;
 }
 
 .fixture-teams {
@@ -114,7 +114,7 @@
 .vs {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #e94560;
+    color: #c41e3a;
 }
 
 .fixture-table {
@@ -130,9 +130,9 @@
 }
 
 .fixture-table th {
-    background: rgba(233, 69, 96, 0.2);
+    background: rgba(196, 30, 58, 0.2);
     font-weight: bold;
-    color: #e94560;
+    color: #c41e3a;
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 1px;
@@ -156,13 +156,13 @@
 }
 
 .venue-cell {
-    color: #4ecdc4;
+    color: #d4a017;
     font-size: 0.9rem;
 }
 
 .bye-badge {
-    background: rgba(233, 69, 96, 0.3);
-    color: #e94560;
+    background: rgba(196, 30, 58, 0.3);
+    color: #c41e3a;
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 0.85rem;
@@ -189,7 +189,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(233, 69, 96, 0.1);
+    background: rgba(196, 30, 58, 0.1);
     list-style: none;
     user-select: none;
 }
@@ -201,7 +201,7 @@
 .mobile-fixture-summary::after {
     content: '▼';
     font-size: 0.75rem;
-    color: #e94560;
+    color: #c41e3a;
     transition: transform 0.3s ease;
 }
 
@@ -242,13 +242,13 @@
 }
 
 .mobile-vs {
-    color: #e94560;
+    color: #c41e3a;
     font-weight: bold;
     font-size: 0.85rem;
 }
 
 .mobile-fixture-venue {
-    color: #4ecdc4;
+    color: #d4a017;
     font-size: 0.85rem;
     margin-top: 4px;
 }
@@ -256,7 +256,7 @@
 .fixture-venue {
     display: block;
     text-align: center;
-    color: #4ecdc4;
+    color: #d4a017;
     font-size: 0.85rem;
     margin-top: 8px;
     padding-top: 8px;
