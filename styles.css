@@ -199,6 +199,6 @@ h1 {
 @media (max-width: 480px) {
     .welcome-content {
         flex-direction: column;
-        text-align: center;
+        text-align: left;
     }
 }
