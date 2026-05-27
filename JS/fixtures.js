@@ -19,19 +19,19 @@ const fixtures = [
         venue: 'BYE'
     },
     {
-        date: '2026-05-26',
+        date: '2026-05-27',
         homeTeam: 'Isca Rifles',
         awayTeam: 'Belle Vue Rifles',
         venue: 'Isca'
     },
     {
-        date: '2026-05-26',
+        date: '2026-05-27',
         homeTeam: 'Pantmawr Rifles',
         awayTeam: 'Rumney Rifles',
         venue: 'Pantmawr'
     },
     {
-        date: '2026-05-26',
+        date: '2026-05-27',
         homeTeam: 'Newport Eagles',
         awayTeam: 'BYE',
         venue: 'BYE'
@@ -113,7 +113,10 @@ const fixtures = [
 // Get today's date in YYYY-MM-DD format
 function getTodayDate() {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 // Format date for display
@@ -188,8 +191,12 @@ function createFixtureCard(fixture) {
             </div>
         `;
     }
+    const isTodayFixture = isToday(fixture.date);
+    const clickAttr = isTodayFixture
+        ? `onclick="window.location.href='match.html?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}&date=${encodeURIComponent(fixture.date)}&venue=${encodeURIComponent(fixture.venue)}'" style="cursor:pointer;"`
+        : '';
     return `
-        <div class="fixture-item">
+        <div class="fixture-item" ${clickAttr}>
             <div class="fixture-teams">
                 <div class="team">
                     <div class="team-badge">🎯</div>

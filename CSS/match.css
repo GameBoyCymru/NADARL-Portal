@@ -1,0 +1,354 @@
+.match-header {
+    text-align: center;
+}
+
+.match-header-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+.match-team {
+    flex: 1;
+    text-align: center;
+    padding: 15px;
+}
+
+.team-badge-large {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.match-team-name {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.match-team-label {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.match-team-total {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #d4a017;
+}
+
+.match-scores {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 6px;
+}
+
+.match-score-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.match-score-label {
+    font-size: 0.7rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.match-score-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #d4a017;
+}
+
+.match-vs {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #c41e3a;
+    flex-shrink: 0;
+}
+
+.match-venue {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #d4a017;
+    font-size: 0.95rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.score-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(212, 160, 23, 0.3);
+}
+
+.score-table th,
+.score-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.score-table th:last-child,
+.score-table td:last-child {
+    border-right: none;
+}
+
+.score-table th {
+    background: rgba(196, 30, 58, 0.35);
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.score-table th:first-child,
+.score-table td:first-child {
+    text-align: left;
+    min-width: 140px;
+}
+
+.score-table td {
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.score-table tbody tr:nth-child(even) td {
+    background: rgba(196, 30, 58, 0.06);
+}
+
+.score-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.score-table .total-cell {
+    font-weight: bold;
+    color: #d4a017;
+    font-size: 1rem;
+}
+
+.score-table .score-cell {
+    min-width: 36px;
+}
+
+.score-table .shooter-cell {
+    font-weight: 500;
+}
+
+.score-table .team-total-row td {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.summary-table {
+    width: 100%;
+}
+
+.summary-table th:first-child,
+.summary-table td:first-child {
+    min-width: unset;
+    width: 60%;
+}
+
+.summary-table .summary-shooter {
+    font-size: 0.85rem;
+    color: #d0d0d0;
+    padding-left: 20px;
+    word-break: break-word;
+}
+
+.summary-table .summary-total-row td {
+    font-weight: bold;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 1rem;
+}
+
+.summary-table .score-cell {
+    min-width: 50px;
+}
+
+.score-tables-wrapper {
+    display: flex;
+    gap: 20px;
+}
+
+.score-table-column {
+    flex: 1;
+    min-width: 0;
+}
+
+.score-table-column .table-responsive {
+    overflow-x: auto;
+}
+
+.score-table-column .score-table {
+    min-width: 480px;
+}
+
+.match-result {
+    text-align: center;
+}
+
+.result-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.result-row:last-child {
+    border-bottom: none;
+}
+
+.result-label {
+    font-weight: bold;
+    color: #c41e3a;
+    min-width: 60px;
+    text-align: right;
+}
+
+.result-value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #d4a017;
+}
+
+.result-score {
+    color: #a0a0a0;
+    font-size: 0.9rem;
+}
+
+.no-match {
+    text-align: center;
+    padding: 40px;
+    color: #a0a0a0;
+    font-style: italic;
+}
+
+@media (max-width: 1024px) {
+    .score-tables-wrapper {
+        flex-direction: column;
+    }
+
+    .score-table-column .score-table {
+        min-width: 480px;
+    }
+
+    .match-header-inner {
+        gap: 15px;
+    }
+
+    .match-team-name {
+        font-size: 1.1rem;
+    }
+
+    .team-badge-large {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+
+    .match-vs {
+        font-size: 1.5rem;
+    }
+
+    .match-score-value {
+        font-size: 1.1rem;
+    }
+
+    .score-table th,
+    .score-table td {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+    }
+
+    .score-table th:first-child,
+    .score-table td:first-child {
+        min-width: 100px;
+    }
+
+    .summary-table {
+        max-width: 100%;
+    }
+
+    .summary-table .summary-shooter {
+        padding-left: 12px;
+        font-size: 0.8rem;
+    }
+
+    .summary-table .summary-team-row td {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .match-header-inner {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .match-vs {
+        font-size: 1.2rem;
+    }
+
+    .team-badge-large {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+
+    .score-table th,
+    .score-table td {
+        padding: 6px 4px;
+        font-size: 0.75rem;
+    }
+
+    .score-table th:first-child,
+    .score-table td:first-child {
+        min-width: 80px;
+    }
+
+    .score-table .score-cell {
+        min-width: 24px;
+    }
+
+    .summary-table .summary-shooter {
+        padding-left: 8px;
+        font-size: 0.75rem;
+    }
+
+    .summary-table .score-cell {
+        min-width: 40px;
+    }
+
+    .summary-table th:first-child,
+    .summary-table td:first-child {
+        width: 55%;
+    }
+}
