@@ -136,8 +136,8 @@ function renderTeamSummary(tbodyId, scores, opponentScores) {
 
     const aClass = scores.aTeam > opponentScores.aTeam ? ' score-winner' : '';
     const bClass = scores.bTeam > opponentScores.bTeam ? ' score-winner' : '';
-    const aText = scores.aTeam > opponentScores.aTeam ? '\u{1F451} ' + scores.aTeam : scores.aTeam;
-    const bText = scores.bTeam > opponentScores.bTeam ? '\u{1F451} ' + scores.bTeam : scores.bTeam;
+    const aText = scores.aTeam;
+    const bText = scores.bTeam;
     html += `<tr class="summary-total-row"><td>Total</td><td class="score-cell${aClass}">${aText}</td><td class="score-cell${bClass}">${bText}</td></tr>`;
 
     tbody.innerHTML = html;
@@ -181,10 +181,10 @@ function initMatchPage() {
     awayAEl.textContent = awayScores.aTeam;
     awayBEl.textContent = awayScores.bTeam;
 
-    if (homeScores.aTeam > awayScores.aTeam) { homeAEl.classList.add('score-winner'); homeAEl.textContent = '\u{1F451} ' + homeScores.aTeam; }
-    else if (awayScores.aTeam > homeScores.aTeam) { awayAEl.classList.add('score-winner'); awayAEl.textContent = '\u{1F451} ' + awayScores.aTeam; }
-    if (homeScores.bTeam > awayScores.bTeam) { homeBEl.classList.add('score-winner'); homeBEl.textContent = '\u{1F451} ' + homeScores.bTeam; }
-    else if (awayScores.bTeam > homeScores.bTeam) { awayBEl.classList.add('score-winner'); awayBEl.textContent = '\u{1F451} ' + awayScores.bTeam; }
+    if (homeScores.aTeam > awayScores.aTeam) homeAEl.classList.add('score-winner');
+    else if (awayScores.aTeam > homeScores.aTeam) awayAEl.classList.add('score-winner');
+    if (homeScores.bTeam > awayScores.bTeam) homeBEl.classList.add('score-winner');
+    else if (awayScores.bTeam > homeScores.bTeam) awayBEl.classList.add('score-winner');
 
     renderMatchSummary(params.home, homeScores, params.away, awayScores);
 }
