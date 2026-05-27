@@ -74,6 +74,11 @@
     color: #d4a017;
 }
 
+.match-score-value.score-winner {
+    color: #d4a017;
+    text-shadow: 0 0 8px rgba(212, 160, 23, 0.4);
+}
+
 .match-vs {
     font-size: 2rem;
     font-weight: bold;
@@ -147,12 +152,25 @@
 
 .score-table .total-cell {
     font-weight: bold;
-    color: #d4a017;
+    color: #ffffff;
     font-size: 1rem;
+}
+
+.score-table .total-cell.total-highest {
+    color: #d4a017;
+}
+
+.score-table .total-cell.total-lowest {
+    color: #c41e3a;
 }
 
 .score-table .score-cell {
     min-width: 36px;
+}
+
+.score-table .score-cell.score-winner {
+    color: #d4a017;
+    text-shadow: 0 0 8px rgba(212, 160, 23, 0.4);
 }
 
 .score-table .shooter-cell {
@@ -187,6 +205,10 @@
     font-size: 1rem;
 }
 
+.summary-table .summary-total-row .score-cell:not(.score-winner) {
+    font-weight: normal;
+}
+
 .summary-table .score-cell {
     min-width: 50px;
 }
@@ -199,49 +221,20 @@
 .score-table-column {
     flex: 1;
     min-width: 0;
-}
-
-.score-table-column .table-responsive {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .score-table-column .score-table {
     min-width: 480px;
 }
 
-.match-result {
-    text-align: center;
-}
-
-.result-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.result-row:last-child {
-    border-bottom: none;
-}
-
-.result-label {
-    font-weight: bold;
-    color: #c41e3a;
-    min-width: 60px;
-    text-align: right;
-}
-
-.result-value {
+.column-title {
     font-size: 1.1rem;
     font-weight: bold;
     color: #d4a017;
-}
-
-.result-score {
-    color: #a0a0a0;
-    font-size: 0.9rem;
+    margin-bottom: 12px;
+    text-align: center;
 }
 
 .no-match {

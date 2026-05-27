@@ -98,12 +98,16 @@ function calculateTeamScores(shooters) {
 function renderShooterTable(tbodyId, shooters) {
     const tbody = document.getElementById(tbodyId);
     const { aTeam, bTeam, ranks, aTeamShooters, bTeamShooters } = calculateTeamScores(shooters);
+    const totals = shooters.map(s => s.total);
+    const maxTotal = Math.max(...totals);
+    const minTotal = Math.min(...totals);
     let html = '';
 
     shooters.forEach((shooter, index) => {
-        const rank = ranks[index];
-        const totalClass = `total-cell ${rank}`;
-        html += `<tr class="shooter-${rank}">`;
+        let totalClass = 'total-cell';
+        if (shooter.total === maxTotal) totalClass += ' total-highest';
+        else if (shooter.total === minTotal) totalClass += ' total-lowest';
+        html += `<tr>`;
         html += `<td class="shooter-cell">${shooter.name}</td>`;
         shooter.scores.forEach(score => {
             html += `<td class="score-cell">${score}</td>`;
@@ -116,7 +120,7 @@ function renderShooterTable(tbodyId, shooters) {
     return { aTeam, bTeam, aTeamShooters, bTeamShooters };
 }
 
-function renderTeamSummary(tbodyId, teamName, scores) {
+function renderTeamSummary(tbodyId, scores, opponentScores) {
     const tbody = document.getElementById(tbodyId);
     let html = '';
 
@@ -130,7 +134,11 @@ function renderTeamSummary(tbodyId, teamName, scores) {
         html += `<tr><td class="summary-shooter">${s.name}</td><td class="score-cell"></td><td class="score-cell">${s.total}</td></tr>`;
     });
 
-    html += `<tr class="summary-total-row"><td>Total</td><td class="score-cell">${scores.aTeam}</td><td class="score-cell">${scores.bTeam}</td></tr>`;
+    const aClass = scores.aTeam > opponentScores.aTeam ? ' score-winner' : '';
+    const bClass = scores.bTeam > opponentScores.bTeam ? ' score-winner' : '';
+    const aText = scores.aTeam > opponentScores.aTeam ? '\u{1F451} ' + scores.aTeam : scores.aTeam;
+    const bText = scores.bTeam > opponentScores.bTeam ? '\u{1F451} ' + scores.bTeam : scores.bTeam;
+    html += `<tr class="summary-total-row"><td>Total</td><td class="score-cell${aClass}">${aText}</td><td class="score-cell${bClass}">${bText}</td></tr>`;
 
     tbody.innerHTML = html;
 }
@@ -138,30 +146,8 @@ function renderTeamSummary(tbodyId, teamName, scores) {
 function renderMatchSummary(homeTeam, homeScores, awayTeam, awayScores) {
     document.getElementById('homeSummaryTitle').textContent = homeTeam;
     document.getElementById('awaySummaryTitle').textContent = awayTeam;
-    renderTeamSummary('homeSummary', homeTeam, homeScores);
-    renderTeamSummary('awaySummary', awayTeam, awayScores);
-}
-
-function renderMatchResult(homeTeam, homeScores, awayTeam, awayScores) {
-    const container = document.getElementById('matchResult');
-    const getResult = (home, away, teamH, teamA) => {
-        if (home > away) return `${teamH} win`;
-        if (away > home) return `${teamA} win`;
-        return 'Draw';
-    };
-
-    container.innerHTML = `
-        <div class="result-row">
-            <span class="result-label">A-Team</span>
-            <span class="result-value">${getResult(homeScores.aTeam, awayScores.aTeam, homeTeam, awayTeam)}</span>
-            <span class="result-score">${homeScores.aTeam} - ${awayScores.aTeam}</span>
-        </div>
-        <div class="result-row">
-            <span class="result-label">B-Team</span>
-            <span class="result-value">${getResult(homeScores.bTeam, awayScores.bTeam, homeTeam, awayTeam)}</span>
-            <span class="result-score">${homeScores.bTeam} - ${awayScores.bTeam}</span>
-        </div>
-    `;
+    renderTeamSummary('homeSummary', homeScores, awayScores);
+    renderTeamSummary('awaySummary', awayScores, homeScores);
 }
 
 function initMatchPage() {
@@ -185,14 +171,22 @@ function initMatchPage() {
     const homeScores = renderShooterTable('homeShooters', matchData.home);
     const awayScores = renderShooterTable('awayShooters', matchData.away);
 
-    document.getElementById('homeATeam').textContent = homeScores.aTeam;
-    document.getElementById('homeBTeam').textContent = homeScores.bTeam;
-    document.getElementById('awayATeam').textContent = awayScores.aTeam;
-    document.getElementById('awayBTeam').textContent = awayScores.bTeam;
+    const homeAEl = document.getElementById('homeATeam');
+    const homeBEl = document.getElementById('homeBTeam');
+    const awayAEl = document.getElementById('awayATeam');
+    const awayBEl = document.getElementById('awayBTeam');
+
+    homeAEl.textContent = homeScores.aTeam;
+    homeBEl.textContent = homeScores.bTeam;
+    awayAEl.textContent = awayScores.aTeam;
+    awayBEl.textContent = awayScores.bTeam;
+
+    if (homeScores.aTeam > awayScores.aTeam) { homeAEl.classList.add('score-winner'); homeAEl.textContent = '\u{1F451} ' + homeScores.aTeam; }
+    else if (awayScores.aTeam > homeScores.aTeam) { awayAEl.classList.add('score-winner'); awayAEl.textContent = '\u{1F451} ' + awayScores.aTeam; }
+    if (homeScores.bTeam > awayScores.bTeam) { homeBEl.classList.add('score-winner'); homeBEl.textContent = '\u{1F451} ' + homeScores.bTeam; }
+    else if (awayScores.bTeam > homeScores.bTeam) { awayBEl.classList.add('score-winner'); awayBEl.textContent = '\u{1F451} ' + awayScores.bTeam; }
 
     renderMatchSummary(params.home, homeScores, params.away, awayScores);
-
-    renderMatchResult(params.home, homeScores, params.away, awayScores);
 }
 
 document.addEventListener('DOMContentLoaded', initMatchPage);
