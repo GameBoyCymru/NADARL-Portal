@@ -190,3 +190,23 @@ function initMatchPage() {
 }
 
 document.addEventListener('DOMContentLoaded', initMatchPage);
+
+function checkViewportWidth() {
+    const overlay = document.getElementById('rotateOverlay');
+    if (!overlay) return;
+    if (window.innerWidth < 768) {
+        overlay.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function dismissRotateOverlay() {
+    const overlay = document.getElementById('rotateOverlay');
+    overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    checkViewportWidth();
+    document.getElementById('rotateDismiss').addEventListener('click', dismissRotateOverlay);
+});
