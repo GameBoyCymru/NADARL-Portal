@@ -247,10 +247,17 @@
 @media (max-width: 1120px) {
     .score-tables-wrapper {
         flex-direction: column;
+        gap: 8px;
+    }
+
+    .score-table-column {
+        flex: none;
+        width: 100%;
     }
 
     .score-table-column .score-table {
-        min-width: 480px;
+        min-width: unset;
+        width: 100%;
     }
 
     .match-header-inner {
@@ -297,6 +304,11 @@
 }
 
 @media (max-width: 480px) {
+    .summary-table th:first-child,
+    .summary-table td:first-child {
+        display: none;
+    }
+
     .match-header-inner {
         flex-direction: column;
         gap: 10px;
@@ -334,10 +346,12 @@
 
     .summary-table .score-cell {
         min-width: 40px;
+        padding: 6px 2px;
     }
 
-    .summary-table th:first-child,
-    .summary-table td:first-child {
-        width: 55%;
+    .summary-table th,
+    .summary-table td {
+        padding: 4px 2px;
+        font-size: 0.7rem;
     }
 }
