@@ -244,7 +244,7 @@
     font-style: italic;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1120px) {
     .score-tables-wrapper {
         flex-direction: column;
     }
@@ -293,10 +293,6 @@
     .summary-table .summary-shooter {
         padding-left: 12px;
         font-size: 0.8rem;
-    }
-
-    .summary-table .summary-team-row td {
-        font-size: 0.85rem;
     }
 }
 
