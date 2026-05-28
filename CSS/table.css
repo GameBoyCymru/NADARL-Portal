@@ -37,6 +37,14 @@
     background: rgba(255, 255, 255, 0.05);
 }
 
+.league-table tr.team-highlight {
+    background: rgba(255, 193, 7, 0.18);
+}
+
+.league-table .team-cell {
+    cursor: pointer;
+}
+
 .league-table td:first-child {
     color: #a0a0a0;
     font-weight: 600;

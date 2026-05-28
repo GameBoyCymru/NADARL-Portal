@@ -113,7 +113,7 @@ function initTablePage() {
 
     let html = '';
     stats.forEach((shooter, index) => {
-        html += `<tr>
+        html += `<tr data-team="${shooter.team}">
             <td>${index + 1}</td>
             <td class="shooter-name">${shooter.name}</td>
             <td class="team-cell">${shooter.team}</td>
@@ -125,6 +125,20 @@ function initTablePage() {
     });
 
     tbody.innerHTML = html;
+
+    tbody.addEventListener('click', function (e) {
+        const cell = e.target.closest('.team-cell');
+        if (!cell) return;
+        const team = cell.closest('tr').dataset.team;
+        const highlighted = tbody.querySelectorAll('tr.team-highlight');
+        const isAlreadyHighlighted = cell.closest('tr').classList.contains('team-highlight');
+        highlighted.forEach(row => row.classList.remove('team-highlight'));
+        if (!isAlreadyHighlighted) {
+            tbody.querySelectorAll('tr').forEach(row => {
+                if (row.dataset.team === team) row.classList.add('team-highlight');
+            });
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', initTablePage);
