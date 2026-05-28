@@ -1,19 +1,19 @@
 // Sample fixture data based on the league information
 const fixtures = [
     {
-        date: '2026-05-20',
+        date: '2026-05-28',
         homeTeam: 'Belle Vue Rifles',
         awayTeam: 'Pantmawr Rifles',
         venue: 'Belle Vue'
     },
     {
-        date: '2026-05-20',
+        date: '2026-05-28',
         homeTeam: 'Rumney Rifles',
         awayTeam: 'Newport Eagles',
         venue: 'Rumney'
     },
     {
-        date: '2026-05-20',
+        date: '2026-05-28',
         homeTeam: 'Isca Rifles',
         awayTeam: 'BYE',
         venue: 'BYE'
