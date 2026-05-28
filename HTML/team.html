@@ -3,24 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teams - Newport & District Air Rifle League</title>
+    <title>Team - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../CSS/teams.css">
+    <link rel="stylesheet" href="../CSS/team.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <a href="../index.html" class="back-link">&larr; Back to Home</a>
+            <a href="teams.html" class="back-link">&larr; Back to Teams</a>
             <h1>Newport & District Air Rifle League</h1>
-            <p class="subtitle">Teams</p>
+            <p class="subtitle" id="teamSubtitle">Team</p>
         </header>
 
+        <section class="section team-profile">
+            <div class="team-profile-inner">
+                <div class="team-logo-wrapper">
+                    <img id="teamLogo" class="team-logo" src="" alt="">
+                    <div id="logoFallback" class="team-logo-fallback"></div>
+                </div>
+                <div class="team-info">
+                    <h2 class="team-detail-name" id="teamName"></h2>
+                    <p class="team-detail-venue" id="teamVenue"></p>
+                </div>
+            </div>
+        </section>
+
         <section class="section">
-            <h2 class="section-title">Our Teams</h2>
-            <p class="teams-intro">
-                Meet the clubs and teams competing in the Newport & District Air Rifle League.
-            </p>
-            <div class="teams-grid" id="teamsGrid">
+            <h2 class="section-title">Team Statistics</h2>
+            <div class="table-responsive">
+                <table class="shooters-table">
+                    <thead>
+                        <tr>
+                            <th>Shooter</th>
+                            <th>Best Score</th>
+                            <th>Season Best</th>
+                            <th>Average</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shootersTable">
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -51,6 +73,6 @@
         </footer>
     </div>
 
-    <script src="../JS/teams.js"></script>
+    <script src="../JS/team.js"></script>
 </body>
 </html>

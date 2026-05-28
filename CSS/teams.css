@@ -11,6 +11,11 @@
     gap: 20px;
 }
 
+.team-card-link {
+    text-decoration: none;
+    display: block;
+}
+
 .team-card {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -20,6 +25,7 @@
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    cursor: pointer;
 }
 
 .team-card::before {
@@ -56,6 +62,27 @@
     justify-content: center;
     font-size: 0.8rem;
     color: #a0a0a0;
+    position: relative;
+    overflow: hidden;
+}
+
+.team-badge-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+    padding: 8px;
+}
+
+.badge-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #d4a017;
 }
 
 .team-card .team-name {
