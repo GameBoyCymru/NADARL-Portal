@@ -248,12 +248,18 @@
 @media (max-width: 1120px) {
     .score-tables-wrapper {
         flex-direction: column;
-        gap: 8px;
+        gap: 0;
     }
 
     .score-table-column {
         flex: none;
         width: 100%;
+    }
+
+    .score-table-column + .score-table-column {
+        border-top: 2px solid rgba(255, 255, 255, 0.1);
+        padding-top: 16px;
+        margin-top: 40px;
     }
 
     .score-table-column .score-table {
