@@ -62,12 +62,14 @@ function generateMatchTotals(teamName, opponent, date, isHome) {
     const teamSeed = seed + (isHome ? 0 : 1000);
 
     return shooters.map((name, i) => {
-        let total = 0;
+        const scores = [];
         for (let r = 0; r < 7; r++) {
             const rng = seededRandom(teamSeed + i * 100 + r);
-            total += Math.floor(7 + rng * 4);
+            scores.push(Math.floor(7 + rng * 4));
         }
-        return { name, total };
+        const total = scores.reduce((sum, s) => sum + s, 0);
+        const tens = scores.filter(s => s === 10).length;
+        return { name, total, tens };
     });
 }
 
@@ -77,18 +79,21 @@ function getTeamStats(teamName) {
     );
 
     const shooterMatchTotals = {};
+    const shooterTens = {};
     const shooters = teamShooters[teamName] || [];
     shooters.forEach(s => {
         shooterMatchTotals[s] = [];
+        shooterTens[s] = 0;
     });
 
     teamFixtures.forEach(fixture => {
         const isHome = fixture.homeTeam === teamName;
         const opponent = isHome ? fixture.awayTeam : fixture.homeTeam;
         const matchTotals = generateMatchTotals(teamName, opponent, fixture.date, isHome);
-        matchTotals.forEach(({ name, total }) => {
+        matchTotals.forEach(({ name, total, tens }) => {
             if (shooterMatchTotals[name]) {
                 shooterMatchTotals[name].push(total);
+                shooterTens[name] += tens;
             }
         });
     });
@@ -113,6 +118,7 @@ function getTeamStats(teamName) {
             seasonBest,
             average,
             matchesPlayed: totals.length,
+            tens: shooterTens[name],
             role
         };
     });
@@ -168,6 +174,7 @@ function initTeamPage() {
             <td class="shooter-name">${shooter.name}${roleAttr}</td>
             <td class="score-cell">${shooter.best}</td>
             <td class="score-cell">${shooter.seasonBest}</td>
+            <td class="score-cell">${shooter.tens}</td>
             <td class="score-cell">${shooter.average}</td>
         </tr>`;
     });
@@ -175,3 +182,23 @@ function initTeamPage() {
 }
 
 document.addEventListener('DOMContentLoaded', initTeamPage);
+
+function checkViewportWidth() {
+    const overlay = document.getElementById('rotateOverlay');
+    if (!overlay) return;
+    if (window.innerWidth < 768) {
+        overlay.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function dismissRotateOverlay() {
+    const overlay = document.getElementById('rotateOverlay');
+    overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    checkViewportWidth();
+    document.getElementById('rotateDismiss').addEventListener('click', dismissRotateOverlay);
+});
