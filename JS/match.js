@@ -18,95 +18,30 @@ function formatDate(dateStr) {
     });
 }
 
-const teamShooters = {
-    'Belle Vue Rifles': ['J. Thompson', 'M. Richards', 'D. Williams', 'A. Davies', 'R. Evans', 'S. Morgan', 'K. Hughes', 'P. Jones', 'L. Clarke'],
-    'Pantmawr Rifles': ['G. Hopkins', 'L. Bennett', 'C. Griffiths', 'T. Edwards', 'N. Powell', 'H. Morris', 'B. Clarke', 'W. Rees', 'F. Owen'],
-    'Rumney Rifles': ['F. Webb', 'O. Perry', 'E. Cox', 'I. Kelly', 'J. Russell', 'M. Grant', 'D. Wallace', 'R. Spencer', 'A. Blake'],
-    'Newport Eagles': ['A. Adams', 'C. Baker', 'E. Carter', 'G. Dixon', 'K. Ellis', 'M. Fox', 'P. Green', 'S. Hart', 'T. James'],
-    'Isca Rifles': ['T. Idris', 'V. Jones', 'W. King', 'X. Lloyd', 'Y. Miles', 'Z. Newman', 'A. Owens', 'B. Price', 'C. Ross']
-};
-
-function hashCode(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
-    }
-    return Math.abs(hash);
-}
-
-function generateScores(homeTeam, awayTeam, date) {
-    const seed = hashCode(homeTeam + awayTeam + date);
-
-    function seededRandom(s) {
-        let x = Math.sin(s) * 10000;
-        return x - Math.floor(x);
-    }
-
-    const result = {};
-
-    ['home', 'away'].forEach(side => {
-        const teamName = side === 'home' ? homeTeam : awayTeam;
-        const shooters = teamShooters[teamName] || generateDefaultShooters(teamName);
-        const teamSeed = seed + (side === 'away' ? 1000 : 0);
-
-        result[side] = shooters.map((name, i) => {
-            const scores = [];
-            for (let r = 0; r < 7; r++) {
-                const rng = seededRandom(teamSeed + i * 100 + r);
-                const score = Math.floor(7 + rng * 4);
-                scores.push(score);
-            }
-            const total = scores.reduce((sum, s) => sum + s, 0);
-            return { name, scores, total };
-        });
-    });
-
-    return result;
-}
-
-function generateDefaultShooters(teamName) {
-    const shooters = [];
-    for (let i = 0; i < 9; i++) {
-        shooters.push(`Shooter ${i + 1}`);
-    }
-    return shooters;
-}
-
+// Sort shooters by total desc, then derive A-team (top 5) and B-team (pos 5-7).
 function calculateTeamScores(shooters) {
     const indexed = shooters.map((s, i) => ({ ...s, originalIndex: i }));
     const sorted = indexed.sort((a, b) => b.total - a.total);
     const aTeam = sorted.slice(0, 5).reduce((sum, s) => sum + s.total, 0);
     const bTeam = sorted.slice(4, 7).reduce((sum, s) => sum + s.total, 0);
 
-    const ranks = new Array(shooters.length).fill('dropped');
-    sorted.forEach((s, pos) => {
-        const isA = pos < 5;
-        const isB = pos >= 4 && pos < 7;
-        if (isA && isB) ranks[s.originalIndex] = 'both';
-        else if (isA) ranks[s.originalIndex] = 'a-team';
-        else if (isB) ranks[s.originalIndex] = 'b-team';
-    });
-
     const aTeamShooters = sorted.slice(0, 5).map(s => ({ name: s.name, total: s.total }));
     const bTeamShooters = sorted.slice(4, 7).map(s => ({ name: s.name, total: s.total }));
 
-    return { aTeam, bTeam, ranks, aTeamShooters, bTeamShooters };
+    return { aTeam, bTeam, aTeamShooters, bTeamShooters };
 }
 
 function renderShooterTable(tbodyId, shooters) {
     const tbody = document.getElementById(tbodyId);
-    const { aTeam, bTeam, ranks, aTeamShooters, bTeamShooters } = calculateTeamScores(shooters);
     const totals = shooters.map(s => s.total);
-    const maxTotal = Math.max(...totals);
-    const minTotal = Math.min(...totals);
+    const maxTotal = totals.length ? Math.max(...totals) : 0;
+    const minTotal = totals.length ? Math.min(...totals) : 0;
     let html = '';
 
-    shooters.forEach((shooter, index) => {
+    shooters.forEach((shooter) => {
         let totalClass = 'total-cell';
-        if (shooter.total === maxTotal) totalClass += ' total-highest';
-        else if (shooter.total === minTotal) totalClass += ' total-lowest';
+        if (shooters.length && shooter.total === maxTotal) totalClass += ' total-highest';
+        else if (shooters.length && shooter.total === minTotal) totalClass += ' total-lowest';
         html += `<tr>`;
         html += `<td class="shooter-cell">${shooter.name}</td>`;
         shooter.scores.forEach(score => {
@@ -117,7 +52,7 @@ function renderShooterTable(tbodyId, shooters) {
     });
 
     tbody.innerHTML = html;
-    return { aTeam, bTeam, aTeamShooters, bTeamShooters };
+    return calculateTeamScores(shooters);
 }
 
 function renderTeamSummary(tbodyId, scores, opponentScores) {
@@ -136,9 +71,7 @@ function renderTeamSummary(tbodyId, scores, opponentScores) {
 
     const aClass = scores.aTeam > opponentScores.aTeam ? ' score-winner' : '';
     const bClass = scores.bTeam > opponentScores.bTeam ? ' score-winner' : '';
-    const aText = scores.aTeam;
-    const bText = scores.bTeam;
-    html += `<tr class="summary-total-row"><td>Total</td><td class="score-cell${aClass}">${aText}</td><td class="score-cell${bClass}">${bText}</td></tr>`;
+    html += `<tr class="summary-total-row"><td>Total</td><td class="score-cell${aClass}">${scores.aTeam}</td><td class="score-cell${bClass}">${scores.bTeam}</td></tr>`;
 
     tbody.innerHTML = html;
 }
@@ -150,7 +83,7 @@ function renderMatchSummary(homeTeam, homeScores, awayTeam, awayScores) {
     renderTeamSummary('awaySummary', awayScores, homeScores);
 }
 
-function initMatchPage() {
+async function initMatchPage() {
     const params = getQueryParams();
 
     if (!params.home || !params.away) {
@@ -166,10 +99,21 @@ function initMatchPage() {
     document.getElementById('homeTeamTableTitle').textContent = params.home;
     document.getElementById('awayTeamTableTitle').textContent = params.away;
 
-    const matchData = generateScores(params.home, params.away, params.date);
+    const rows = await NADARL.fetchMatchScorecard(params.date, params.home, params.away);
 
-    const homeScores = renderShooterTable('homeShooters', matchData.home);
-    const awayScores = renderShooterTable('awayShooters', matchData.away);
+    const homeShooters = rows.filter(r => r.team_name === params.home)
+        .map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total }));
+    const awayShooters = rows.filter(r => r.team_name === params.away)
+        .map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total }));
+
+    if (!homeShooters.length && !awayShooters.length) {
+        document.querySelector('.score-tables-wrapper').innerHTML =
+            '<div class="no-fixtures">Scores for this match have not been entered yet.</div>';
+        return;
+    }
+
+    const homeScores = renderShooterTable('homeShooters', homeShooters);
+    const awayScores = renderShooterTable('awayShooters', awayShooters);
 
     const homeAEl = document.getElementById('homeATeam');
     const homeBEl = document.getElementById('homeBTeam');

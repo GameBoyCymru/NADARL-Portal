@@ -1,37 +1,16 @@
-const teamsData = [
-    {
-        name: 'Belle Vue Rifles',
-        venue: 'Belle Vue',
-        slug: 'belle-vue-rifles'
-    },
-    {
-        name: 'Isca Rifles',
-        venue: 'Isca',
-        slug: 'isca-rifles'
-    },
-    {
-        name: 'Newport Eagles',
-        venue: 'Newport',
-        slug: 'newport-eagles'
-    },
-    {
-        name: 'Pantmawr Rifles',
-        venue: 'Pantmawr',
-        slug: 'pantmawr-rifles'
-    },
-    {
-        name: 'Rumney Rifles',
-        venue: 'Rumney',
-        slug: 'rumney-rifles'
-    }
-];
-
-function renderTeamCards() {
+async function renderTeamCards() {
     const grid = document.getElementById('teamsGrid');
     if (!grid) return;
 
+    const teams = await NADARL.fetchTeams();
+
+    if (!teams.length) {
+        grid.innerHTML = '<p class="no-fixtures">No teams found.</p>';
+        return;
+    }
+
     let html = '';
-    teamsData.forEach(team => {
+    teams.forEach(team => {
         html += `
             <a href="team.html?team=${encodeURIComponent(team.name)}" class="team-card-link">
                 <div class="team-card">
