@@ -1,4 +1,4 @@
 .kilo/
 
 # Supabase keys - keep your real project credentials out of git
-JS/supabase-keys.js
+#JS/supabase-keys.js
