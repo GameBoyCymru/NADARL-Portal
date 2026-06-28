@@ -57,7 +57,7 @@ const NADARL = (function () {
     async function fetchFixtures() {
         const { data, error } = await db().from('fixture_list')
             .select('*')
-            .order('match_date');
+            .order('date');
         if (error) { console.error('fetchFixtures', error); return []; }
         return data.map(f => ({
             id: f.id,
