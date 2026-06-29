@@ -79,12 +79,25 @@ const NADARL = (function () {
         return data;
     }
 
+    // Profile of the currently signed-in user (or null if not signed in).
+    async function fetchMyProfile() {
+        const { data: { user } } = await db().auth.getUser();
+        if (!user) return null;
+        const { data, error } = await db().from('user_profile')
+            .select('id,email,role,team_id')
+            .eq('id', user.id)
+            .maybeSingle();
+        if (error) { console.error('fetchMyProfile', error); return null; }
+        return data;
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
         fetchTeamShootersStats,
         fetchAllShooterStats,
         fetchFixtures,
-        fetchMatchScorecard
+        fetchMatchScorecard,
+        fetchMyProfile
     };
 })();
