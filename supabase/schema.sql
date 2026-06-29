@@ -56,12 +56,16 @@ create table if not exists public.score (
     unique (match_id, shooter_id)
 );
 
--- Links auth.users (logins) to a committee role + optional team.
+-- Links auth.users (logins) to a role + optional team.
+--   pending  - signed up, awaiting admin approval
+--   generic  - per-team shared account; edits today's home-match scores
+--   captain  - edits today's home-match scores + manages own team's shooters
+--   admin    - full access
 create table if not exists public.user_profile (
-    id      uuid primary key references auth.users(id) on delete cascade,
-    email   text,
-    role    text not null check (role in ('captain','secretary','treasurer','admin')),
-    team_id uuid references public.team(id) on delete set null
+    id             uuid primary key references auth.users(id) on delete cascade,
+    email          text,
+    role           text not null check (role in ('pending','generic','captain','admin')),
+    team_id        uuid references public.team(id) on delete set null
 );
 
 -- ----------------------------------------------------------------------------
@@ -133,7 +137,10 @@ join public.shooter sh on sh.id = sc.shooter_id;
 
 -- ----------------------------------------------------------------------------
 -- ROW LEVEL SECURITY
--- Public can read everything; only committee editors can write.
+-- Public can read everything. Writes are scoped:
+--   admin    -> everything
+--   captain  -> own team's shooters + today's home-match scores
+--   generic  -> today's home-match scores only
 -- ----------------------------------------------------------------------------
 
 alter table public.team          enable row level security;
@@ -143,8 +150,27 @@ alter table public.score         enable row level security;
 alter table public.season        enable row level security;
 alter table public.user_profile  enable row level security;
 
--- Helper: is the current user a committee member who may edit data?
-create or replace function public.is_editor()
+-- The "league day", resolved in UK local time.
+create or replace function public.league_today()
+returns date
+language sql
+stable
+set search_path = public
+as $$
+    select (now() at time zone 'Europe/London')::date;
+$$;
+
+-- team_id of the currently signed-in user (or null).
+create or replace function public.my_team_id()
+returns uuid
+language sql
+security definer
+set search_path = public
+as $$
+    select team_id from public.user_profile where id = auth.uid();
+$$;
+
+create or replace function public.is_admin()
 returns boolean
 language sql
 security definer
@@ -152,10 +178,30 @@ set search_path = public
 as $$
     select exists (
         select 1 from public.user_profile p
-        where p.id = auth.uid()
-          and p.role in ('captain','secretary','treasurer','admin')
+        where p.id = auth.uid() and p.role = 'admin'
     );
 $$;
+
+-- Auto-create a 'pending' profile for any new auth user (e.g. when you add a
+-- user in the Supabase Dashboard). Set their role/team with create-accounts.sql.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    insert into public.user_profile (id, email, role, team_id)
+    values (new.id, new.email, 'pending', null)
+    on conflict (id) do nothing;
+    return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+    after insert on auth.users
+    for each row execute function public.handle_new_user();
 
 -- ---- Read policies (public) ----
 drop policy if exists "public read" on public.team;
@@ -176,28 +222,89 @@ create policy "public read" on public.season for select using (true);
 drop policy if exists "public read" on public.user_profile;
 create policy "public read" on public.user_profile for select using (true);
 
--- ---- Write policies (editors only) ----
-drop policy if exists "editors manage teams" on public.team;
-create policy "editors manage teams" on public.team
-    for all using (public.is_editor()) with check (public.is_editor());
+-- ---- Write policies ----
 
-drop policy if exists "editors manage shooters" on public.shooter;
-create policy "editors manage shooters" on public.shooter
-    for all using (public.is_editor()) with check (public.is_editor());
+-- team / match / season / user_profile -> admins only
+drop policy if exists "editors manage teams" on public.team;
+drop policy if exists "admin manages teams" on public.team;
+create policy "admin manages teams" on public.team
+    for all using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "editors manage matches" on public.match;
-create policy "editors manage matches" on public.match
-    for all using (public.is_editor()) with check (public.is_editor());
-
-drop policy if exists "editors manage scores" on public.score;
-create policy "editors manage scores" on public.score
-    for all using (public.is_editor()) with check (public.is_editor());
+drop policy if exists "admin manages matches" on public.match;
+create policy "admin manages matches" on public.match
+    for all using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "editors manage seasons" on public.season;
-create policy "editors manage seasons" on public.season
-    for all using (public.is_editor()) with check (public.is_editor());
+drop policy if exists "admin manages seasons" on public.season;
+create policy "admin manages seasons" on public.season
+    for all using (public.is_admin()) with check (public.is_admin());
 
--- user_profile: editors manage rows; a user may read their own (covered by public read).
 drop policy if exists "editors manage profiles" on public.user_profile;
-create policy "editors manage profiles" on public.user_profile
-    for all using (public.is_editor()) with check (public.is_editor());
+drop policy if exists "admin manages profiles" on public.user_profile;
+create policy "admin manages profiles" on public.user_profile
+    for all using (public.is_admin()) with check (public.is_admin());
+
+-- shooters -> admin (any) OR captain (own team only)
+drop policy if exists "editors manage shooters" on public.shooter;
+drop policy if exists "manage shooters" on public.shooter;
+create policy "manage shooters" on public.shooter
+    for all
+    using (
+        public.is_admin()
+        or exists (
+            select 1 from public.user_profile p
+            where p.id = auth.uid()
+              and p.role = 'captain'
+              and p.team_id = shooter.team_id
+        )
+    )
+    with check (
+        public.is_admin()
+        or exists (
+            select 1 from public.user_profile p
+            where p.id = auth.uid()
+              and p.role = 'captain'
+              and p.team_id = shooter.team_id
+        )
+    );
+
+-- scores -> admin (any) OR captain/generic for today's home match
+drop policy if exists "editors manage scores" on public.score;
+drop policy if exists "manage scores" on public.score;
+create policy "manage scores" on public.score
+    for all
+    using (
+        public.is_admin()
+        or (
+            score.team_id = public.my_team_id()
+            and exists (
+                select 1 from public.match m
+                where m.id = score.match_id
+                  and m.match_date = public.league_today()
+                  and m.home_team_id = score.team_id
+            )
+            and exists (
+                select 1 from public.user_profile p
+                where p.id = auth.uid()
+                  and p.role in ('captain', 'generic')
+            )
+        )
+    )
+    with check (
+        public.is_admin()
+        or (
+            score.team_id = public.my_team_id()
+            and exists (
+                select 1 from public.match m
+                where m.id = score.match_id
+                  and m.match_date = public.league_today()
+                  and m.home_team_id = score.team_id
+            )
+            and exists (
+                select 1 from public.user_profile p
+                where p.id = auth.uid()
+                  and p.role in ('captain', 'generic')
+            )
+        )
+    );

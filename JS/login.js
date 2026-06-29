@@ -1,4 +1,4 @@
-const EDITOR_ROLES = ['captain', 'secretary', 'treasurer', 'admin'];
+const EDITOR_ROLES = ['captain', 'generic', 'admin'];
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('loginForm');
@@ -57,11 +57,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const profile = await NADARL.fetchMyProfile();
 
-        if (!profile || EDITOR_ROLES.indexOf(profile.role) === -1) {
+        if (!profile) {
             await window.db.auth.signOut();
             setLoading(false);
             showMessage(
-                'Your account is not authorised to access this area. Only league admins, captains, secretaries and treasurers may sign in.',
+                'Your account is not set up yet. If you have just signed up, ' +
+                'a league administrator needs to approve your request first.',
+                'error'
+            );
+            passwordInput.value = '';
+            return;
+        }
+
+        if (profile.role === 'pending') {
+            await window.db.auth.signOut();
+            setLoading(false);
+            showMessage(
+                'Your account is awaiting approval from a league administrator. ' +
+                'You will be able to sign in once it has been activated.',
+                'error'
+            );
+            passwordInput.value = '';
+            return;
+        }
+
+        if (EDITOR_ROLES.indexOf(profile.role) === -1) {
+            await window.db.auth.signOut();
+            setLoading(false);
+            showMessage(
+                'Your account is not authorised to access this area. Only league ' +
+                'admins, captains and team accounts may sign in.',
                 'error'
             );
             passwordInput.value = '';
@@ -86,6 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loggedInPanel.hidden = false;
         loggedInEmail.textContent = profile.email || 'committee member';
         loggedInRole.textContent = profile.role;
+        const adminLink = document.getElementById('adminLink');
+        if (adminLink) adminLink.hidden = profile.role !== 'admin';
         loginStatus.textContent = '';
         loginStatus.hidden = true;
     }

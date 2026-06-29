@@ -91,6 +91,27 @@ const NADARL = (function () {
         return data;
     }
 
+    // All user profiles (admin only - RLS enforces write; reads are public).
+    async function fetchProfiles() {
+        const { data, error } = await db().from('user_profile')
+            .select('id,email,role,team_id')
+            .order('email');
+        if (error) { console.error('fetchProfiles', error); return []; }
+        return data;
+    }
+
+    // Update a profile's role and/or team. Returns true on success.
+    async function updateProfile(id, { role, team_id }) {
+        const patch = {};
+        if (role !== undefined) patch.role = role;
+        if (team_id !== undefined) patch.team_id = team_id;
+        const { error } = await db().from('user_profile')
+            .update(patch)
+            .eq('id', id);
+        if (error) { console.error('updateProfile', error); return false; }
+        return true;
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -98,6 +119,8 @@ const NADARL = (function () {
         fetchAllShooterStats,
         fetchFixtures,
         fetchMatchScorecard,
-        fetchMyProfile
+        fetchMyProfile,
+        fetchProfiles,
+        updateProfile
     };
 })();

@@ -1,0 +1,98 @@
+.admin-section {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.access-panel {
+    text-align: center;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: #e0d6c8;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    vertical-align: middle;
+}
+
+.admin-table th {
+    color: #d4a017;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.admin-table tr.row-pending td {
+    background: rgba(212, 160, 23, 0.08);
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-table select,
+.admin-table .row-button {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    font-size: 0.85rem;
+}
+
+.admin-table select:focus {
+    outline: none;
+    border-color: #c41e3a;
+}
+
+.admin-table select option {
+    color: #000000;
+}
+
+.row-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.row-button {
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
+    font-weight: 600;
+    padding: 8px 14px;
+}
+
+.row-button:hover {
+    opacity: 0.9;
+}
+
+.row-button-secondary {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.role-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.role-admin { background: rgba(196, 30, 58, 0.25); color: #ffb3c0; }
+.role-captain { background: rgba(40, 167, 69, 0.2); color: #b5e8bd; }
+.role-generic { background: rgba(60, 120, 200, 0.2); color: #bcd6f5; }
+.role-pending { background: rgba(212, 160, 23, 0.2); color: #f0d98a; }
