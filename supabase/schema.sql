@@ -98,6 +98,9 @@ from public.shooter sh
 join public.team  t  on t.id  = sh.team_id
 left join public.score sc on sc.shooter_id = sh.id
 group by sh.id, sh.name, sh.role, sh.team_id, t.name, t.slug, t.venue;
+create view public.shooter_stats with (security_invoker = true) as
+select
+    sh.id            as shooter_id,
 
 -- Flat fixture list with team names (drives the Fixtures page).
 create or replace view public.fixture_list as
