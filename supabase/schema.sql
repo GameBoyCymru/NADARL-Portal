@@ -81,7 +81,7 @@ create index if not exists idx_score_team          on public.score(team_id);
 -- ----------------------------------------------------------------------------
 
 -- Per-shooter season aggregates (drives the League Table + Team page).
-create or replace view public.shooter_stats as
+create or replace view public.shooter_stats with (security_invoker = true) as
 select
     sh.id            as shooter_id,
     sh.name,
@@ -98,12 +98,9 @@ from public.shooter sh
 join public.team  t  on t.id  = sh.team_id
 left join public.score sc on sc.shooter_id = sh.id
 group by sh.id, sh.name, sh.role, sh.team_id, t.name, t.slug, t.venue;
-create view public.shooter_stats with (security_invoker = true) as
-select
-    sh.id            as shooter_id,
 
 -- Flat fixture list with team names (drives the Fixtures page).
-create or replace view public.fixture_list as
+create or replace view public.fixture_list with (security_invoker = true) as
 select
     m.id,
     m.match_date      as date,
@@ -118,7 +115,7 @@ join public.team th on th.id = m.home_team_id
 left join public.team ta on ta.id = m.away_team_id;
 
 -- Full scorecard rows for a match (drives the Match page).
-create or replace view public.match_scorecard as
+create or replace view public.match_scorecard with (security_invoker = true) as
 select
     sc.match_id,
     m.match_date      as date,
