@@ -101,15 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 team_id: teamSel.value || null
             });
             save.disabled = false;
-            if (res.ok) {
+            if (res.ok && res.count > 0) {
                 p.role = roleSel.value;
                 p.team_id = teamSel.value || null;
                 showMessage('Updated ' + (p.email || 'account') + '.', 'success');
                 render();
             } else {
                 showMessage(
-                    'Could not update that account: ' + (res.error || 'unknown error') +
-                    '. Check you are signed in as admin and that the permission migration has been run.',
+                    'Update did not take effect (' + (res.count === 0 ? '0 rows changed' : (res.error || 'unknown')) +
+                    '). This usually means Row-Level-Security is blocking it — confirm the ' +
+                    'permission migration ran and that your own account is role "admin".',
                     'error'
                 );
             }

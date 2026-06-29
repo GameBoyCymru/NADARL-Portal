@@ -100,16 +100,17 @@ const NADARL = (function () {
         return data;
     }
 
-    // Update a profile's role and/or team. Returns { ok, error }.
+    // Update a profile's role and/or team. Returns { ok, error, count }.
     async function updateProfile(id, { role, team_id }) {
         const patch = {};
         if (role !== undefined) patch.role = role;
         if (team_id !== undefined) patch.team_id = team_id;
-        const { error } = await db().from('user_profile')
+        const { data, error } = await db().from('user_profile')
             .update(patch)
-            .eq('id', id);
+            .eq('id', id)
+            .select('id');
         if (error) { console.error('updateProfile', error); return { ok: false, error: error.message }; }
-        return { ok: true };
+        return { ok: true, count: data ? data.length : 0 };
     }
 
     return {
