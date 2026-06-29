@@ -96,18 +96,22 @@ document.addEventListener('DOMContentLoaded', () => {
         save.textContent = 'Save';
         save.addEventListener('click', async () => {
             save.disabled = true;
-            const ok = await NADARL.updateProfile(p.id, {
+            const res = await NADARL.updateProfile(p.id, {
                 role: roleSel.value,
                 team_id: teamSel.value || null
             });
             save.disabled = false;
-            if (ok) {
+            if (res.ok) {
                 p.role = roleSel.value;
                 p.team_id = teamSel.value || null;
                 showMessage('Updated ' + (p.email || 'account') + '.', 'success');
                 render();
             } else {
-                showMessage('Could not update that account. Check you are still signed in as admin.', 'error');
+                showMessage(
+                    'Could not update that account: ' + (res.error || 'unknown error') +
+                    '. Check you are signed in as admin and that the permission migration has been run.',
+                    'error'
+                );
             }
         });
         controls.appendChild(save);

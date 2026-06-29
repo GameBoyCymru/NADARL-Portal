@@ -141,23 +141,28 @@ create policy "public read" on public.user_profile for select using (true);
 -- ---- WRITE: team / match / season / user_profile -> admins only ---------
 
 drop policy if exists "editors manage teams" on public.team;
+drop policy if exists "admin manages teams" on public.team;
 create policy "admin manages teams" on public.team
     for all using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "editors manage matches" on public.match;
+drop policy if exists "admin manages matches" on public.match;
 create policy "admin manages matches" on public.match
     for all using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "editors manage seasons" on public.season;
+drop policy if exists "admin manages seasons" on public.season;
 create policy "admin manages seasons" on public.season
     for all using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "editors manage profiles" on public.user_profile;
+drop policy if exists "admin manages profiles" on public.user_profile;
 create policy "admin manages profiles" on public.user_profile
     for all using (public.is_admin()) with check (public.is_admin());
 
 -- ---- WRITE: shooters -> admin (any team) OR captain (own team only) -----
 drop policy if exists "editors manage shooters" on public.shooter;
+drop policy if exists "manage shooters" on public.shooter;
 create policy "manage shooters" on public.shooter
     for all
     using (
@@ -185,6 +190,7 @@ create policy "manage shooters" on public.shooter
 
 -- ---- WRITE: scores -> admin (any) OR captain/generic for ongoing home match
 drop policy if exists "editors manage scores" on public.score;
+drop policy if exists "manage scores" on public.score;
 create policy "manage scores" on public.score
     for all
     using (
