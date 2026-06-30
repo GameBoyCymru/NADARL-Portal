@@ -22,49 +22,92 @@ const FixturesAdmin = (function () {
         seasons = await NADARL.fetchSeasons();
         if (!teams.length) { show('No teams found. Add teams first.'); return; }
 
+        populateMondaySelects();
         populateSeasons();
-        defaultStartDate();
         wire();
+    }
+
+    // Fill the start + exclude dropdowns with the next 52 Mondays only.
+    function populateMondaySelects() {
+        const startSel = $('fxStart');
+        const exclSel = $('fxExcludeDate');
+        startSel.innerHTML = '';
+        exclSel.innerHTML = '<option value="" disabled selected>Pick a Monday…</option>';
+
+        const d = nextMonday(new Date());
+        for (let i = 0; i < 52; i++) {
+            const iso = toISO(d);
+            const label = fmtDate(iso);
+            const o1 = document.createElement('option');
+            o1.value = iso; o1.textContent = label;
+            if (i === 0) o1.selected = true;     // default first Monday = next Monday
+            startSel.appendChild(o1);
+
+            const o2 = document.createElement('option');
+            o2.value = iso; o2.textContent = label;
+            exclSel.appendChild(o2);
+
+            d.setDate(d.getDate() + 7);
+        }
     }
 
     function populateSeasons() {
         const sel = $('fxSeason');
         sel.innerHTML = '';
+        if (!seasons.length) {
+            const o = document.createElement('option');
+            o.value = '';
+            o.textContent = 'Create a season below first…';
+            sel.appendChild(o);
+            sel.disabled = true;
+            return;
+        }
+        sel.disabled = false;
         const current = seasons.find(s => s.is_current) || seasons[0];
         seasons.forEach(s => {
             const o = document.createElement('option');
             o.value = s.id;
-            o.textContent = s.name;
+            o.textContent = s.name + (s.is_current ? '  (current)' : '');
             if (current && s.id === current.id) o.selected = true;
             sel.appendChild(o);
         });
     }
 
-    function defaultStartDate() {
-        // next Monday
-        const d = new Date();
-        const day = d.getDay(); // 0 Sun .. 6 Sat
-        const diff = (8 - day) % 7 || 7; // days until next Monday
-        d.setDate(d.getDate() + diff);
-        $('fxStart').value = toISO(d);
+    async function refreshSeasons() {
+        seasons = await NADARL.fetchSeasons();
+        populateSeasons();
     }
 
     function wire() {
         $('fxAddExclude').addEventListener('click', addExclude);
-        $('fxExcludeDate').addEventListener('change', e => {
-            if (e.target.value) $('fxAddExclude').focus();
-        });
         $('fxGenerate').addEventListener('click', generate);
         $('fxSave').addEventListener('click', save);
         $('fxClear').addEventListener('click', clearAll);
+        $('fxAddSeason').addEventListener('click', createSeason);
+    }
+
+    async function createSeason() {
+        const nameEl = $('fxNewSeasonName');
+        const name = nameEl.value.trim();
+        if (!name) { show('Enter a season name (e.g. 2026-27).', 'error'); return; }
+        const btn = $('fxAddSeason');
+        btn.disabled = true;
+        const res = await NADARL.addSeason({
+            name,
+            is_current: $('fxNewSeasonCurrent').checked
+        });
+        btn.disabled = false;
+        if (!res.ok) { show('Could not create season: ' + res.error, 'error'); return; }
+        nameEl.value = '';
+        await refreshSeasons();
+        show('Season "' + name + '" created.', 'success');
     }
 
     function addExclude() {
         const inp = $('fxExcludeDate');
         const v = inp.value;
-        if (!v) return;
-        // snap to Monday if needed
-        excluded.add(toISO(ensureMonday(parseDate(v))));
+        if (!v) { show('Pick a Monday to exclude.', 'error'); return; }
+        excluded.add(v);
         inp.value = '';
         renderExcluded();
     }
@@ -229,6 +272,14 @@ const FixturesAdmin = (function () {
     function ensureMonday(d) {
         const day = d.getDay();            // 0 Sun .. 6 Sat
         const diff = (1 - day + 7) % 7;    // days forward to Monday
+        const r = new Date(d);
+        r.setDate(r.getDate() + diff);
+        return r;
+    }
+    // strictly the next Monday after (or same-day if already Monday used via ensureMonday)
+    function nextMonday(d) {
+        const day = d.getDay();
+        const diff = (8 - day) % 7 || 7;   // always 1..7 days forward
         const r = new Date(d);
         r.setDate(r.getDate() + diff);
         return r;

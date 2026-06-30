@@ -163,6 +163,25 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // Create a season. If is_current, clears that flag on all other seasons first.
+    async function addSeason({ name, start_date, end_date, is_current }) {
+        if (is_current) {
+            await db().from('season').update({ is_current: false })
+                .neq('id', '00000000-0000-0000-0000-000000000000');
+        }
+        const { data, error } = await db().from('season')
+            .insert({
+                name: String(name).trim(),
+                start_date: start_date || null,
+                end_date: end_date || null,
+                is_current: !!is_current
+            })
+            .select('id,name,is_current')
+            .single();
+        if (error) { console.error('addSeason', error); return { ok: false, error: error.message }; }
+        return { ok: true, season: data };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -177,6 +196,7 @@ const NADARL = (function () {
         updateShooter,
         fetchSeasons,
         clearMatches,
-        insertMatches
+        insertMatches,
+        addSeason
     };
 })();

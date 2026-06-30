@@ -65,15 +65,22 @@
                     </div>
                     <div class="fx-field">
                         <label for="fxStart">First Monday</label>
-                        <input type="date" id="fxStart">
+                        <select id="fxStart"></select>
                     </div>
+                </div>
+
+                <div class="fx-season-create">
+                    <span class="fx-hint">No season yet? Add one (e.g. "2026-27"):</span>
+                    <input type="text" id="fxNewSeasonName" class="fx-text-input" placeholder="2026-27" maxlength="20">
+                    <label class="fx-current-check"><input type="checkbox" id="fxNewSeasonCurrent" checked> Current season</label>
+                    <button type="button" id="fxAddSeason" class="shooter-button">Add Season</button>
                 </div>
 
                 <div class="fx-exclude">
                     <div class="fx-field fx-exclude-field">
                         <label for="fxExcludeDate">Exclude a Monday (bank holiday, etc.)</label>
                         <div class="fx-exclude-row">
-                            <input type="date" id="fxExcludeDate">
+                            <select id="fxExcludeDate"></select>
                             <button type="button" id="fxAddExclude" class="shooter-button">Add</button>
                         </div>
                     </div>

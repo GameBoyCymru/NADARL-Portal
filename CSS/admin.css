@@ -147,6 +147,41 @@
     margin-bottom: 18px;
 }
 
+.fx-season-create {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fx-hint {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+}
+
+.fx-text-input {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    font-size: 0.9rem;
+    width: 130px;
+}
+
+.fx-current-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #e0d6c8;
+}
+
 .fx-exclude-field {
     flex: 1 1 320px;
 }
