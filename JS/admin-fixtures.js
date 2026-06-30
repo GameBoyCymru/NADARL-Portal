@@ -172,7 +172,9 @@ const FixturesAdmin = (function () {
     }
 
     // ---- round robin -------------------------------------------------
-    function buildDoubleRoundRobin() {
+    // Single round-robin: each team plays once per round. With an odd number
+    // of teams one team gets a BYE each round (dummy opponent).
+    function singleRoundRobin() {
         const n = teams.length;
         if (n < 2) return [];
         const hasBye = n % 2 !== 0;
@@ -189,25 +191,38 @@ const FixturesAdmin = (function () {
                 const a = line[i];
                 const b = line[m - 1 - i];
                 if (a === null || b === null) {
-                    round.push({ home: a || b, away: null, bye: true, half: 1 });
+                    round.push({ home: a || b, away: null, bye: true });
                 } else if ((r + i) % 2 === 0) {
-                    round.push({ home: a, away: b, half: 1 });
+                    round.push({ home: a, away: b });
                 } else {
-                    round.push({ home: b, away: a, half: 1 });
+                    round.push({ home: b, away: a });
                 }
             }
             rounds.push(round);
             // rotate rest: last element moves to front
             rest = [rest[rest.length - 1], ...rest.slice(0, -1)];
         }
+        return rounds;
+    }
 
-        // second half mirrors first with home/away swapped -> tagged half 2 (handicaps)
-        const mirror = rounds.map(rd => rd.map(g =>
+    // Double round-robin: single + its mirror (home/away swapped), so every
+    // pair meets twice (home and away).
+    function doubleRoundRobin() {
+        const single = singleRoundRobin();
+        const mirror = single.map(rd => rd.map(g =>
             g.bye
-                ? { home: g.home, away: null, bye: true, half: 2 }
-                : { home: g.away, away: g.home, half: 2 }
+                ? { home: g.home, away: null, bye: true }
+                : { home: g.away, away: g.home }
         ));
-        return rounds.concat(mirror);
+        return single.concat(mirror);
+    }
+
+    // Full season = two double round-robins:
+    //   half 1 = normal (each pair home & away)
+    //   half 2 = handicap (the whole thing repeated, home & away again)
+    function buildFullSeason() {
+        const tag = (rounds, half) => rounds.map(rd => rd.map(g => ({ ...g, half })));
+        return tag(doubleRoundRobin(), 1).concat(tag(doubleRoundRobin(), 2));
     }
 
     function generate() {
@@ -215,7 +230,7 @@ const FixturesAdmin = (function () {
         if (!startInput) { show('Pick a start date.', 'error'); return; }
         const begin = ensureMonday(parseDate(startInput));
 
-        const rounds = buildDoubleRoundRobin();
+        const rounds = buildFullSeason();
         if (!rounds.length) { show('Need at least two teams.', 'error'); return; }
 
         // one Monday per round, skipping excluded Mondays
@@ -258,10 +273,12 @@ const FixturesAdmin = (function () {
             .forEach(row => {
                 const tr = document.createElement('tr');
                 if (row._bye) tr.className = 'fx-bye-row';
+                const halfLabel = row.half === 2
+                    ? '<span class="fx-half-badge" title="Second half (handicaps)">Handicap</span>'
+                    : '<span class="fx-half-first">1st</span>';
                 tr.innerHTML =
-                    '<td>' + fmtDate(row.match_date) +
-                        (row.half === 2 ? ' <span class="fx-half-badge" title="Second half (handicaps)">H2</span>' : '') +
-                    '</td>' +
+                    '<td>' + fmtDate(row.match_date) + '</td>' +
+                    '<td>' + halfLabel + '</td>' +
                     '<td>' + row._home + '</td>' +
                     '<td>' + (row._bye ? '<span class="bye-badge">BYE</span>' : row._away) + '</td>' +
                     '<td>' + (row._bye ? '—' : row.venue) + '</td>';

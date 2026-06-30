@@ -267,12 +267,16 @@
 
 .fx-half-badge {
     display: inline-block;
-    padding: 1px 6px;
+    padding: 2px 8px;
     border-radius: 4px;
     background: rgba(60, 120, 200, 0.2);
     border: 1px solid rgba(60, 120, 200, 0.4);
     color: #bcd6f5;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    margin-left: 4px;
+}
+
+.fx-half-first {
+    color: #a0a0a0;
+    font-size: 0.8rem;
 }
