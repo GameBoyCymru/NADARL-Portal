@@ -96,3 +96,136 @@
 .role-captain { background: rgba(40, 167, 69, 0.2); color: #b5e8bd; }
 .role-generic { background: rgba(60, 120, 200, 0.2); color: #bcd6f5; }
 .role-pending { background: rgba(212, 160, 23, 0.2); color: #f0d98a; }
+
+/* ---- Fixtures generator ---- */
+.fx-section {
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fx-controls {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 18px 0;
+}
+
+.fx-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 200px;
+}
+
+.fx-field label {
+    font-size: 0.85rem;
+    color: #e0d6c8;
+}
+
+.fx-field input,
+.fx-field select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.25);
+    color: #ffffff;
+    font-size: 0.95rem;
+}
+
+.fx-field input:focus,
+.fx-field select:focus {
+    outline: none;
+    border-color: #c41e3a;
+}
+
+.fx-field select option {
+    color: #000000;
+}
+
+.fx-exclude {
+    margin-bottom: 18px;
+}
+
+.fx-exclude-field {
+    flex: 1 1 320px;
+}
+
+.fx-exclude-row {
+    display: flex;
+    gap: 8px;
+}
+
+.fx-exclude-row input {
+    flex: 1;
+}
+
+.fx-excluded-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.fx-chip {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 16px;
+    background: rgba(212, 160, 23, 0.15);
+    border: 1px solid rgba(212, 160, 23, 0.4);
+    color: #f0d98a;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.fx-chip:hover {
+    background: rgba(212, 160, 23, 0.25);
+}
+
+.fx-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 18px 0;
+}
+
+.shooter-button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.shooter-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.fx-button-secondary {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fx-preview {
+    margin-top: 14px;
+}
+
+.fx-bye-row td {
+    color: #d4a017;
+    font-style: italic;
+}
+
+.bye-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(212, 160, 23, 0.2);
+    color: #f0d98a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}

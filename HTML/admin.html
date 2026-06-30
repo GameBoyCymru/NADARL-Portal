@@ -47,6 +47,54 @@
                         <tbody id="profilesBody"></tbody>
                     </table>
                 </div>
+
+            <section class="fx-section">
+                <h2 class="section-title">Fixtures</h2>
+                <p class="login-intro">
+                    Generate a double round-robin (every team plays every other team, home and away).
+                    Each round falls on a Monday. With an odd number of teams one team gets a BYE each
+                    week. Excluded Mondays are skipped, shifting that round to the next available Monday.
+                </p>
+
+                <div id="fxMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="fx-controls">
+                    <div class="fx-field">
+                        <label for="fxSeason">Season</label>
+                        <select id="fxSeason"></select>
+                    </div>
+                    <div class="fx-field">
+                        <label for="fxStart">First Monday</label>
+                        <input type="date" id="fxStart">
+                    </div>
+                </div>
+
+                <div class="fx-exclude">
+                    <div class="fx-field fx-exclude-field">
+                        <label for="fxExcludeDate">Exclude a Monday (bank holiday, etc.)</label>
+                        <div class="fx-exclude-row">
+                            <input type="date" id="fxExcludeDate">
+                            <button type="button" id="fxAddExclude" class="shooter-button">Add</button>
+                        </div>
+                    </div>
+                    <div class="fx-excluded-list" id="fxExcludedList"></div>
+                </div>
+
+                <div class="fx-actions">
+                    <button type="button" id="fxGenerate" class="shooter-button">Generate Preview</button>
+                    <button type="button" id="fxSave" class="shooter-button" disabled>Save Fixtures</button>
+                    <button type="button" id="fxClear" class="shooter-button fx-button-secondary">Clear All</button>
+                </div>
+
+                <div id="fxPreviewWrap" class="table-wrap" hidden>
+                    <table class="admin-table fx-preview">
+                        <thead>
+                            <tr><th>Date</th><th>Home</th><th>Away</th><th>Venue</th></tr>
+                        </thead>
+                        <tbody id="fxPreviewBody"></tbody>
+                    </table>
+                </div>
+            </section>
             </div>
         </section>
 
@@ -75,5 +123,6 @@
     <script src="../JS/supabase-config.js"></script>
     <script src="../JS/data.js"></script>
     <script src="../JS/admin.js"></script>
+    <script src="../JS/admin-fixtures.js"></script>
 </body>
 </html>

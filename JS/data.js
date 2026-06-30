@@ -138,6 +138,31 @@ const NADARL = (function () {
         return { ok: true, shooter: data && data[0] };
     }
 
+    // All seasons, ordered by name.
+    async function fetchSeasons() {
+        const { data, error } = await db().from('season')
+            .select('id,name,start_date,end_date,is_current')
+            .order('name');
+        if (error) { console.error('fetchSeasons', error); return []; }
+        return data;
+    }
+
+    // Delete every match (scores cascade-delete). Admin only - RLS enforces.
+    async function clearMatches() {
+        const { error } = await db().from('match')
+            .delete()
+            .gte('match_date', '1900-01-01');
+        if (error) { console.error('clearMatches', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // Bulk insert matches. rows: [{ season_id, match_date, home_team_id, away_team_id, venue }].
+    async function insertMatches(rows) {
+        const { error } = await db().from('match').insert(rows);
+        if (error) { console.error('insertMatches', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -149,6 +174,9 @@ const NADARL = (function () {
         fetchProfiles,
         updateProfile,
         addShooter,
-        updateShooter
+        updateShooter,
+        fetchSeasons,
+        clearMatches,
+        insertMatches
     };
 })();
