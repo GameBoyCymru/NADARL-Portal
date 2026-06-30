@@ -65,7 +65,8 @@ const NADARL = (function () {
             homeTeam: f.home_team,
             awayTeam: f.away_team,        // null for BYE
             venue: f.venue,
-            isBye: f.is_bye
+            isBye: f.is_bye,
+            half: f.half                  // 1 = first half, 2 = second half (handicaps)
         }));
     }
 

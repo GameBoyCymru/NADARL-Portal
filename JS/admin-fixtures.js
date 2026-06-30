@@ -22,31 +22,70 @@ const FixturesAdmin = (function () {
         seasons = await NADARL.fetchSeasons();
         if (!teams.length) { show('No teams found. Add teams first.'); return; }
 
-        populateMondaySelects();
         populateSeasons();
+        applySeasonToMondays();
         wire();
     }
 
-    // Fill the start + exclude dropdowns with the next 52 Mondays only.
-    function populateMondaySelects() {
-        const startSel = $('fxStart');
-        const exclSel = $('fxExcludeDate');
-        startSel.innerHTML = '';
-        exclSel.innerHTML = '<option value="" disabled selected>Pick a Monday…</option>';
+    // Mondays only exist during the league window: Sep + Oct of the season's
+    // start year (parsed from the season name, e.g. "2026-27" -> 2026).
+    function seasonStartYear(season) {
+        if (season && season.name) {
+            const m = String(season.name).match(/\d{4}/);
+            if (m) return parseInt(m[0], 10);
+        }
+        return new Date().getFullYear();
+    }
 
-        const d = nextMonday(new Date());
-        for (let i = 0; i < 52; i++) {
+    function selectedSeason() {
+        const id = $('fxSeason').value;
+        return seasons.find(s => s.id === id) || seasons[0] || null;
+    }
+
+    // Repopulate the Monday dropdowns for the selected season.
+    function applySeasonToMondays() {
+        const season = selectedSeason();
+        if (!season) {
+            $('fxStart').innerHTML = '';
+            $('fxExcludeDate').innerHTML = '';
+            return;
+        }
+        const year = seasonStartYear(season);
+        populateStartSelect(year);     // league kicks off Sep-Oct
+        populateExcludeSelect(year);   // exclusions can fall anywhere mid-season
+        excluded.clear();              // exclusions are season-specific
+        renderExcluded();
+    }
+
+    // First Monday dropdown: only Sep-Oct of the start year (the league start window).
+    function populateStartSelect(year) {
+        const sel = $('fxStart');
+        sel.innerHTML = '';
+        const d = ensureMonday(new Date(year, 8, 1));   // first Monday on/after 1 Sep
+        const end = new Date(year, 9, 31);              // 31 Oct
+        let first = true;
+        while (d <= end) {
             const iso = toISO(d);
-            const label = fmtDate(iso);
-            const o1 = document.createElement('option');
-            o1.value = iso; o1.textContent = label;
-            if (i === 0) o1.selected = true;     // default first Monday = next Monday
-            startSel.appendChild(o1);
+            const o = document.createElement('option');
+            o.value = iso; o.textContent = fmtDate(iso);
+            if (first) { o.selected = true; first = false; }
+            sel.appendChild(o);
+            d.setDate(d.getDate() + 7);
+        }
+    }
 
-            const o2 = document.createElement('option');
-            o2.value = iso; o2.textContent = label;
-            exclSel.appendChild(o2);
-
+    // Exclude dropdown: every Monday across the full season span
+    // (Sep of start year -> Apr of the following year), for mid-league removals.
+    function populateExcludeSelect(year) {
+        const sel = $('fxExcludeDate');
+        sel.innerHTML = '<option value="" disabled selected>Pick a Monday…</option>';
+        const d = ensureMonday(new Date(year, 8, 1));   // first Monday on/after 1 Sep
+        const end = new Date(year + 1, 3, 30);          // 30 Apr next year
+        while (d <= end) {
+            const iso = toISO(d);
+            const o = document.createElement('option');
+            o.value = iso; o.textContent = fmtDate(iso);
+            sel.appendChild(o);
             d.setDate(d.getDate() + 7);
         }
     }
@@ -76,6 +115,7 @@ const FixturesAdmin = (function () {
     async function refreshSeasons() {
         seasons = await NADARL.fetchSeasons();
         populateSeasons();
+        applySeasonToMondays();
     }
 
     function wire() {
@@ -84,6 +124,7 @@ const FixturesAdmin = (function () {
         $('fxSave').addEventListener('click', save);
         $('fxClear').addEventListener('click', clearAll);
         $('fxAddSeason').addEventListener('click', createSeason);
+        $('fxSeason').addEventListener('change', applySeasonToMondays);
     }
 
     async function createSeason() {
@@ -148,11 +189,11 @@ const FixturesAdmin = (function () {
                 const a = line[i];
                 const b = line[m - 1 - i];
                 if (a === null || b === null) {
-                    round.push({ home: a || b, away: null, bye: true });
+                    round.push({ home: a || b, away: null, bye: true, half: 1 });
                 } else if ((r + i) % 2 === 0) {
-                    round.push({ home: a, away: b });
+                    round.push({ home: a, away: b, half: 1 });
                 } else {
-                    round.push({ home: b, away: a });
+                    round.push({ home: b, away: a, half: 1 });
                 }
             }
             rounds.push(round);
@@ -160,8 +201,12 @@ const FixturesAdmin = (function () {
             rest = [rest[rest.length - 1], ...rest.slice(0, -1)];
         }
 
-        // second half mirrors first with home/away swapped
-        const mirror = rounds.map(rd => rd.map(g => g.bye ? g : { home: g.away, away: g.home }));
+        // second half mirrors first with home/away swapped -> tagged half 2 (handicaps)
+        const mirror = rounds.map(rd => rd.map(g =>
+            g.bye
+                ? { home: g.home, away: null, bye: true, half: 2 }
+                : { home: g.away, away: g.home, half: 2 }
+        ));
         return rounds.concat(mirror);
     }
 
@@ -191,6 +236,7 @@ const FixturesAdmin = (function () {
                     home_team_id: g.home.id,
                     away_team_id: g.away ? g.away.id : null,
                     venue: g.home.venue,
+                    half: g.half,
                     _home: g.home.name,
                     _away: g.away ? g.away.name : null,
                     _bye: g.bye
@@ -213,7 +259,9 @@ const FixturesAdmin = (function () {
                 const tr = document.createElement('tr');
                 if (row._bye) tr.className = 'fx-bye-row';
                 tr.innerHTML =
-                    '<td>' + fmtDate(row.match_date) + '</td>' +
+                    '<td>' + fmtDate(row.match_date) +
+                        (row.half === 2 ? ' <span class="fx-half-badge" title="Second half (handicaps)">H2</span>' : '') +
+                    '</td>' +
                     '<td>' + row._home + '</td>' +
                     '<td>' + (row._bye ? '<span class="bye-badge">BYE</span>' : row._away) + '</td>' +
                     '<td>' + (row._bye ? '—' : row.venue) + '</td>';
@@ -240,7 +288,8 @@ const FixturesAdmin = (function () {
             match_date: p.match_date,
             home_team_id: p.home_team_id,
             away_team_id: p.away_team_id,
-            venue: p.venue
+            venue: p.venue,
+            half: p.half
         }));
         const res = await NADARL.insertMatches(rows);
         $('fxSave').disabled = false;
@@ -272,14 +321,6 @@ const FixturesAdmin = (function () {
     function ensureMonday(d) {
         const day = d.getDay();            // 0 Sun .. 6 Sat
         const diff = (1 - day + 7) % 7;    // days forward to Monday
-        const r = new Date(d);
-        r.setDate(r.getDate() + diff);
-        return r;
-    }
-    // strictly the next Monday after (or same-day if already Monday used via ensureMonday)
-    function nextMonday(d) {
-        const day = d.getDay();
-        const diff = (8 - day) % 7 || 7;   // always 1..7 days forward
         const r = new Date(d);
         r.setDate(r.getDate() + diff);
         return r;

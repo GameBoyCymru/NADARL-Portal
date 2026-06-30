@@ -42,6 +42,7 @@ create table if not exists public.match (
     home_team_id  uuid not null references public.team(id),
     away_team_id  uuid references public.team(id),   -- NULL means a BYE week
     venue         text,
+    half          smallint not null default 1 check (half in (1, 2)),  -- 1 = first half, 2 = second half (handicaps)
     unique (match_date, home_team_id, away_team_id)
 );
 
@@ -130,6 +131,7 @@ group by sh.id, sh.shooter_no, sh.name, sh.role, sh.team_id, t.name, t.slug, t.v
 create or replace view public.fixture_list with (security_invoker = true) as
 select
     m.id,
+    m.half,
     m.match_date      as date,
     m.home_team_id,
     th.name           as home_team,
