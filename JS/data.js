@@ -113,6 +113,31 @@ const NADARL = (function () {
         return { ok: true, count: data ? data.length : 0 };
     }
 
+    // Add a shooter to a team (captain of that team or admin). RLS enforces.
+    async function addShooter(teamId, { name, role }) {
+        const { data, error } = await db().from('shooter')
+            .insert({
+                team_id: teamId,
+                name: String(name).trim(),
+                role: role || null
+            })
+            .select('id,shooter_no,name,role,team_id')
+            .single();
+        if (error) { console.error('addShooter', error); return { ok: false, error: error.message }; }
+        return { ok: true, shooter: data };
+    }
+
+    // Update a shooter's name/role (captain of that team or admin). RLS enforces.
+    async function updateShooter(shooterId, { name, role }) {
+        const patch = { name: String(name).trim(), role: role || null };
+        const { data, error } = await db().from('shooter')
+            .update(patch)
+            .eq('id', shooterId)
+            .select('id,shooter_no,name,role,team_id');
+        if (error) { console.error('updateShooter', error); return { ok: false, error: error.message }; }
+        return { ok: true, shooter: data && data[0] };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -122,6 +147,8 @@ const NADARL = (function () {
         fetchMatchScorecard,
         fetchMyProfile,
         fetchProfiles,
-        updateProfile
+        updateProfile,
+        addShooter,
+        updateShooter
     };
 })();

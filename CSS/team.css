@@ -123,6 +123,126 @@
     letter-spacing: 0.5px;
 }
 
+/* ---- Shooter number column ---- */
+.shooter-no-cell {
+    font-variant-numeric: tabular-nums;
+    color: #d4a017;
+    font-weight: 600;
+    width: 56px;
+}
+
+.col-actions {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.empty-row {
+    text-align: center;
+    color: #a0a0a0;
+    font-style: italic;
+}
+
+/* ---- Captain / admin editing ---- */
+.edit-notice {
+    color: #d4a017;
+    font-size: 0.9rem;
+    margin: 0 0 14px 0;
+}
+
+.shooter-edit-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.shooter-input,
+.shooter-select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.shooter-input:focus,
+.shooter-select:focus {
+    outline: none;
+    border-color: #c41e3a;
+}
+
+.shooter-select option {
+    color: #000000;
+}
+
+.shooter-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.shooter-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.add-shooter-panel {
+    margin-top: 22px;
+    padding: 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.add-shooter-title {
+    font-size: 1.1rem;
+    color: #d4a017;
+    margin: 0 0 12px 0;
+}
+
+.add-shooter-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.add-shooter-form .shooter-input {
+    flex: 2 1 200px;
+}
+
+.add-shooter-form .shooter-select {
+    flex: 1 1 140px;
+}
+
+/* ---- Inline message box (login-message styles, duplicated for this page) ---- */
+.login-message {
+    margin: 0 0 16px 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.login-message-error {
+    background: rgba(196, 30, 58, 0.15);
+    border: 1px solid rgba(196, 30, 58, 0.5);
+    color: #ffb3c0;
+}
+
+.login-message-success {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.5);
+    color: #b5e8bd;
+}
+
 .shooters-table .score-cell {
     font-variant-numeric: tabular-nums;
     min-width: 80px;

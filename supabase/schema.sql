@@ -27,10 +27,11 @@ create table if not exists public.team (
 );
 
 create table if not exists public.shooter (
-    id      uuid primary key default gen_random_uuid(),
-    team_id uuid not null references public.team(id) on delete cascade,
-    name    text not null,                     -- e.g. 'J. Thompson'
-    role    text check (role in ('captain','secretary','treasurer')),
+    id          uuid primary key default gen_random_uuid(),
+    shooter_no  integer unique,                 -- league-wide sequential number (0001...), auto-assigned
+    team_id     uuid not null references public.team(id) on delete cascade,
+    name        text not null,                     -- e.g. 'J. Thompson'
+    role        text check (role in ('captain','secretary','treasurer')),
     unique (team_id, name)
 );
 
@@ -73,6 +74,27 @@ create table if not exists public.user_profile (
 -- ----------------------------------------------------------------------------
 
 create index if not exists idx_shooter_team       on public.shooter(team_id);
+
+-- League-wide sequential shooter number (0001...). Auto-assigned on insert.
+create sequence if not exists public.shooter_no_seq as integer start with 1;
+
+create or replace function public.assign_shooter_no()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+    if new.shooter_no is null then
+        new.shooter_no := nextval('public.shooter_no_seq');
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists trg_shooter_no on public.shooter;
+create trigger trg_shooter_no
+    before insert on public.shooter
+    for each row execute function public.assign_shooter_no();
 create index if not exists idx_match_date          on public.match(match_date);
 create index if not exists idx_match_home          on public.match(home_team_id);
 create index if not exists idx_match_away          on public.match(away_team_id);
@@ -88,6 +110,7 @@ create index if not exists idx_score_team          on public.score(team_id);
 create or replace view public.shooter_stats with (security_invoker = true) as
 select
     sh.id            as shooter_id,
+    sh.shooter_no,
     sh.name,
     sh.role,
     sh.team_id,
@@ -101,7 +124,7 @@ select
 from public.shooter sh
 join public.team  t  on t.id  = sh.team_id
 left join public.score sc on sc.shooter_id = sh.id
-group by sh.id, sh.name, sh.role, sh.team_id, t.name, t.slug, t.venue;
+group by sh.id, sh.shooter_no, sh.name, sh.role, sh.team_id, t.name, t.slug, t.venue;
 
 -- Flat fixture list with team names (drives the Fixtures page).
 create or replace view public.fixture_list with (security_invoker = true) as

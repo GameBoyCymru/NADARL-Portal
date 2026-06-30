@@ -1,3 +1,14 @@
+const SHOOTER_ROLES = [
+    { value: '', label: 'No role' },
+    { value: 'captain', label: 'Captain' },
+    { value: 'secretary', label: 'Secretary' },
+    { value: 'treasurer', label: 'Treasurer' }
+];
+
+function padNo(n) {
+    return n == null ? '' : String(n).padStart(4, '0');
+}
+
 async function initTeamPage() {
     const params = new URLSearchParams(window.location.search);
     const teamName = params.get('team') || '';
@@ -10,6 +21,8 @@ async function initTeamPage() {
     }
 
     const stats = await NADARL.fetchTeamShootersStats(team.id);
+    const me = await NADARL.fetchMyProfile();
+    const canEdit = !!me && (me.role === 'admin' || (me.role === 'captain' && me.team_id === team.id));
 
     document.title = `${team.name} - Newport & District Air Rifle League`;
     document.getElementById('teamName').textContent = team.name;
@@ -26,24 +39,156 @@ async function initTeamPage() {
         fallback.textContent = team.name.split(' ').map(w => w[0]).join('');
     };
 
+    if (canEdit) enableEditing(team);
+
+    renderShooters(stats, canEdit);
+}
+
+function enableEditing(team) {
+    document.getElementById('editNotice').hidden = false;
+    document.getElementById('editNotice').textContent =
+        `You are editing ${team.name}'s roster. Shooter numbers are assigned automatically.`;
+    document.getElementById('thActions').hidden = false;
+    document.getElementById('addShooterPanel').hidden = false;
+
+    document.getElementById('addShooterButton').addEventListener('click', async () => {
+        const nameEl = document.getElementById('newShooterName');
+        const roleEl = document.getElementById('newShooterRole');
+        const name = nameEl.value.trim();
+        if (!name) {
+            showEditMessage('Please enter a shooter name.', 'error');
+            return;
+        }
+        const btn = document.getElementById('addShooterButton');
+        btn.disabled = true;
+        const res = await NADARL.addShooter(team.id, { name, role: roleEl.value });
+        btn.disabled = false;
+        if (!res.ok) {
+            showEditMessage('Could not add shooter: ' + res.error, 'error');
+            return;
+        }
+        nameEl.value = '';
+        roleEl.value = '';
+        showEditMessage('Added ' + name + '.', 'success');
+        await refreshShooters(team.id);
+    });
+}
+
+function renderShooters(stats, canEdit) {
     const tbody = document.getElementById('shootersTable');
+    tbody.innerHTML = '';
+
     if (!stats.length) {
-        tbody.innerHTML = '<tr><td colspan="5">No shooter statistics available yet.</td></tr>';
+        const colspan = canEdit ? 7 : 6;
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-row">No shooters yet${canEdit ? ' — add one below.' : '.'}</td></tr>`;
         return;
     }
 
-    let html = '';
     stats.forEach(shooter => {
-        const roleAttr = shooter.role ? `<span class="shooter-role">${shooter.role.charAt(0).toUpperCase() + shooter.role.slice(1)}</span>` : '';
-        html += `<tr>
-            <td class="shooter-name">${shooter.name}${roleAttr}</td>
-            <td class="score-cell">${shooter.best}</td>
-            <td class="score-cell">${shooter.best}</td>
-            <td class="score-cell">${shooter.tens}</td>
-            <td class="score-cell">${Number(shooter.average).toFixed(1)}</td>
-        </tr>`;
+        tbody.appendChild(buildRow(shooter, canEdit));
     });
-    tbody.innerHTML = html;
+}
+
+function buildRow(shooter, canEdit) {
+    const tr = document.createElement('tr');
+
+    // Number
+    const tdNo = document.createElement('td');
+    tdNo.className = 'col-no shooter-no-cell';
+    tdNo.textContent = padNo(shooter.shooter_no);
+    tr.appendChild(tdNo);
+
+    // Shooter (name + role)
+    const tdName = document.createElement('td');
+    tdName.className = 'shooter-name-cell';
+    if (canEdit) {
+        const wrap = document.createElement('div');
+        wrap.className = 'shooter-edit-wrap';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'shooter-input';
+        nameInput.value = shooter.name;
+        nameInput.maxLength = 60;
+        const roleSelect = document.createElement('select');
+        roleSelect.className = 'shooter-select';
+        SHOOTER_ROLES.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.value;
+            opt.textContent = r.label;
+            if ((r.value || null) === (shooter.role || null)) opt.selected = true;
+            roleSelect.appendChild(opt);
+        });
+        wrap.appendChild(nameInput);
+        wrap.appendChild(roleSelect);
+        tdName.appendChild(wrap);
+    } else {
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'shooter-name';
+        nameDiv.textContent = shooter.name;
+        if (shooter.role) {
+            const roleSpan = document.createElement('span');
+            roleSpan.className = 'shooter-role';
+            roleSpan.textContent = shooter.role.charAt(0).toUpperCase() + shooter.role.slice(1);
+            nameDiv.appendChild(roleSpan);
+        }
+        tdName.appendChild(nameDiv);
+    }
+    tr.appendChild(tdName);
+
+    // Stats columns (read-only)
+    tdAppendStat(tr, shooter.best);
+    tdAppendStat(tr, shooter.best);          // Season Best (mirrors Best as before)
+    tdAppendStat(tr, shooter.tens);
+    tdAppendStat(tr, Number(shooter.average).toFixed(1));
+
+    // Actions (only when editing)
+    if (canEdit) {
+        const tdActions = document.createElement('td');
+        tdActions.className = 'col-actions';
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'shooter-button';
+        save.textContent = 'Save';
+        save.addEventListener('click', async () => {
+            const nameInput = tr.querySelector('.shooter-input');
+            const roleSelect = tr.querySelector('.shooter-select');
+            const name = nameInput.value.trim();
+            if (!name) { showEditMessage('Shooter name cannot be empty.', 'error'); return; }
+            save.disabled = true;
+            const res = await NADARL.updateShooter(shooter.shooter_id, { name, role: roleSelect.value });
+            save.disabled = false;
+            if (!res.ok) {
+                showEditMessage('Could not save: ' + res.error, 'error');
+                return;
+            }
+            showEditMessage('Saved ' + name + '.', 'success');
+            await refreshShooters(shooter.team_id);
+        });
+        tdActions.appendChild(save);
+        tr.appendChild(tdActions);
+    }
+
+    return tr;
+}
+
+function tdAppendStat(tr, value) {
+    const td = document.createElement('td');
+    td.className = 'score-cell';
+    td.textContent = value;
+    tr.appendChild(td);
+}
+
+async function refreshShooters(teamId) {
+    const stats = await NADARL.fetchTeamShootersStats(teamId);
+    const canEdit = !document.getElementById('addShooterPanel').hidden;
+    renderShooters(stats, canEdit);
+}
+
+function showEditMessage(text, type) {
+    const el = document.getElementById('editMessage');
+    el.textContent = text;
+    el.className = 'login-message login-message-' + type;
+    el.hidden = false;
 }
 
 document.addEventListener('DOMContentLoaded', initTeamPage);
