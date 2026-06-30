@@ -39,19 +39,45 @@ async function initTeamPage() {
         fallback.textContent = team.name.split(' ').map(w => w[0]).join('');
     };
 
-    if (canEdit) enableEditing(team);
+    // Captains/admins get a button to toggle the roster editor.
+    const editToggle = document.getElementById('editToggleButton');
+    if (canEdit) {
+        editToggle.hidden = false;
+        editToggle.addEventListener('click', () => toggleEdit(team));
+    }
 
-    renderShooters(stats, canEdit);
+    renderShooters(stats, false);
 }
 
-function enableEditing(team) {
-    document.getElementById('editNotice').hidden = false;
-    document.getElementById('editNotice').textContent =
-        `You are editing ${team.name}'s roster. Shooter numbers are assigned automatically.`;
-    document.getElementById('thActions').hidden = false;
-    document.getElementById('addShooterPanel').hidden = false;
+function toggleEdit(team) {
+    const panel = document.getElementById('addShooterPanel');
+    const nowEditing = panel.hidden; // currently read-only -> entering edit mode
+    setEditMode(nowEditing, team);
+    refreshShooters(team.id);
+}
 
-    document.getElementById('addShooterButton').addEventListener('click', async () => {
+function setEditMode(editing, team) {
+    document.getElementById('addShooterPanel').hidden = !editing;
+    document.getElementById('thActions').hidden = !editing;
+    const notice = document.getElementById('editNotice');
+    const toggle = document.getElementById('editToggleButton');
+    if (editing) {
+        notice.hidden = false;
+        notice.textContent =
+            `Editing ${team.name}'s roster. Shooter numbers are assigned automatically.`;
+        toggle.textContent = 'Done';
+        wireAddButton(team);
+    } else {
+        notice.hidden = true;
+        toggle.textContent = 'Edit Roster';
+    }
+}
+
+function wireAddButton(team) {
+    const btn = document.getElementById('addShooterButton');
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = '1';
+    btn.addEventListener('click', async () => {
         const nameEl = document.getElementById('newShooterName');
         const roleEl = document.getElementById('newShooterRole');
         const name = nameEl.value.trim();
@@ -59,7 +85,6 @@ function enableEditing(team) {
             showEditMessage('Please enter a shooter name.', 'error');
             return;
         }
-        const btn = document.getElementById('addShooterButton');
         btn.disabled = true;
         const res = await NADARL.addShooter(team.id, { name, role: roleEl.value });
         btn.disabled = false;

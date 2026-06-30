@@ -149,6 +149,24 @@
     margin: 0 0 14px 0;
 }
 
+.roster-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.roster-header .section-title {
+    margin: 0;
+}
+
+.edit-toggle {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 18px;
+}
+
 .shooter-edit-wrap {
     display: flex;
     flex-direction: column;
