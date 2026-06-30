@@ -214,6 +214,7 @@
 
 .add-shooter-panel {
     margin-top: 22px;
+    margin-bottom: 22px;
     padding: 18px;
     border-radius: 10px;
     border: 1px solid rgba(212, 160, 23, 0.3);
