@@ -308,3 +308,16 @@ create policy "manage scores" on public.score
             )
         )
     );
+
+-- ----------------------------------------------------------------------------
+-- GRANTS - Supabase grants SELECT by default but not writes on
+-- manually-created tables, so write privileges must be granted explicitly
+-- to the anon / authenticated API roles.
+-- ----------------------------------------------------------------------------
+grant select, insert, update, delete
+    on all tables in schema public
+    to anon, authenticated;
+
+grant usage, select
+    on all sequences in schema public
+    to anon, authenticated;

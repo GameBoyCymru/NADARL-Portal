@@ -233,6 +233,19 @@ create policy "manage scores" on public.score
 commit;
 
 -- ---------------------------------------------------------------------------
+-- 5b. Grant API roles the privileges they need to read/write the tables.
+--     Supabase grants SELECT by default but not writes on manually-created
+--     tables, so this is required for the admin panel / captains to save.
+-- ---------------------------------------------------------------------------
+grant select, insert, update, delete
+    on all tables in schema public
+    to anon, authenticated;
+
+grant usage, select
+    on all sequences in schema public
+    to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
 -- 6. Bootstrap the first admin (optional, run once).
 --    Replace the email with the league administrator's auth user email.
 --    Their auth account must already exist (created via the Dashboard).
