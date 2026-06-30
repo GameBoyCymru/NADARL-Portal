@@ -55,7 +55,10 @@ create trigger trg_shooter_no
     for each row execute function public.assign_shooter_no();
 
 -- 4. Expose shooter_no through the shooter_stats view
-create or replace view public.shooter_stats with (security_invoker = true) as
+--    (drop+recreate because CREATE OR REPLACE VIEW cannot insert a column
+--     anywhere but the end)
+drop view if exists public.shooter_stats;
+create view public.shooter_stats with (security_invoker = true) as
 select
     sh.id            as shooter_id,
     sh.shooter_no,
