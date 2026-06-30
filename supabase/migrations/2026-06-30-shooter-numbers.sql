@@ -77,6 +77,9 @@ join public.team  t  on t.id  = sh.team_id
 left join public.score sc on sc.shooter_id = sh.id
 group by sh.id, sh.shooter_no, sh.name, sh.role, sh.team_id, t.name, t.slug, t.venue;
 
+-- recreate wipes privileges, so re-grant read access to the API roles
+grant select on public.shooter_stats to anon, authenticated;
+
 -- 5. Grants (in case write privileges were not yet granted on the shooter table)
 grant select, insert, update, delete on public.shooter to anon, authenticated;
 grant usage, select on public.shooter_no_seq to anon, authenticated;
