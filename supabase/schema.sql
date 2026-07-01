@@ -148,7 +148,7 @@ select
     th.name           as home_team,
     m.away_team_id,
     ta.name           as away_team,
-    coalesce(m.venue, th.venue) as venue,
+    th.venue          as venue,
     (m.away_team_id is null)     as is_bye
 from public.match m
 join public.team th on th.id = m.home_team_id
