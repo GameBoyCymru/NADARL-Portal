@@ -16,6 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function init() {
         const me = await NADARL.fetchMyProfile();
         if (!me || me.role !== 'admin') return;
+        if (typeof NADARL.addTeam !== 'function' ||
+            typeof NADARL.updateTeam !== 'function' ||
+            typeof NADARL.deleteTeam !== 'function') {
+            showMessage(
+                'Team tools failed to load — your browser is using a cached ' +
+                'copy of data.js. Please hard-refresh (Ctrl/Cmd+Shift+R).',
+                'error'
+            );
+            return;
+        }
         await load();
     }
 
