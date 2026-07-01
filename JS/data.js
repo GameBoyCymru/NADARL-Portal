@@ -213,6 +213,45 @@ const NADARL = (function () {
         return { ok: true, season: data };
     }
 
+    // Create a team. Admin only - RLS enforces.
+    async function addTeam({ name, venue, slug }) {
+        const { data, error } = await db().from('team')
+            .insert({
+                name: String(name).trim(),
+                venue: String(venue).trim(),
+                slug: String(slug).trim()
+            })
+            .select('id,name,venue,slug')
+            .single();
+        if (error) { console.error('addTeam', error); return { ok: false, error: error.message }; }
+        return { ok: true, team: data };
+    }
+
+    // Update a team's name/venue/slug. Admin only - RLS enforces.
+    async function updateTeam(id, { name, venue, slug }) {
+        const patch = {
+            name: String(name).trim(),
+            venue: String(venue).trim(),
+            slug: String(slug).trim()
+        };
+        const { data, error } = await db().from('team')
+            .update(patch)
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('updateTeam', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // Delete a team. Admin only - RLS enforces.
+    async function deleteTeam(id) {
+        const { data, error } = await db().from('team')
+            .delete()
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('deleteTeam', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -231,6 +270,9 @@ const NADARL = (function () {
         fetchExclusions,
         clearExclusions,
         insertExclusions,
-        addSeason
+        addSeason,
+        addTeam,
+        updateTeam,
+        deleteTeam
     };
 })();

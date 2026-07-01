@@ -48,6 +48,38 @@
                     </table>
                 </div>
 
+            <section id="teamsPanel" class="fx-section">
+                <h2 class="section-title">Teams</h2>
+                <p class="login-intro">
+                    Create and edit the teams in the league. The slug must be unique and
+                    matches the team badge image filename (e.g. "belle-vue-rifles").
+                </p>
+
+                <div id="teamsMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="fx-season-create">
+                    <span class="fx-hint">Add a team:</span>
+                    <input type="text" id="teamNewName" class="fx-text-input" placeholder="Team name" maxlength="100" style="width:180px;">
+                    <input type="text" id="teamNewVenue" class="fx-text-input" placeholder="Venue" maxlength="100" style="width:140px;">
+                    <input type="text" id="teamNewSlug" class="fx-text-input" placeholder="slug" maxlength="100">
+                    <button type="button" id="teamsAdd" class="shooter-button">Add Team</button>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Venue</th>
+                                <th>Slug</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
             <section id="fixturesPanel" class="fx-section">
                 <h2 class="section-title">Fixtures</h2>
                 <p class="login-intro">
@@ -131,6 +163,7 @@
     <script src="../JS/supabase-config.js"></script>
     <script src="../JS/data.js"></script>
     <script src="../JS/admin.js"></script>
+    <script src="../JS/admin-teams.js"></script>
     <script src="../JS/admin-fixtures.js"></script>
 </body>
 </html>
