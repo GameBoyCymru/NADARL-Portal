@@ -150,8 +150,6 @@
     border-collapse: separate;
     border-spacing: 0;
     border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid rgba(212, 160, 23, 0.3);
 }
 
 .fixture-table th,
@@ -159,12 +157,21 @@
     padding: 15px;
     text-align: left;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 2px solid rgba(196, 30, 58, 0.3);
+    border-right: 2px solid rgba(196, 30, 58, 0.3);
 }
 
 .fixture-table th:last-child,
 .fixture-table td:last-child {
-    border-right: none;
+    border-right: 2px solid rgba(196, 30, 58, 0.3);
+}
+
+.fixture-table .fixture-date-row td {
+    border-top: 2px solid rgba(196, 30, 58, 0.3);
+}
+
+.fixture-table tr:last-child td {
+    border-bottom: 2px solid rgba(196, 30, 58, 0.3);
 }
 
 .fixture-table th {
@@ -176,19 +183,19 @@
     letter-spacing: 1px;
 }
 
-.fixture-table .fixture-row td {
-    background: linear-gradient(135deg, rgba(196, 30, 58, 0.06), rgba(196, 30, 58, 0.12));
+.fixture-table .fixture-detail-row td {
+    background: transparent;
 }
 
-.fixture-table tr:hover td:not(.date-cell) {
+.fixture-table tr.fixture-detail-row:hover td {
     background: rgba(255, 255, 255, 0.05);
 }
 
-.fixture-table .fixture-row-alt td {
-    background: linear-gradient(135deg, rgba(196, 30, 58, 0.14), rgba(196, 30, 58, 0.22));
+.fixture-table .fixture-row-alt .fixture-detail-row td {
+    background: transparent;
 }
 
-.fixture-row-alt:hover td:not(.date-cell) {
+.fixture-row-alt .fixture-detail-row:hover td {
     background: rgba(255, 255, 255, 0.05);
 }
 
@@ -201,6 +208,73 @@
     font-size: 0.9rem;
     width: 1%;
     white-space: nowrap;
+}
+
+.fixture-date-header {
+    width: auto !important;
+    white-space: normal !important;
+    background: rgba(196, 30, 58, 0.35) !important;
+}
+
+.fixture-row-alt .fixture-date-header {
+    background: rgba(196, 30, 58, 0.42) !important;
+}
+
+.fixture-table .fixture-excluded-row .fixture-date-header {
+    background: rgba(80, 85, 100, 0.6) !important;
+    border-left: 2px solid rgba(255, 255, 255, 0.5);
+    border-right: 2px solid rgba(255, 255, 255, 0.5);
+    border-top: 2px solid rgba(255, 255, 255, 0.5);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.fixture-excluded-row.fixture-row-alt .fixture-date-header {
+    background: rgba(80, 85, 100, 0.8) !important;
+}
+
+.fixture-excluded-row .fixture-date {
+    color: #d8dce4;
+}
+
+.fixture-excluded-row .fixture-date-inner .fixture-blocked-reason {
+    color: #c7ccd6;
+    font-style: italic;
+}
+
+.fixture-table .fixture-excluded-row {
+    cursor: default;
+}
+
+.fixture-table .fixture-excluded-row:hover td {
+    background: rgba(80, 85, 100, 0.6) !important;
+}
+
+.fixture-table .fixture-excluded-row.fixture-row-alt:hover td {
+    background: rgba(80, 85, 100, 0.8) !important;
+}
+
+.fixture-date-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fixture-date-header .fixture-date {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.fixture-date-inner .fixture-blocked-reason {
+    margin-left: auto;
+}
+
+.fixture-table .fixture-date-row:hover td {
+    background: rgba(196, 30, 58, 0.35) !important;
+}
+
+.fixture-table .fixture-row-alt.fixture-date-row:hover td {
+    background: rgba(196, 30, 58, 0.42) !important;
 }
 
 .teams-cell {
@@ -237,15 +311,15 @@
 }
 
 .type-wohc {
-    background: rgba(80, 170, 90, 0.18);
-    border-color: rgba(80, 170, 90, 0.45);
-    color: #bfe6c4;
+    background: rgba(200, 200, 200, 0.2);
+    border-color: rgba(200, 200, 200, 0.5);
+    color: #e0e0e0;
 }
 
 .type-hc {
-    background: rgba(196, 30, 58, 0.22);
-    border-color: rgba(196, 30, 58, 0.5);
-    color: #f0aeb6;
+    background: rgba(80, 170, 90, 0.3);
+    border-color: rgba(80, 170, 90, 0.6);
+    color: #bfe6c4;
 }
 
 .fixture-blocked-row td {
@@ -262,15 +336,26 @@
 }
 
 .mobile-fixture-blocked {
-    background: rgba(196, 30, 58, 0.16);
-    border: 1px solid rgba(224, 97, 106, 0.5);
-    border-left: 4px solid #e0616a;
+    background: rgba(80, 85, 100, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.5);
 }
 
-.mobile-fixture-blocked .mobile-fixture-summary {
-    color: #f3c2c0;
+.mobile-fixture-blocked .mobile-fixture-summary,
+.mobile-fixture-group-alt.mobile-fixture-blocked .mobile-fixture-summary {
+    background: rgba(80, 85, 100, 0.6);
+    color: #d8dce4;
     font-style: italic;
     font-weight: 600;
+    cursor: default;
+    list-style: none;
+}
+
+.mobile-fixture-blocked .mobile-fixture-summary::-webkit-details-marker {
+    display: none;
+}
+
+.mobile-fixture-blocked .mobile-fixture-summary::after {
+    content: none;
 }
 
 .mobile-fixture-group {

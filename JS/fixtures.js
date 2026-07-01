@@ -48,6 +48,9 @@ function groupFixturesByDate(fixtureList) {
         }
         grouped[fixture.date].push(fixture);
     });
+    Object.values(grouped).forEach(group => {
+        group.sort((a, b) => (a.isBye === b.isBye) ? 0 : (a.isBye ? 1 : -1));
+    });
     return grouped;
 }
 
@@ -88,7 +91,7 @@ function createFixtureCard(fixture) {
                 <div class="team">
                     <div class="team-badge">🎯</div>
                     <div class="team-name">${fixture.homeTeam}</div>
-                    <div class="venue-cell">BYE Week</div>
+                    <span class="bye-badge">BYE</span>
                 </div>
             </div>
         `;
@@ -151,44 +154,49 @@ function renderSeasonFixtures() {
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const formattedDate = formatDate(date);
-        const rowClass = dateIndex % 2 === 0 ? 'fixture-row' : 'fixture-row fixture-row-alt';
+        const group = groupedFixtures[date];
+        const altClass = dateIndex % 2 === 1 ? ' fixture-row-alt' : '';
 
-        groupedFixtures[date].forEach((fixture, index) => {
-            if (fixture.isBlocked) {
-                const row = document.createElement('tr');
-                row.className = 'fixture-row fixture-blocked-row';
-                row.innerHTML = `
-                    <td class="date-cell">${formattedDate}</td>
-                    <td class="teams-cell fixture-blocked-reason" colspan="3">No matches &mdash; ${escapeHtml(fixture.reason)}</td>
-                    <td class="venue-cell">&mdash;</td>
-                `;
-                tbody.appendChild(row);
-                return;
-            }
+        if (group[0] && group[0].isBlocked) {
+            const headerRow = document.createElement('tr');
+            headerRow.className = 'fixture-row fixture-date-row fixture-excluded-row' + altClass;
+            headerRow.innerHTML = `
+                <td class="date-cell fixture-date-header" colspan="3">
+                    <div class="fixture-date-inner">
+                        <span class="fixture-date">${formattedDate}</span>
+                        <span class="fixture-blocked-reason">${escapeHtml(group[0].reason)}</span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(headerRow);
+            return;
+        }
 
+        const typeBadgeHtml = typeBadge(group[0]);
+
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'fixture-row fixture-date-row' + altClass;
+        headerRow.innerHTML = `
+            <td class="date-cell fixture-date-header" colspan="3">
+                <div class="fixture-date-inner">
+                    <span class="fixture-date">${formattedDate}</span>
+                    <span class="date-type-badge">${typeBadgeHtml}</span>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(headerRow);
+
+        group.forEach((fixture, index) => {
             const awayTeamDisplay = fixture.isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
             const venueDisplay = fixture.isBye ? '-' : fixture.venue;
 
             const row = document.createElement('tr');
-            row.className = rowClass;
-
-            if (index === 0) {
-                row.innerHTML = `
-                    <td class="date-cell" rowspan="${groupedFixtures[date].length}">${formattedDate}</td>
-                    <td class="type-cell">${typeBadge(fixture)}</td>
-                    <td class="teams-cell">${fixture.homeTeam}</td>
-                    <td class="teams-cell">${awayTeamDisplay}</td>
-                    <td class="venue-cell">${venueDisplay}</td>
-                `;
-            } else {
-                row.innerHTML = `
-                    <td class="type-cell">${typeBadge(fixture)}</td>
-                    <td class="teams-cell">${fixture.homeTeam}</td>
-                    <td class="teams-cell">${awayTeamDisplay}</td>
-                    <td class="venue-cell">${venueDisplay}</td>
-                `;
-            }
-
+            row.className = 'fixture-row fixture-detail-row' + altClass;
+            row.innerHTML = `
+                <td class="teams-cell">${fixture.homeTeam}</td>
+                <td class="teams-cell">${awayTeamDisplay}</td>
+                <td class="venue-cell">${venueDisplay}</td>
+            `;
             tbody.appendChild(row);
         });
     });
@@ -203,16 +211,16 @@ function renderMobileSeasonFixtures() {
         const altClass = dateIndex % 2 === 1 ? ' mobile-fixture-group-alt' : '';
         const group = groupedFixtures[date];
 
-        // blocked (no-match) day: show the reason in the summary, no fixtures
+        // blocked (no-match) day: show the reason only, not interactive
         if (group[0] && group[0].isBlocked) {
-            html += `<details class="mobile-fixture-group mobile-fixture-blocked${altClass}">`;
-            html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">No matches &mdash; ${escapeHtml(group[0].reason)}</span></summary>`;
-            html += `</details>`;
+            html += `<div class="mobile-fixture-group mobile-fixture-blocked${altClass}">`;
+            html += `<div class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">${escapeHtml(group[0].reason)}</span></div>`;
+            html += `</div>`;
             return;
         }
 
         html += `<details class="mobile-fixture-group${altClass}">`;
-        html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span></summary>`;
+        html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span> ${typeBadge(group[0])}</summary>`;
         html += `<div class="mobile-fixture-content">`;
 
         group.forEach(fixture => {
@@ -223,7 +231,6 @@ function renderMobileSeasonFixtures() {
                             <span class="mobile-team">${fixture.homeTeam}</span>
                             <span class="bye-badge">BYE</span>
                         </div>
-                        ${typeBadge(fixture)}
                     </div>
                 `;
             } else {
@@ -237,7 +244,6 @@ function renderMobileSeasonFixtures() {
                             <span class="mobile-team">${fixture.awayTeam}</span>
                         </div>
                         <div class="mobile-fixture-venue">${fixture.venue}</div>
-                        ${typeBadge(fixture)}
                     </div>
                 `;
             }
