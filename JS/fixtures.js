@@ -6,6 +6,13 @@ function escapeHtml(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+function typeBadge(fixture) {
+    if (fixture.half === 2) {
+        return '<span class="type-badge type-hc" title="Handicap">HC</span>';
+    }
+    return '<span class="type-badge type-wohc" title="Without handicap">Wo/HC</span>';
+}
+
 function getTodayDate() {
     const today = new Date();
     const year = today.getFullYear();
@@ -152,7 +159,7 @@ function renderSeasonFixtures() {
                 row.className = 'fixture-row fixture-blocked-row';
                 row.innerHTML = `
                     <td class="date-cell">${formattedDate}</td>
-                    <td class="teams-cell fixture-blocked-reason" colspan="2">No matches &mdash; ${escapeHtml(fixture.reason)}</td>
+                    <td class="teams-cell fixture-blocked-reason" colspan="3">No matches &mdash; ${escapeHtml(fixture.reason)}</td>
                     <td class="venue-cell">&mdash;</td>
                 `;
                 tbody.appendChild(row);
@@ -168,12 +175,14 @@ function renderSeasonFixtures() {
             if (index === 0) {
                 row.innerHTML = `
                     <td class="date-cell" rowspan="${groupedFixtures[date].length}">${formattedDate}</td>
+                    <td class="type-cell">${typeBadge(fixture)}</td>
                     <td class="teams-cell">${fixture.homeTeam}</td>
                     <td class="teams-cell">${awayTeamDisplay}</td>
                     <td class="venue-cell">${venueDisplay}</td>
                 `;
             } else {
                 row.innerHTML = `
+                    <td class="type-cell">${typeBadge(fixture)}</td>
                     <td class="teams-cell">${fixture.homeTeam}</td>
                     <td class="teams-cell">${awayTeamDisplay}</td>
                     <td class="venue-cell">${venueDisplay}</td>
@@ -214,6 +223,7 @@ function renderMobileSeasonFixtures() {
                             <span class="mobile-team">${fixture.homeTeam}</span>
                             <span class="bye-badge">BYE</span>
                         </div>
+                        ${typeBadge(fixture)}
                     </div>
                 `;
             } else {
@@ -227,6 +237,7 @@ function renderMobileSeasonFixtures() {
                             <span class="mobile-team">${fixture.awayTeam}</span>
                         </div>
                         <div class="mobile-fixture-venue">${fixture.venue}</div>
+                        ${typeBadge(fixture)}
                     </div>
                 `;
             }

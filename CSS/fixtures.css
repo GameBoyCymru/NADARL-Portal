@@ -221,13 +221,56 @@
     font-weight: bold;
 }
 
+.type-cell {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border: 1px solid transparent;
+}
+
+.type-wohc {
+    background: rgba(80, 170, 90, 0.18);
+    border-color: rgba(80, 170, 90, 0.45);
+    color: #bfe6c4;
+}
+
+.type-hc {
+    background: rgba(196, 30, 58, 0.22);
+    border-color: rgba(196, 30, 58, 0.5);
+    color: #f0aeb6;
+}
+
+.fixture-blocked-row td {
+    background: rgba(196, 30, 58, 0.16) !important;
+    color: #f3c2c0;
+}
+
+.fixture-blocked-row .date-cell {
+    box-shadow: inset 4px 0 0 #e0616a;
+}
+
 .mobile-fixtures {
     display: none;
 }
 
+.mobile-fixture-blocked {
+    background: rgba(196, 30, 58, 0.16);
+    border: 1px solid rgba(224, 97, 106, 0.5);
+    border-left: 4px solid #e0616a;
+}
+
 .mobile-fixture-blocked .mobile-fixture-summary {
-    color: #d98a80;
+    color: #f3c2c0;
     font-style: italic;
+    font-weight: 600;
 }
 
 .mobile-fixture-group {
@@ -297,6 +340,10 @@
 
 .mobile-fixture-item:last-child {
     border-bottom: none;
+}
+
+.mobile-fixture-item .type-badge {
+    margin-top: 8px;
 }
 
 .mobile-fixture-teams {
