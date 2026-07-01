@@ -203,7 +203,9 @@
 }
 
 .fx-chip {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 6px 12px;
     border-radius: 16px;
     background: rgba(212, 160, 23, 0.15);
@@ -215,6 +217,22 @@
 
 .fx-chip:hover {
     background: rgba(212, 160, 23, 0.25);
+}
+
+.fx-chip-date {
+    font-weight: 600;
+}
+
+.fx-chip-reason {
+    font-weight: 400;
+    color: #e0d6c8;
+    border-left: 1px solid rgba(212, 160, 23, 0.35);
+    padding-left: 8px;
+}
+
+.fx-chip-x {
+    opacity: 0.6;
+    font-size: 0.75rem;
 }
 
 .fx-actions {
@@ -249,6 +267,43 @@
     margin-top: 14px;
 }
 
+.fx-date-group td {
+    background: rgba(255, 255, 255, 0.06);
+    border-top: 2px solid rgba(255, 255, 255, 0.16);
+    padding: 7px 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #e6e6e6;
+    line-height: 1.2;
+}
+
+.fx-date-group:first-child td {
+    border-top: none;
+}
+
+.fx-date-blocked td {
+    background: rgba(180, 70, 70, 0.12);
+    border-top-color: rgba(200, 90, 70, 0.4);
+    color: #f0bcb5;
+}
+
+.fx-blocked-reason {
+    color: #d89a92 !important;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.fx-date-group-date {
+    display: inline-block;
+}
+
+.fx-date-group-count {
+    float: right;
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: #9a9a9a;
+}
+
 .fx-bye-row td {
     color: #d4a017;
     font-style: italic;
@@ -274,6 +329,35 @@
     color: #bcd6f5;
     font-size: 0.72rem;
     font-weight: 600;
+}
+
+.fx-half-badge.fx-wohc {
+    background: rgba(80, 170, 90, 0.18);
+    border-color: rgba(80, 170, 90, 0.4);
+    color: #bfe6c4;
+}
+
+.fx-half-badge.fx-hc {
+    background: rgba(200, 90, 60, 0.18);
+    border-color: rgba(200, 90, 60, 0.4);
+    color: #f0c4b5;
+}
+
+.fx-half-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-start;
+}
+
+.fx-subhalf-first,
+.fx-subhalf-second {
+    color: #a0a0a0;
+    font-size: 0.7rem;
+}
+
+.fx-subhalf-second {
+    color: #8a8a8a;
 }
 
 .fx-half-first {

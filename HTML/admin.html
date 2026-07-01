@@ -78,9 +78,10 @@
 
                 <div class="fx-exclude">
                     <div class="fx-field fx-exclude-field">
-                        <label for="fxExcludeDate">Exclude a Monday (bank holiday, etc.)</label>
+                        <label for="fxExcludeDate">Exclude a Monday (no matches that week)</label>
                         <div class="fx-exclude-row">
                             <select id="fxExcludeDate"></select>
+                            <input type="text" id="fxExcludeReason" class="fx-text-input" placeholder="Reason (e.g. Catch Up)" maxlength="40">
                             <button type="button" id="fxAddExclude" class="shooter-button">Add</button>
                         </div>
                     </div>
@@ -96,7 +97,7 @@
                 <div id="fxPreviewWrap" class="table-wrap" hidden>
                     <table class="admin-table fx-preview">
                         <thead>
-                            <tr><th>Date</th><th>Half</th><th>Home</th><th>Away</th><th>Venue</th></tr>
+                            <tr><th>Type</th><th>Home</th><th>Away</th><th>Venue</th></tr>
                         </thead>
                         <tbody id="fxPreviewBody"></tbody>
                     </table>

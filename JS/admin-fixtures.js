@@ -8,7 +8,8 @@
 const FixturesAdmin = (function () {
     let teams = [];
     let seasons = [];
-    let excluded = new Set();
+    let excluded = {}; // excluded Mondays: { 'YYYY-MM-DD': reason }
+    let allExclusions = []; // saved exclusions across seasons (for re-loading)
     let preview = []; // generated match rows ready to insert
 
     function $(id) { return document.getElementById(id); }
@@ -20,6 +21,7 @@ const FixturesAdmin = (function () {
 
         teams = await NADARL.fetchTeams();
         seasons = await NADARL.fetchSeasons();
+        allExclusions = await NADARL.fetchExclusions();
         if (!teams.length) { show('No teams found. Add teams first.'); return; }
 
         populateSeasons();
@@ -48,12 +50,18 @@ const FixturesAdmin = (function () {
         if (!season) {
             $('fxStart').innerHTML = '';
             $('fxExcludeDate').innerHTML = '';
+            excluded = {};
+            renderExcluded();
             return;
         }
         const year = seasonStartYear(season);
         populateStartSelect(year);     // league kicks off Sep-Oct
         populateExcludeSelect(year);   // exclusions can fall anywhere mid-season
-        excluded.clear();              // exclusions are season-specific
+        // reload any saved exclusions for this season
+        excluded = {};
+        allExclusions
+            .filter(e => e.season_id === season.id)
+            .forEach(e => { excluded[e.date] = e.reason; });
         renderExcluded();
     }
 
@@ -146,26 +154,31 @@ const FixturesAdmin = (function () {
 
     function addExclude() {
         const inp = $('fxExcludeDate');
+        const reasonInp = $('fxExcludeReason');
         const v = inp.value;
         if (!v) { show('Pick a Monday to exclude.', 'error'); return; }
-        excluded.add(v);
+        const reason = reasonInp.value.trim() || 'Bank holiday';
+        excluded[v] = reason;
         inp.value = '';
+        reasonInp.value = '';
         renderExcluded();
     }
 
     function removeExclude(iso) {
-        excluded.delete(iso);
+        delete excluded[iso];
         renderExcluded();
     }
 
     function renderExcluded() {
         const list = $('fxExcludedList');
         list.innerHTML = '';
-        Array.from(excluded).sort().forEach(iso => {
+        Object.keys(excluded).sort().forEach(iso => {
             const chip = document.createElement('span');
             chip.className = 'fx-chip';
-            chip.textContent = fmtDate(iso) + '  ✕';
-            chip.title = 'Click to remove';
+            chip.innerHTML =
+                '<span class="fx-chip-date">' + fmtDate(iso) + '</span>' +
+                '<span class="fx-chip-reason">' + escapeHtml(excluded[iso] || 'Bank holiday') + '</span>' +
+                '<span class="fx-chip-x" title="Click to remove">✕</span>';
             chip.addEventListener('click', () => removeExclude(iso));
             list.appendChild(chip);
         });
@@ -205,24 +218,23 @@ const FixturesAdmin = (function () {
         return rounds;
     }
 
-    // Double round-robin: single + its mirror (home/away swapped), so every
-    // pair meets twice (home and away).
-    function doubleRoundRobin() {
+    // Full season = two sections, each a double round-robin:
+    //   half 1 = Without Handicap (Wo/HC): single round-robin (1st) + mirror (2nd)
+    //   half 2 = Handicap (HC):            single round-robin (1st) + mirror (2nd)
+    //   subHalf 1 = the first round-robin, subHalf 2 = the mirrored home/away legs
+    function buildFullSeason() {
         const single = singleRoundRobin();
         const mirror = single.map(rd => rd.map(g =>
             g.bye
                 ? { home: g.home, away: null, bye: true }
                 : { home: g.away, away: g.home }
         ));
-        return single.concat(mirror);
-    }
-
-    // Full season = two double round-robins:
-    //   half 1 = normal (each pair home & away)
-    //   half 2 = handicap (the whole thing repeated, home & away again)
-    function buildFullSeason() {
-        const tag = (rounds, half) => rounds.map(rd => rd.map(g => ({ ...g, half })));
-        return tag(doubleRoundRobin(), 1).concat(tag(doubleRoundRobin(), 2));
+        const tag = (rounds, half, subHalf) =>
+            rounds.map(rd => rd.map(g => ({ ...g, half, subHalf })));
+        return tag(single, 1, 1)
+            .concat(tag(mirror, 1, 2))
+            .concat(tag(single, 2, 1))
+            .concat(tag(mirror, 2, 2));
     }
 
     function generate() {
@@ -238,7 +250,7 @@ const FixturesAdmin = (function () {
         let d = new Date(begin);
         while (dates.length < rounds.length) {
             const iso = toISO(d);
-            if (!excluded.has(iso)) dates.push(iso);
+            if (!excluded[iso]) dates.push(iso);
             d.setDate(d.getDate() + 7);
         }
 
@@ -252,6 +264,7 @@ const FixturesAdmin = (function () {
                     away_team_id: g.away ? g.away.id : null,
                     venue: g.home.venue,
                     half: g.half,
+                    subHalf: g.subHalf,
                     _home: g.home.name,
                     _away: g.away ? g.away.name : null,
                     _bye: g.bye
@@ -259,31 +272,78 @@ const FixturesAdmin = (function () {
             });
         });
 
+        // Surface excluded Mondays that fall inside the season span as
+        // blocked (no-match) days, so they read as part of the fixture list.
+        const firstIso = toISO(begin);
+        const lastIso = dates[dates.length - 1];
+        Object.keys(excluded).forEach(iso => {
+            if (iso >= firstIso && iso <= lastIso) {
+                preview.push({ match_date: iso, _blocked: true, _reason: excluded[iso] });
+            }
+        });
+
         renderPreview(dates);
         $('fxSave').disabled = false;
         show('Preview ready. ' + dates.length + ' match days, ' +
-            preview.filter(p => !p._bye).length + ' matches. Review then Save.', 'success');
+            preview.filter(p => !p._bye && !p._blocked).length + ' matches. Review then Save.', 'success');
     }
 
     function renderPreview(dates) {
         const body = $('fxPreviewBody');
         body.innerHTML = '';
-        // sort preview by date then home team
-        preview.slice().sort((a, b) => a.match_date.localeCompare(b.match_date) || a._home.localeCompare(b._home))
-            .forEach(row => {
+        // sort preview by date then home team, then group by date
+        const sorted = preview.slice().sort(
+            (a, b) => a.match_date.localeCompare(b.match_date) || a._home.localeCompare(b._home)
+        );
+        const groups = [];
+        sorted.forEach(row => {
+            const g = groups[groups.length - 1];
+            if (g && g.date === row.match_date) g.rows.push(row);
+            else groups.push({ date: row.match_date, rows: [row] });
+        });
+
+        groups.forEach(g => {
+            const blocked = g.rows.some(r => r._blocked);
+            // date group header row
+            const gtr = document.createElement('tr');
+            gtr.className = 'fx-date-group' + (blocked ? ' fx-date-blocked' : '');
+            let header;
+            if (blocked) {
+                header =
+                    '<span class="fx-date-group-date">' + fmtDate(g.date) + '</span>' +
+                    '<span class="fx-date-group-count fx-blocked-reason">No matches — ' +
+                    escapeHtml(g.rows[0]._reason || 'Bank holiday') + '</span>';
+            } else {
+                const matches = g.rows.filter(r => !r._bye).length;
+                header =
+                    '<span class="fx-date-group-date">' + fmtDate(g.date) + '</span>' +
+                    '<span class="fx-date-group-count">' + matches +
+                    (matches === 1 ? ' match' : ' matches') + '</span>';
+            }
+            gtr.innerHTML = '<td colspan="4">' + header + '</td>';
+            body.appendChild(gtr);
+
+            // blocked days have no match rows
+            if (blocked) return;
+
+            // match rows for this date
+            g.rows.forEach(row => {
                 const tr = document.createElement('tr');
                 if (row._bye) tr.className = 'fx-bye-row';
-                const halfLabel = row.half === 2
-                    ? '<span class="fx-half-badge" title="Second half (handicaps)">Handicap</span>'
-                    : '<span class="fx-half-first">1st</span>';
+                const sectionLabel = row.half === 2
+                    ? '<span class="fx-half-badge fx-hc" title="Handicap">HC</span>'
+                    : '<span class="fx-half-badge fx-wohc" title="Without handicap">Wo/HC</span>';
+                const halfLabel = row.subHalf === 1
+                    ? '<span class="fx-subhalf-first">1st half</span>'
+                    : '<span class="fx-subhalf-second">2nd half</span>';
                 tr.innerHTML =
-                    '<td>' + fmtDate(row.match_date) + '</td>' +
-                    '<td>' + halfLabel + '</td>' +
+                    '<td><div class="fx-half-cell">' + sectionLabel + halfLabel + '</div></td>' +
                     '<td>' + row._home + '</td>' +
                     '<td>' + (row._bye ? '<span class="bye-badge">BYE</span>' : row._away) + '</td>' +
                     '<td>' + (row._bye ? '—' : row.venue) + '</td>';
                 body.appendChild(tr);
             });
+        });
         $('fxPreviewWrap').hidden = false;
     }
 
@@ -300,7 +360,7 @@ const FixturesAdmin = (function () {
             show('Could not clear existing fixtures: ' + cleared.error, 'error');
             return;
         }
-        const rows = preview.map(p => ({
+        const rows = preview.filter(p => !p._blocked).map(p => ({
             season_id: seasonId,
             match_date: p.match_date,
             home_team_id: p.home_team_id,
@@ -309,23 +369,59 @@ const FixturesAdmin = (function () {
             half: p.half
         }));
         const res = await NADARL.insertMatches(rows);
+        if (!res.ok) {
+            $('fxSave').disabled = false;
+            show('Could not save fixtures: ' + res.error, 'error');
+            return;
+        }
+
+        // persist exclusions (no-match Mondays) for this season
+        const exRows = Object.keys(excluded).map(iso => ({
+            season_id: seasonId,
+            match_date: iso,
+            reason: excluded[iso] || 'Bank holiday'
+        }));
+        await NADARL.clearExclusions();
+        if (exRows.length) {
+            const exRes = await NADARL.insertExclusions(exRows);
+            if (!exRes.ok) {
+                $('fxSave').disabled = false;
+                show('Fixtures saved, but exclusions failed: ' + exRes.error, 'error');
+                return;
+            }
+        }
+        // keep the in-memory cache in sync for this season
+        allExclusions = allExclusions
+            .filter(e => e.season_id !== seasonId)
+            .concat(exRows.map(r => ({ season_id: seasonId, date: r.match_date, reason: r.reason })));
+
         $('fxSave').disabled = false;
-        if (!res.ok) { show('Could not save fixtures: ' + res.error, 'error'); return; }
         show('Fixtures saved. ' + rows.length + ' matches across ' +
-            new Set(rows.map(r => r.match_date)).size + ' Mondays.', 'success');
+            new Set(rows.map(r => r.match_date)).size + ' Mondays' +
+            (exRows.length ? ', ' + exRows.length + ' exclusions' : '') + '.', 'success');
     }
 
     async function clearAll() {
         if (!confirm('Delete ALL fixtures and their scores?')) return;
         const res = await NADARL.clearMatches();
         if (!res.ok) { show('Could not clear fixtures: ' + res.error, 'error'); return; }
+        const exRes = await NADARL.clearExclusions();
+        if (!exRes.ok) { show('Could not clear exclusions: ' + exRes.error, 'error'); return; }
+        allExclusions = [];
+        excluded = {};
+        renderExcluded();
         preview = [];
         $('fxPreviewWrap').hidden = true;
         $('fxSave').disabled = true;
-        show('All fixtures cleared.', 'success');
+        show('All fixtures and exclusions cleared.', 'success');
     }
 
     // ---- date helpers ------------------------------------------------
+    function escapeHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
     function parseDate(iso) {
         const [y, m, d] = iso.split('-').map(Number);
         return new Date(y, m - 1, d);

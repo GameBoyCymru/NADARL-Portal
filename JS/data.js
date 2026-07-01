@@ -164,6 +164,36 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // All exclusions (no-match Mondays), ordered by date.
+    async function fetchExclusions() {
+        const { data, error } = await db().from('exclusion')
+            .select('id,season_id,match_date,reason')
+            .order('match_date');
+        if (error) { console.error('fetchExclusions', error); return []; }
+        return data.map(e => ({
+            id: e.id,
+            season_id: e.season_id,
+            date: e.match_date,
+            reason: e.reason
+        }));
+    }
+
+    // Delete every exclusion. Admin only - RLS enforces.
+    async function clearExclusions() {
+        const { error } = await db().from('exclusion')
+            .delete()
+            .gte('match_date', '1900-01-01');
+        if (error) { console.error('clearExclusions', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // Bulk insert exclusions. rows: [{ season_id, match_date, reason }].
+    async function insertExclusions(rows) {
+        const { error } = await db().from('exclusion').insert(rows);
+        if (error) { console.error('insertExclusions', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
     // Create a season. If is_current, clears that flag on all other seasons first.
     async function addSeason({ name, start_date, end_date, is_current }) {
         if (is_current) {
@@ -198,6 +228,9 @@ const NADARL = (function () {
         fetchSeasons,
         clearMatches,
         insertMatches,
+        fetchExclusions,
+        clearExclusions,
+        insertExclusions,
         addSeason
     };
 })();

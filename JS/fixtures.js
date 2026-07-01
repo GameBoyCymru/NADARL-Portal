@@ -1,5 +1,11 @@
 let fixtures = [];
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function getTodayDate() {
     const today = new Date();
     const year = today.getFullYear();
@@ -62,6 +68,13 @@ function renderTodayFixtures() {
 }
 
 function createFixtureCard(fixture) {
+    if (fixture.isBlocked) {
+        return `
+            <div class="fixture-item fixture-blocked">
+                <div class="fixture-blocked-reason">No matches &mdash; ${escapeHtml(fixture.reason)}</div>
+            </div>
+        `;
+    }
     if (fixture.isBye) {
         return `
             <div class="fixture-item fixture-bye">
@@ -134,6 +147,18 @@ function renderSeasonFixtures() {
         const rowClass = dateIndex % 2 === 0 ? 'fixture-row' : 'fixture-row fixture-row-alt';
 
         groupedFixtures[date].forEach((fixture, index) => {
+            if (fixture.isBlocked) {
+                const row = document.createElement('tr');
+                row.className = 'fixture-row fixture-blocked-row';
+                row.innerHTML = `
+                    <td class="date-cell">${formattedDate}</td>
+                    <td class="teams-cell fixture-blocked-reason" colspan="2">No matches &mdash; ${escapeHtml(fixture.reason)}</td>
+                    <td class="venue-cell">&mdash;</td>
+                `;
+                tbody.appendChild(row);
+                return;
+            }
+
             const awayTeamDisplay = fixture.isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
             const venueDisplay = fixture.isBye ? '-' : fixture.venue;
 
@@ -167,11 +192,21 @@ function renderMobileSeasonFixtures() {
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const altClass = dateIndex % 2 === 1 ? ' mobile-fixture-group-alt' : '';
+        const group = groupedFixtures[date];
+
+        // blocked (no-match) day: show the reason in the summary, no fixtures
+        if (group[0] && group[0].isBlocked) {
+            html += `<details class="mobile-fixture-group mobile-fixture-blocked${altClass}">`;
+            html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">No matches &mdash; ${escapeHtml(group[0].reason)}</span></summary>`;
+            html += `</details>`;
+            return;
+        }
+
         html += `<details class="mobile-fixture-group${altClass}">`;
-        html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${groupedFixtures[date].length} fixture${groupedFixtures[date].length > 1 ? 's' : ''})</span></summary>`;
+        html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span></summary>`;
         html += `<div class="mobile-fixture-content">`;
 
-        groupedFixtures[date].forEach(fixture => {
+        group.forEach(fixture => {
             if (fixture.isBye) {
                 html += `
                     <div class="mobile-fixture-item fixture-bye">
@@ -205,6 +240,12 @@ function renderMobileSeasonFixtures() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     fixtures = await NADARL.fetchFixtures();
+    // merge in saved exclusions as blocked (no-match) days
+    const exclusions = await NADARL.fetchExclusions();
+    exclusions.forEach(e => {
+        fixtures.push({ date: e.date, isBlocked: true, reason: e.reason });
+    });
+    fixtures.sort((a, b) => a.date.localeCompare(b.date));
     renderTodayFixtures();
     renderSeasonFixtures();
     renderMobileSeasonFixtures();

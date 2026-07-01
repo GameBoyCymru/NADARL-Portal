@@ -46,6 +46,15 @@ create table if not exists public.match (
     unique (match_date, home_team_id, away_team_id)
 );
 
+-- Mondays with no matches (bank holidays, cup comps, catch-up), with a reason.
+create table if not exists public.exclusion (
+    id          uuid primary key default gen_random_uuid(),
+    season_id   uuid not null references public.season(id) on delete cascade,
+    match_date  date not null,
+    reason      text not null default 'Bank holiday',
+    unique (season_id, match_date)
+);
+
 -- One row per shooter per match: the 7 individual shots plus derived totals.
 create table if not exists public.score (
     id         uuid primary key default gen_random_uuid(),
@@ -99,6 +108,8 @@ create trigger trg_shooter_no
 create index if not exists idx_match_date          on public.match(match_date);
 create index if not exists idx_match_home          on public.match(home_team_id);
 create index if not exists idx_match_away          on public.match(away_team_id);
+create index if not exists idx_exclusion_season    on public.exclusion(season_id);
+create index if not exists idx_exclusion_date      on public.exclusion(match_date);
 create index if not exists idx_score_match         on public.score(match_id);
 create index if not exists idx_score_shooter       on public.score(shooter_id);
 create index if not exists idx_score_team          on public.score(team_id);
@@ -171,6 +182,7 @@ join public.shooter sh on sh.id = sc.shooter_id;
 alter table public.team          enable row level security;
 alter table public.shooter       enable row level security;
 alter table public.match         enable row level security;
+alter table public.exclusion     enable row level security;
 alter table public.score         enable row level security;
 alter table public.season        enable row level security;
 alter table public.user_profile  enable row level security;
@@ -238,6 +250,9 @@ create policy "public read" on public.shooter for select using (true);
 drop policy if exists "public read" on public.match;
 create policy "public read" on public.match for select using (true);
 
+drop policy if exists "public read" on public.exclusion;
+create policy "public read" on public.exclusion for select using (true);
+
 drop policy if exists "public read" on public.score;
 create policy "public read" on public.score for select using (true);
 
@@ -258,6 +273,10 @@ create policy "admin manages teams" on public.team
 drop policy if exists "editors manage matches" on public.match;
 drop policy if exists "admin manages matches" on public.match;
 create policy "admin manages matches" on public.match
+    for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "admin manages exclusions" on public.exclusion;
+create policy "admin manages exclusions" on public.exclusion
     for all using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists "editors manage seasons" on public.season;
