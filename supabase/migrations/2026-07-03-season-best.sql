@@ -3,8 +3,12 @@
 --   season_best  -> best within the current season (resets each season)
 -- matches_played / tens / average are now scoped to the current season, so the
 -- Team Statistics page reflects the season in progress.
+-- The view is dropped first because CREATE OR REPLACE VIEW cannot insert a new
+-- column (season_best) into the middle of the existing column list.
 
-create or replace view public.shooter_stats with (security_invoker = true) as
+drop view if exists public.shooter_stats;
+
+create view public.shooter_stats with (security_invoker = true) as
 with cur as (
     select id as season_id from public.season where is_current limit 1
 )
@@ -38,3 +42,6 @@ left join public.match  m  on m.id = sc.match_id
 group by
     sh.id, sh.shooter_no, sh.name, sh.role, sh.team_id,
     t.name, t.slug, t.venue, cur.season_id;
+
+-- Re-grant SELECT (dropping the view removed the previous grants).
+grant select on public.shooter_stats to anon, authenticated;
