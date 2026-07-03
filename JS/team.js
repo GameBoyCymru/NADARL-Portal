@@ -104,7 +104,7 @@ function renderShooters(stats, canEdit) {
     tbody.innerHTML = '';
 
     if (!stats.length) {
-        const colspan = canEdit ? 7 : 6;
+        const colspan = canEdit ? 9 : 8;
         tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-row">No shooters yet${canEdit ? ' — add one below.' : '.'}</td></tr>`;
         return;
     }
@@ -161,10 +161,12 @@ function buildRow(shooter, canEdit) {
     tr.appendChild(tdName);
 
     // Stats columns (read-only)
-    tdAppendStat(tr, shooter.best);
-    tdAppendStat(tr, shooter.best);          // Season Best (mirrors Best as before)
+    tdAppendStat(tr, shooter.best);          // Personal Best (all-time)
+    tdAppendStat(tr, shooter.season_best);   // Season Best (current season)
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
+    tdAppendStat(tr, shooter.matches_played);
+    tdAppendStat(tr, shooter.handicap);
 
     // Actions (only when editing)
     if (canEdit) {

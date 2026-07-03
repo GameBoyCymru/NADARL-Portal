@@ -14,7 +14,7 @@ async function initTablePage() {
             <td class="shooter-name">${shooter.name}</td>
             <td class="team-cell">${shooter.team_name}</td>
             <td class="score-cell">${shooter.best}</td>
-            <td class="score-cell">${shooter.best}</td>
+            <td class="score-cell">${shooter.season_best}</td>
             <td class="score-cell">${shooter.tens}</td>
             <td class="score-cell">${Number(shooter.average).toFixed(1)}</td>
         </tr>`;
