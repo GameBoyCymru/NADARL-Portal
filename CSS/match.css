@@ -463,6 +463,11 @@
     text-align: left;
 }
 
+.edit-mode .shooter-picker-trigger:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .edit-mode .shooter-picker-trigger:hover {
     background: rgba(255, 255, 255, 0.12);
 }
@@ -537,6 +542,12 @@
 .edit-mode .shooter-picker-none {
     font-style: italic;
     color: #a0a0a0;
+}
+
+.edit-mode .shooter-picker-new {
+    color: #bfe6c4;
+    font-weight: 600;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .edit-mode .shooter-picker-option:hover {
