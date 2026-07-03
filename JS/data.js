@@ -359,6 +359,45 @@ const NADARL = (function () {
         return { ok: true, count: data ? data.length : 0 };
     }
 
+    // Handicap formula config (single row). { target, factor }.
+    async function fetchHandicapConfig() {
+        const { data, error } = await db().from('handicap_config')
+            .select('target,factor')
+            .eq('id', 1)
+            .maybeSingle();
+        if (error) { console.error('fetchHandicapConfig', error); return { target: 70, factor: 1 }; }
+        return data || { target: 70, factor: 1 };
+    }
+
+    // Update the handicap formula. Admin only - RLS enforces.
+    async function updateHandicapConfig({ target, factor }) {
+        const patch = {};
+        if (target !== undefined) patch.target = Number(target);
+        if (factor !== undefined) patch.factor = Number(factor);
+        const { data, error } = await db().from('handicap_config')
+            .update(patch)
+            .eq('id', 1)
+            .select('target,factor')
+            .maybeSingle();
+        if (error) { console.error('updateHandicapConfig', error); return { ok: false, error: error.message }; }
+        return { ok: true, config: data };
+    }
+
+    // Handicaps for a set of shooters as-of a date (YYYY-MM-DD), or to date if null.
+    // Returns a Map-like object: { shooterId -> number }.
+    async function fetchHandicaps(shooterIds, asOfDate) {
+        const ids = (shooterIds || []).filter(Boolean);
+        if (!ids.length) return {};
+        const { data, error } = await db().rpc('handicaps_for', {
+            p_before: asOfDate || null,
+            p_shooters: ids
+        });
+        if (error) { console.error('fetchHandicaps', error); return {}; }
+        const map = {};
+        (data || []).forEach(r => { map[r.shooter_id] = Number(r.handicap) || 0; });
+        return map;
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -391,6 +430,9 @@ const NADARL = (function () {
         addSeason,
         addTeam,
         updateTeam,
-        deleteTeam
+        deleteTeam,
+        fetchHandicapConfig,
+        updateHandicapConfig,
+        fetchHandicaps
     };
 })();

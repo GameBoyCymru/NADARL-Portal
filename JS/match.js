@@ -26,15 +26,57 @@ function isToday(dateStr) {
     return dateStr === `${y}-${m}-${d}`;
 }
 
-// Sort shooters by total desc, then derive A-team (top 5) and B-team (pos 5-7).
-function calculateTeamScores(shooters) {
-    const indexed = shooters.map((s, i) => ({ ...s, originalIndex: i }));
-    const sorted = indexed.sort((a, b) => b.total - a.total);
-    const aTeam = sorted.slice(0, 5).reduce((sum, s) => sum + s.total, 0);
-    const bTeam = sorted.slice(4, 7).reduce((sum, s) => sum + s.total, 0);
+// ---------------------------------------------------------------------
+// Handicap (second-half / half=2 matches only)
+// ---------------------------------------------------------------------
 
-    const aTeamShooters = sorted.slice(0, 5).map(s => ({ name: s.name, total: s.total }));
-    const bTeamShooters = sorted.slice(4, 7).map(s => ({ name: s.name, total: s.total }));
+let isHandicapMatch = false;
+let handicapMap = {};   // shooter_id -> handicap number
+
+function hcFor(shooterId) {
+    return isHandicapMatch && shooterId ? (handicapMap[shooterId] || 0) : 0;
+}
+
+function showHandicapBanner() {
+    const header = document.getElementById('matchHeader');
+    if (!header || document.getElementById('handicapBanner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'handicapBanner';
+    banner.className = 'handicap-banner';
+    banner.textContent = 'Handicap match — totals include handicap (based on each shooter\'s last 3 matches).';
+    header.appendChild(banner);
+}
+
+// Append HC + Adj. columns to every score table header (handicap matches only).
+function ensureHandicapHeaders() {
+    if (!isHandicapMatch) return;
+    document.querySelectorAll('.score-table').forEach(tbl => {
+        const tr = tbl.querySelector('thead tr');
+        if (!tr || tr.querySelector('.th-hc')) return;
+        const hc = document.createElement('th');
+        hc.className = 'th-hc';
+        hc.textContent = 'HC';
+        const adj = document.createElement('th');
+        adj.className = 'th-adj';
+        adj.textContent = 'Adj.';
+        tr.appendChild(hc);
+        tr.appendChild(adj);
+    });
+}
+
+// Sort shooters by total desc, then derive A-team (top 5) and B-team (pos 5-7).
+// In a handicap match, ranking + team totals use the adjusted (total + HC) score.
+function calculateTeamScores(shooters) {
+    const indexed = shooters.map((s, i) => {
+        const hc = hcFor(s.shooter_id);
+        return { ...s, originalIndex: i, handicap: hc, effective: (s.total || 0) + hc };
+    });
+    const sorted = indexed.sort((a, b) => b.effective - a.effective);
+    const aTeam = sorted.slice(0, 5).reduce((sum, s) => sum + s.effective, 0);
+    const bTeam = sorted.slice(4, 7).reduce((sum, s) => sum + s.effective, 0);
+
+    const aTeamShooters = sorted.slice(0, 5).map(s => ({ name: s.name, total: s.effective }));
+    const bTeamShooters = sorted.slice(4, 7).map(s => ({ name: s.name, total: s.effective }));
 
     return { aTeam, bTeam, aTeamShooters, bTeamShooters };
 }
@@ -48,10 +90,11 @@ function renderShooterTable(tbodyId, shooters) {
     const totals = shooters.map(s => s.total);
     const maxTotal = totals.length ? Math.max(...totals) : 0;
     const minTotal = totals.length ? Math.min(...totals) : 0;
+    const hcCols = isHandicapMatch ? 2 : 0;
     let html = '';
 
     if (!shooters.length) {
-        html = '<tr><td colspan="9" class="empty-table-msg">No scores entered yet</td></tr>';
+        html = `<tr><td colspan="${9 + hcCols}" class="empty-table-msg">No scores entered yet</td></tr>`;
     }
 
     shooters.forEach((shooter) => {
@@ -64,6 +107,11 @@ function renderShooterTable(tbodyId, shooters) {
             html += `<td class="score-cell">${score}</td>`;
         });
         html += `<td class="${totalClass}">${shooter.total}</td>`;
+        if (isHandicapMatch) {
+            const hc = hcFor(shooter.shooter_id);
+            html += `<td class="score-cell hc-cell">${hc}</td>`;
+            html += `<td class="score-cell adj-cell">${(shooter.total || 0) + hc}</td>`;
+        }
         html += '</tr>';
     });
 
@@ -101,9 +149,9 @@ function renderMatchSummary(homeTeam, homeScores, awayTeam, awayScores) {
 
 function renderReadOnly(params, rows) {
     const homeShooters = rows.filter(r => r.team_name === params.home)
-        .map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total }));
+        .map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total }));
     const awayShooters = rows.filter(r => r.team_name === params.away)
-        .map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total }));
+        .map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total }));
 
     const homeScores = renderShooterTable('homeShooters', homeShooters);
     const awayScores = renderShooterTable('awayShooters', awayShooters);
@@ -363,6 +411,18 @@ function buildEditRow(shooterList, existing, teamId) {
     tdTotal.appendChild(totalInner);
     tr.appendChild(tdTotal);
 
+    if (isHandicapMatch) {
+        const hc = hcFor(existing && existing.shooter_id);
+        const tdHc = document.createElement('td');
+        tdHc.className = 'score-cell hc-cell row-hc';
+        tdHc.textContent = hc;
+        tr.appendChild(tdHc);
+        const tdAdj = document.createElement('td');
+        tdAdj.className = 'score-cell adj-cell row-adj';
+        tdAdj.textContent = (existing ? existing.total : 0) + hc;
+        tr.appendChild(tdAdj);
+    }
+
     return tr;
 }
 
@@ -371,6 +431,26 @@ function recalcRowTotal(tr) {
     let total = 0;
     inputs.forEach(i => { total += i.value === '' ? 0 : (parseInt(i.value, 10) || 0); });
     tr.querySelector('.row-total').textContent = total;
+    if (isHandicapMatch) {
+        const adjCell = tr.querySelector('.row-adj');
+        if (adjCell) {
+            const hc = Number(tr.querySelector('.row-hc').textContent) || 0;
+            adjCell.textContent = total + hc;
+        }
+    }
+}
+
+// Re-read this row's shooter and refresh its HC + adjusted cells (handicap matches).
+function refreshRowHandicap(tr) {
+    if (!isHandicapMatch || !tr) return;
+    const picker = tr.querySelector('.shooter-picker');
+    const sid = picker ? picker.getAttribute('data-shooter-id') : null;
+    const hc = hcFor(sid);
+    const hcCell = tr.querySelector('.row-hc');
+    if (hcCell) hcCell.textContent = hc;
+    const adjCell = tr.querySelector('.row-adj');
+    const total = Number(tr.querySelector('.row-total').textContent) || 0;
+    if (adjCell) adjCell.textContent = total + hc;
 }
 
 function isRowComplete(tr) {
@@ -446,8 +526,8 @@ function gatherTeamRows(tbodyId) {
 }
 
 function recalcSummary(params, homeTbodyId, awayTbodyId) {
-    const homeRows = gatherTeamRows(homeTbodyId).map(r => ({ name: r.name, total: r.total, scores: r.shots }));
-    const awayRows = gatherTeamRows(awayTbodyId).map(r => ({ name: r.name, total: r.total, scores: r.shots }));
+    const homeRows = gatherTeamRows(homeTbodyId).map(r => ({ name: r.name, shooter_id: r.shooter_id, total: r.total, scores: r.shots }));
+    const awayRows = gatherTeamRows(awayTbodyId).map(r => ({ name: r.name, shooter_id: r.shooter_id, total: r.total, scores: r.shots }));
 
     const homeScores = calculateTeamScores(homeRows);
     const awayScores = calculateTeamScores(awayRows);
@@ -460,7 +540,7 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
     tbody.innerHTML = '';
 
     if (!editable) {
-        const shooters = existingRows.map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total }));
+        const shooters = existingRows.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total }));
         const scores = renderShooterTable(tbodyId, shooters);
         return scores;
     }
@@ -488,6 +568,7 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
     });
     tbody.addEventListener('change', (e) => {
         if (e.target.classList.contains('shooter-picker')) {
+            refreshRowHandicap(e.target.closest('tr'));
             recalcSummary(params, homeTbodyId, awayTbodyId);
             updateCurrentShooters();
             scheduleSave();
@@ -704,6 +785,12 @@ async function initMatchPage() {
     const match = await NADARL.fetchMatch(params.date, params.home, params.away);
     const rows = await NADARL.fetchMatchScorecard(params.date, params.home, params.away);
 
+    isHandicapMatch = !!(match && match.half === 2);
+    if (isHandicapMatch) {
+        showHandicapBanner();
+        ensureHandicapHeaders();
+    }
+
     // Scores (shots) are entered by the home team only; shooters can be
     // assigned by each team's own captain/generic account. Admins do both.
     // NOTE: today-check disabled for testing.
@@ -721,6 +808,10 @@ async function initMatchPage() {
     const canEdit = homeEditable || awayEditable;
 
     if (!canEdit) {
+        if (isHandicapMatch) {
+            handicapMap = await NADARL.fetchHandicaps(
+                rows.map(r => r.shooter_id).filter(Boolean), params.date);
+        }
         renderReadOnly(params, rows);
         if (match) {
             let refreshTimer = null;
@@ -728,6 +819,10 @@ async function initMatchPage() {
                 clearTimeout(refreshTimer);
                 refreshTimer = setTimeout(async () => {
                     const fresh = await NADARL.fetchMatchScorecard(params.date, params.home, params.away);
+                    if (isHandicapMatch) {
+                        handicapMap = await NADARL.fetchHandicaps(
+                            fresh.map(r => r.shooter_id).filter(Boolean), params.date);
+                    }
                     renderReadOnly(params, fresh);
                 }, 300);
             });
@@ -742,6 +837,14 @@ async function initMatchPage() {
 
     const homeShooters = homeCanPick || canScore ? await NADARL.fetchShootersForTeam(homeTeamId) : [];
     const awayShooters = (awayCanPick || canScore) && awayTeamId ? await NADARL.fetchShootersForTeam(awayTeamId) : [];
+
+    if (isHandicapMatch) {
+        const ids = [];
+        rows.forEach(r => { if (r.shooter_id) ids.push(r.shooter_id); });
+        homeShooters.forEach(s => ids.push(s.id));
+        awayShooters.forEach(s => ids.push(s.id));
+        handicapMap = await NADARL.fetchHandicaps(ids, params.date);
+    }
 
     const homeExisting = rows.filter(r => r.team_name === params.home);
     const awayExisting = rows.filter(r => r.team_name === params.away);

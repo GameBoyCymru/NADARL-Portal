@@ -120,7 +120,8 @@ create index if not exists idx_score_team          on public.score(team_id);
 
 -- Per-shooter season aggregates (drives the League Table + Team page).
 -- Note: later migrations refine this (submitted-only filtering, personal-best vs
--- season-best split, current-season scoping). See supabase/migrations/.
+-- season-best split, current-season scoping, and a `handicap` column). See
+-- supabase/migrations/.
 create or replace view public.shooter_stats with (security_invoker = true) as
 select
     sh.id            as shooter_id,
