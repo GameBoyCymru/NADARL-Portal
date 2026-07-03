@@ -123,6 +123,22 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // Live updates: fire onChange whenever scores for a match change.
+    function subscribeMatchScores(matchId, onChange) {
+        if (!db || !db().channel) return null;
+        return db().channel('match-scores-' + matchId)
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'score', filter: 'match_id=eq.' + matchId },
+                onChange)
+            .subscribe();
+    }
+
+    function unsubscribeChannel(channel) {
+        if (channel && db && db().removeChannel) {
+            db().removeChannel(channel);
+        }
+    }
+
     // Profile of the currently signed-in user (or null if not signed in).
     async function fetchMyProfile() {
         const { data: { user } } = await db().auth.getUser();
@@ -305,6 +321,8 @@ const NADARL = (function () {
         fetchMatch,
         fetchShootersForTeam,
         saveTeamScores,
+        subscribeMatchScores,
+        unsubscribeChannel,
         fetchMyProfile,
         fetchProfiles,
         updateProfile,

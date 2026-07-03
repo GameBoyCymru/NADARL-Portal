@@ -137,6 +137,14 @@ function updateHeaderScores(homeScores, awayScores) {
 
 const SHOT_COUNT = 7;
 
+// Per-table edit rights, set in initMatchPage.
+//   pick  -> can assign shooters (each team's own captain/generic)
+//   score -> can enter shot scores (home team only)
+const editRights = {
+    homeShooters: { pick: false, score: false },
+    awayShooters: { pick: false, score: false }
+};
+
 function createShooterPicker(shooterList, selectedId, teamId) {
     const container = document.createElement('div');
     container.className = 'shooter-picker';
@@ -371,6 +379,7 @@ function isRowComplete(tr) {
 function updateCurrentShooter(tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
+    const rights = editRights[tbodyId] || { pick: false, score: false };
     const rows = Array.from(tbody.querySelectorAll('tr.score-edit-row'));
     let currentFound = false;
     let prevHasShooter = true;
@@ -378,7 +387,7 @@ function updateCurrentShooter(tbodyId) {
         const picker = tr.querySelector('.shooter-picker');
         const hasShooter = !!(picker && picker.getAttribute('data-shooter-id'));
         const trigger = picker ? picker.querySelector('.shooter-picker-trigger') : null;
-        if (trigger) trigger.disabled = !prevHasShooter;
+        if (trigger) trigger.disabled = !rights.pick || !prevHasShooter;
 
         const isCurrent = !currentFound && !isRowComplete(tr);
         if (isCurrent) {
@@ -387,11 +396,11 @@ function updateCurrentShooter(tbodyId) {
         } else {
             tr.classList.remove('current-shooter');
         }
-        const editable = isCurrent || isRowComplete(tr);
+        const shotsEditable = rights.score && (isCurrent || isRowComplete(tr));
         tr.querySelectorAll('.shot-input').forEach(el => {
-            el.disabled = !editable;
+            el.disabled = !shotsEditable;
         });
-        tr.classList.toggle('row-locked', !editable);
+        tr.classList.toggle('row-locked', !shotsEditable);
 
         prevHasShooter = hasShooter;
     });
@@ -470,43 +479,50 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
             recalcRowTotal(e.target.closest('tr'));
             recalcSummary(params, homeTbodyId, awayTbodyId);
             updateCurrentShooters();
+            scheduleSave();
         }
     });
     tbody.addEventListener('change', (e) => {
         if (e.target.classList.contains('shooter-picker')) {
             recalcSummary(params, homeTbodyId, awayTbodyId);
             updateCurrentShooters();
+            scheduleSave();
         }
     });
 
-    // Save button: appended after the table inside its column
+    // Status indicator (auto-saves on every change)
     const column = tbody.closest('.score-table-column');
-    if (column && !column.querySelector('.score-controls')) {
-        const controls = document.createElement('div');
-        controls.className = 'score-controls';
+    let statusEl = column && column.querySelector('.score-status');
+    if (column && !statusEl) {
+        statusEl = document.createElement('div');
+        statusEl.className = 'score-status';
+        column.appendChild(statusEl);
+    }
 
-        const saveBtn = document.createElement('button');
-        saveBtn.type = 'button';
-        saveBtn.className = 'score-save-btn';
-        saveBtn.textContent = 'Save Scores';
-
-        const status = document.createElement('div');
-        status.className = 'score-status';
-
-        saveBtn.addEventListener('click', async () => {
-            saveBtn.disabled = true;
-            status.textContent = 'Saving…';
-            const rows = gatherTeamRows(tbodyId);
-            const res = await NADARL.saveTeamScores(matchId, teamId, rows);
-            saveBtn.disabled = false;
-            status.textContent = res.ok
-                ? 'Saved ' + rows.length + ' score(s).'
+    let saveTimer = null;
+    let saveInFlight = false;
+    let dirty = false;
+    function scheduleSave() {
+        if (statusEl) statusEl.textContent = 'Editing…';
+        dirty = true;
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(flushSave, 700);
+    }
+    async function flushSave() {
+        if (saveInFlight) { saveTimer = setTimeout(flushSave, 300); return; }
+        if (!dirty) return;
+        dirty = false;
+        saveInFlight = true;
+        if (statusEl) statusEl.textContent = 'Saving…';
+        const rows = gatherTeamRows(tbodyId);
+        const res = await NADARL.saveTeamScores(matchId, teamId, rows);
+        saveInFlight = false;
+        if (statusEl) {
+            statusEl.textContent = res.ok
+                ? 'Saved ' + rows.length + ' score(s)'
                 : 'Save failed: ' + res.error;
-        });
-
-        controls.appendChild(saveBtn);
-        column.appendChild(controls);
-        column.appendChild(status);
+        }
+        if (dirty) flushSave();
     }
 
     return calculateTeamScores(existingRows.map(r => ({ name: r.shooter_name, total: r.total })));
@@ -540,29 +556,59 @@ async function initMatchPage() {
     const match = await NADARL.fetchMatch(params.date, params.home, params.away);
     const rows = await NADARL.fetchMatchScorecard(params.date, params.home, params.away);
 
-    const canEditHome = !!(match && (isAdmin || (isCaptainOrGeneric && profile.team_id === match.home_team_id && isToday(params.date))));
-    const canEditAway = !!(match && isAdmin && match.away_team_id);
-    const canEdit = canEditHome || canEditAway;
+    // Scores (shots) are entered by the home team only; shooters can be
+    // assigned by each team's own captain/generic account. Admins do both.
+    const today = match && isToday(params.date);
+    const isHome = match && isCaptainOrGeneric && profile.team_id === match.home_team_id;
+    const canScore = !!(isAdmin || (today && isHome));
+    const homeCanPick = !!(isAdmin || (today && isCaptainOrGeneric && profile.team_id === match.home_team_id));
+    const awayCanPick = !!(isAdmin || (today && isCaptainOrGeneric && match && match.away_team_id && profile.team_id === match.away_team_id));
+
+    editRights.homeShooters = { pick: homeCanPick, score: canScore };
+    editRights.awayShooters = { pick: awayCanPick, score: canScore };
+
+    const homeEditable = homeCanPick || canScore;
+    const awayEditable = !!(match && match.away_team_id) && (awayCanPick || canScore);
+    const canEdit = homeEditable || awayEditable;
 
     if (!canEdit) {
         renderReadOnly(params, rows);
+        if (match) {
+            let refreshTimer = null;
+            const channel = NADARL.subscribeMatchScores(match.id, () => {
+                clearTimeout(refreshTimer);
+                refreshTimer = setTimeout(async () => {
+                    const fresh = await NADARL.fetchMatchScorecard(params.date, params.home, params.away);
+                    renderReadOnly(params, fresh);
+                }, 300);
+            });
+            window.addEventListener('beforeunload', () => NADARL.unsubscribeChannel(channel));
+        }
         return;
     }
 
     const homeTeamId = match.home_team_id;
     const awayTeamId = match.away_team_id;
 
-    const homeShooters = await NADARL.fetchShootersForTeam(homeTeamId);
-    const awayShooters = awayTeamId ? await NADARL.fetchShootersForTeam(awayTeamId) : [];
+    const homeShooters = homeCanPick || canScore ? await NADARL.fetchShootersForTeam(homeTeamId) : [];
+    const awayShooters = (awayCanPick || canScore) && awayTeamId ? await NADARL.fetchShootersForTeam(awayTeamId) : [];
 
     const homeExisting = rows.filter(r => r.team_name === params.home);
     const awayExisting = rows.filter(r => r.team_name === params.away);
 
     document.body.classList.add('edit-mode');
 
-    renderEditableGrid('homeShooters', match.id, homeTeamId, homeShooters, homeExisting, canEditHome, params, 'homeShooters', 'awayShooters');
-    if (awayTeamId) {
-        renderEditableGrid('awayShooters', match.id, awayTeamId, awayShooters, awayExisting, canEditAway, params, 'homeShooters', 'awayShooters');
+    if (homeEditable) {
+        renderEditableGrid('homeShooters', match.id, homeTeamId, homeShooters, homeExisting, true, params, 'homeShooters', 'awayShooters');
+    } else {
+        renderShooterTable('homeShooters', homeExisting.map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total })));
+    }
+    if (match.away_team_id) {
+        if (awayEditable) {
+            renderEditableGrid('awayShooters', match.id, awayTeamId, awayShooters, awayExisting, true, params, 'homeShooters', 'awayShooters');
+        } else {
+            renderShooterTable('awayShooters', awayExisting.map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total })));
+        }
     }
 
     recalcSummary(params, 'homeShooters', 'awayShooters');

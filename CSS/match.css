@@ -604,35 +604,6 @@
     height: 100%;
 }
 
-.score-controls {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-}
-
-.score-save-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: background-color 0.2s ease;
-    background: rgba(80, 170, 90, 0.35);
-    color: #d6f3da;
-    border-color: rgba(80, 170, 90, 0.6);
-}
-
-.score-save-btn:hover {
-    background: rgba(80, 170, 90, 0.55);
-}
-
-.score-save-btn:disabled {
-    opacity: 0.6;
-    cursor: default;
-}
-
 .score-status {
     margin-top: 8px;
     font-size: 0.85rem;
