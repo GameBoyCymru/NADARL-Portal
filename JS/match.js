@@ -374,8 +374,10 @@ function recalcRowTotal(tr) {
 }
 
 function isRowComplete(tr) {
+    const picker = tr.querySelector('.shooter-picker');
+    const hasShooter = !!(picker && picker.getAttribute('data-shooter-id'));
     const inputs = tr.querySelectorAll('.shot-input');
-    return Array.from(inputs).every(i => i.value !== '');
+    return hasShooter && Array.from(inputs).every(i => i.value !== '');
 }
 
 function updateCurrentShooter(tbodyId) {
@@ -398,7 +400,7 @@ function updateCurrentShooter(tbodyId) {
         } else {
             tr.classList.remove('current-shooter');
         }
-        const shotsEditable = rights.score && (isCurrent || isRowComplete(tr));
+        const shotsEditable = rights.score && hasShooter && (isCurrent || isRowComplete(tr));
         tr.querySelectorAll('.shot-input').forEach(el => {
             el.disabled = !shotsEditable;
         });
@@ -524,6 +526,11 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
                 ? 'Saved ' + rows.length + ' score(s)'
                 : 'Save failed: ' + res.error;
         }
+        if (res.ok && !matchStatus.submitted) {
+            await NADARL.resetMatchConfirm(matchId);
+            matchStatus = (await NADARL.fetchMatchStatus(matchId)) || matchStatus;
+            refreshConfirmUI();
+        }
         if (dirty) flushSave();
     }
 
@@ -552,12 +559,15 @@ function buildConfirmArea(side) {
     confirmBtn.className = 'confirm-btn';
     confirmBtn.textContent = 'Confirm Results';
     confirmBtn.addEventListener('click', async () => {
+        const confirmed = side === 'home' ? matchStatus.home_confirmed : matchStatus.away_confirmed;
         confirmBtn.disabled = true;
-        const res = await NADARL.confirmMatchSide(confirmCtx.matchId, side);
+        const res = confirmed
+            ? await NADARL.unconfirmMatchSide(confirmCtx.matchId, side)
+            : await NADARL.confirmMatchSide(confirmCtx.matchId, side);
         if (res.ok) {
             matchStatus = (await NADARL.fetchMatchStatus(confirmCtx.matchId)) || matchStatus;
         } else {
-            window.alert('Could not confirm: ' + (res.error || 'not permitted'));
+            window.alert('Could not update confirmation: ' + (res.error || 'not permitted'));
         }
         refreshConfirmUI();
     });
@@ -610,8 +620,10 @@ function refreshConfirmUI() {
             : (side === 'home' ? 'Home: awaiting confirmation' : 'Away: awaiting confirmation');
         statusEl.className = 'match-confirm-status' + (confirmed ? ' confirmed' : '');
 
-        confirmBtn.hidden = !canConfirm || confirmed;
+        confirmBtn.hidden = !canConfirm;
         confirmBtn.disabled = false;
+        confirmBtn.textContent = confirmed ? 'Unconfirm' : 'Confirm Results';
+        confirmBtn.classList.toggle('unconfirm', confirmed);
 
         // Submit only on home side, only when both confirmed, only for home team
         if (side === 'home') {

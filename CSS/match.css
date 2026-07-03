@@ -662,6 +662,16 @@
     background: rgba(212, 160, 23, 0.5);
 }
 
+.confirm-btn.unconfirm {
+    background: rgba(196, 30, 58, 0.3);
+    color: #f0aeb6;
+    border-color: rgba(196, 30, 58, 0.5);
+}
+
+.confirm-btn.unconfirm:hover {
+    background: rgba(196, 30, 58, 0.5);
+}
+
 .confirm-btn[hidden],
 .submit-btn[hidden] {
     display: none;

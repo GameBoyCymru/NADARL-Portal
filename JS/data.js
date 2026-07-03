@@ -156,6 +156,20 @@ const NADARL = (function () {
         return { ok: !!data };
     }
 
+    // Unconfirm one side of a match.
+    async function unconfirmMatchSide(matchId, side) {
+        const { data, error } = await db().rpc('unconfirm_match_side', { p_match: matchId, p_side: side });
+        if (error) { console.error('unconfirmMatchSide', error); return { ok: false, error: error.message }; }
+        return { ok: !!data };
+    }
+
+    // Reset both confirmations (e.g. after scores are edited).
+    async function resetMatchConfirm(matchId) {
+        const { data, error } = await db().rpc('reset_match_confirm', { p_match: matchId });
+        if (error) { console.error('resetMatchConfirm', error); return { ok: false, error: error.message }; }
+        return { ok: !!data };
+    }
+
     // Submit (commit) a match once both sides confirmed.
     async function submitMatch(matchId) {
         const { data, error } = await db().rpc('submit_match', { p_match: matchId });
@@ -359,6 +373,8 @@ const NADARL = (function () {
         unsubscribeChannel,
         fetchMatchStatus,
         confirmMatchSide,
+        unconfirmMatchSide,
+        resetMatchConfirm,
         submitMatch,
         subscribeMatch,
         fetchMyProfile,
