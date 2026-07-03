@@ -1,4 +1,5 @@
 let fixtures = [];
+let isAdmin = false;
 
 function escapeHtml(s) {
     return String(s)
@@ -37,7 +38,9 @@ function isToday(dateStr) {
 function getNextFixtures() {
     const today = getTodayDate();
     const futureFixtures = fixtures.filter(f => f.date > today);
-    return futureFixtures.slice(0, 2);
+    const dates = [...new Set(futureFixtures.map(f => f.date))].sort().slice(0, 1);
+    const dateSet = new Set(dates);
+    return futureFixtures.filter(f => dateSet.has(f.date));
 }
 
 function groupFixturesByDate(fixtureList) {
@@ -97,7 +100,8 @@ function createFixtureCard(fixture) {
         `;
     }
     const isTodayFixture = isToday(fixture.date);
-    const clickAttr = isTodayFixture
+    const clickable = isTodayFixture || isAdmin;
+    const clickAttr = clickable
         ? `onclick="window.location.href='match.html?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}&date=${encodeURIComponent(fixture.date)}&venue=${encodeURIComponent(fixture.venue)}'" style="cursor:pointer;"`
         : '';
     return `
@@ -263,6 +267,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         fixtures.push({ date: e.date, isBlocked: true, reason: e.reason });
     });
     fixtures.sort((a, b) => a.date.localeCompare(b.date));
+    const profile = await NADARL.fetchMyProfile();
+    isAdmin = !!(profile && profile.role === 'admin');
     renderTodayFixtures();
     renderSeasonFixtures();
     renderMobileSeasonFixtures();
