@@ -483,6 +483,11 @@
     background: rgba(212, 160, 23, 0.18);
 }
 
+.edit-mode .score-edit-row.row-locked .shot-input {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .edit-mode .total-cell-inner {
     display: flex;
     align-items: center;

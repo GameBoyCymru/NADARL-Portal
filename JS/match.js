@@ -204,12 +204,19 @@ function updateCurrentShooter(tbodyId) {
     const rows = Array.from(tbody.querySelectorAll('tr.score-edit-row'));
     let currentFound = false;
     rows.forEach(tr => {
-        if (!currentFound && !isRowComplete(tr)) {
+        const isCurrent = !currentFound && !isRowComplete(tr);
+        if (isCurrent) {
             tr.classList.add('current-shooter');
             currentFound = true;
         } else {
             tr.classList.remove('current-shooter');
         }
+        // shot cells editable only when complete or the current (next) shooter
+        const editable = isCurrent || isRowComplete(tr);
+        tr.querySelectorAll('.shot-input').forEach(el => {
+            el.disabled = !editable;
+        });
+        tr.classList.toggle('row-locked', !editable);
     });
 }
 
@@ -275,6 +282,14 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
 
     tbody.addEventListener('input', (e) => {
         if (e.target.classList.contains('shot-input')) {
+            const v = e.target.value;
+            if (v !== '') {
+                let n = parseInt(v, 10);
+                if (isNaN(n)) n = 0;
+                if (n < 0) n = 0;
+                if (n > 10) n = 10;
+                if (String(n) !== v) e.target.value = n;
+            }
             recalcRowTotal(e.target.closest('tr'));
             recalcSummary(params, homeTbodyId, awayTbodyId);
             updateCurrentShooters();
