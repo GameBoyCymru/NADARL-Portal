@@ -479,6 +479,10 @@
     height: 100%;
 }
 
+.edit-mode .score-edit-row.current-shooter td {
+    background: rgba(212, 160, 23, 0.18);
+}
+
 .edit-mode .total-cell-inner {
     display: flex;
     align-items: center;

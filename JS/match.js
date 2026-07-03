@@ -193,6 +193,31 @@ function recalcRowTotal(tr) {
     tr.querySelector('.row-total').textContent = total;
 }
 
+function isRowComplete(tr) {
+    const inputs = tr.querySelectorAll('.shot-input');
+    return Array.from(inputs).every(i => i.value !== '');
+}
+
+function updateCurrentShooter(tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr.score-edit-row'));
+    let currentFound = false;
+    rows.forEach(tr => {
+        if (!currentFound && !isRowComplete(tr)) {
+            tr.classList.add('current-shooter');
+            currentFound = true;
+        } else {
+            tr.classList.remove('current-shooter');
+        }
+    });
+}
+
+function updateCurrentShooters() {
+    updateCurrentShooter('homeShooters');
+    updateCurrentShooter('awayShooters');
+}
+
 function gatherTeamRows(tbodyId) {
     const rows = [];
     const tbody = document.getElementById(tbodyId);
@@ -252,6 +277,7 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
         if (e.target.classList.contains('shot-input')) {
             recalcRowTotal(e.target.closest('tr'));
             recalcSummary(params, homeTbodyId, awayTbodyId);
+            updateCurrentShooters();
         }
     });
     tbody.addEventListener('change', (e) => {
@@ -347,6 +373,7 @@ async function initMatchPage() {
     }
 
     recalcSummary(params, 'homeShooters', 'awayShooters');
+    updateCurrentShooters();
 }
 
 document.addEventListener('DOMContentLoaded', initMatchPage);
