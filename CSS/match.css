@@ -104,8 +104,22 @@
     border-collapse: separate;
     border-spacing: 0;
     border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid rgba(212, 160, 23, 0.3);
+}
+
+.score-table thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.score-table thead th:last-child {
+    border-top-right-radius: 12px;
+}
+
+.score-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+.score-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
 }
 
 .score-table th,
@@ -113,12 +127,24 @@
     padding: 10px 12px;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.score-table th:first-child,
+.score-table td:first-child {
+    border-left: 3px solid rgba(196, 30, 58, 0.3);
 }
 
 .score-table th:last-child,
 .score-table td:last-child {
-    border-right: none;
+    border-right: 3px solid rgba(196, 30, 58, 0.3);
+}
+
+.score-table thead th {
+    border-top: 3px solid rgba(196, 30, 58, 0.3);
+}
+
+.score-table tbody tr:last-child td {
+    border-bottom: 3px solid rgba(196, 30, 58, 0.3);
 }
 
 .score-table th {
