@@ -95,7 +95,7 @@ const NADARL = (function () {
     // All shooters for a team (for the score-entry dropdowns).
     async function fetchShootersForTeam(teamId) {
         const { data, error } = await db().from('shooter')
-            .select('id,name,role')
+            .select('id,shooter_no,name,role')
             .eq('team_id', teamId)
             .order('name');
         if (error) { console.error('fetchShootersForTeam', error); return []; }

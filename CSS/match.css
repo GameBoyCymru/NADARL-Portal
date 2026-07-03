@@ -442,7 +442,16 @@
 
 /* ---- Score entry (edit mode) ---- */
 
-.edit-mode .shooter-select {
+.edit-mode .shooter-picker {
+    position: relative;
+    width: 100%;
+}
+
+.edit-mode .shooter-picker-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     width: 100%;
     padding: 6px 8px;
     background: rgba(255, 255, 255, 0.06);
@@ -450,6 +459,94 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 6px;
     font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.edit-mode .shooter-picker-trigger:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.edit-mode .shooter-picker-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.edit-mode .shooter-picker-caret {
+    font-size: 0.65rem;
+    color: #a0a0a0;
+}
+
+.edit-mode .shooter-picker-panel[hidden] {
+    display: none;
+}
+
+.edit-mode .shooter-picker-panel {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    max-height: 260px;
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-mode .shooter-picker-search {
+    width: 100%;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 0.9rem;
+}
+
+.edit-mode .shooter-picker-search:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.edit-mode .shooter-picker-list {
+    overflow-y: auto;
+    max-height: 210px;
+}
+
+.edit-mode .shooter-picker-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.edit-mode .shooter-picker-none {
+    font-style: italic;
+    color: #a0a0a0;
+}
+
+.edit-mode .shooter-picker-option:hover {
+    background: rgba(196, 30, 58, 0.25);
+}
+
+.edit-mode .shooter-option-no {
+    color: #a0a0a0;
+    font-size: 0.8rem;
+    white-space: nowrap;
 }
 
 .edit-mode .shot-input {

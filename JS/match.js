@@ -137,25 +137,144 @@ function updateHeaderScores(homeScores, awayScores) {
 
 const SHOT_COUNT = 7;
 
+function createShooterPicker(shooterList, selectedId) {
+    const container = document.createElement('div');
+    container.className = 'shooter-picker';
+
+    const selected = selectedId ? shooterList.find(s => s.id === selectedId) : null;
+    container.setAttribute('data-shooter-id', selected ? selected.id : '');
+    container.setAttribute('data-name', selected ? selected.name : '');
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'shooter-picker-trigger';
+
+    const label = document.createElement('span');
+    label.className = 'shooter-picker-label';
+    label.textContent = selected ? `${selected.name} #${String(selected.shooter_no).padStart(4, '0')}` : '— select shooter —';
+
+    const caret = document.createElement('span');
+    caret.className = 'shooter-picker-caret';
+    caret.textContent = '\u25BC';
+
+    trigger.appendChild(label);
+    trigger.appendChild(caret);
+    container.appendChild(trigger);
+
+    const panel = document.createElement('div');
+    panel.className = 'shooter-picker-panel';
+    panel.hidden = true;
+
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.className = 'shooter-picker-search';
+    search.placeholder = 'Search name or number…';
+
+    const list = document.createElement('div');
+    list.className = 'shooter-picker-list';
+
+    const noneOpt = document.createElement('button');
+    noneOpt.type = 'button';
+    noneOpt.className = 'shooter-picker-option shooter-picker-none';
+    const noneSpan = document.createElement('span');
+    noneSpan.className = 'shooter-option-name';
+    noneSpan.textContent = '— none —';
+    noneOpt.appendChild(noneSpan);
+    noneOpt.addEventListener('click', () => {
+        container.setAttribute('data-shooter-id', '');
+        container.setAttribute('data-name', '');
+        label.textContent = '— select shooter —';
+        panel.hidden = true;
+        container.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    list.appendChild(noneOpt);
+
+    shooterList.forEach(s => {
+        const opt = document.createElement('button');
+        opt.type = 'button';
+        opt.className = 'shooter-picker-option';
+        opt.setAttribute('data-shooter-id', s.id);
+        const noStr = String(s.shooter_no).padStart(4, '0');
+        opt.setAttribute('data-search', (s.name + ' #' + noStr).toLowerCase());
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'shooter-option-name';
+        nameSpan.textContent = s.name;
+        const noSpan = document.createElement('span');
+        noSpan.className = 'shooter-option-no';
+        noSpan.textContent = '#' + noStr;
+        opt.appendChild(nameSpan);
+        opt.appendChild(noSpan);
+        opt.addEventListener('click', () => {
+            container.setAttribute('data-shooter-id', s.id);
+            container.setAttribute('data-name', s.name);
+            label.textContent = `${s.name} #${noStr}`;
+            panel.hidden = true;
+            container.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        list.appendChild(opt);
+    });
+
+    function applyFilter() {
+        const q = search.value.toLowerCase().trim();
+        list.querySelectorAll('.shooter-picker-option').forEach(opt => {
+            const matchesSearch = q === '' || opt.getAttribute('data-search').includes(q);
+            const used = opt.classList.contains('option-used');
+            opt.style.display = (matchesSearch && !used) ? '' : 'none';
+        });
+    }
+
+    search.addEventListener('input', applyFilter);
+
+    panel.appendChild(search);
+    panel.appendChild(list);
+    container.appendChild(panel);
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasOpen = !panel.hidden;
+        closeAllPickerPanels();
+        if (!wasOpen) {
+            const tbody = container.closest('tbody');
+            const usedIds = new Set();
+            if (tbody) {
+                tbody.querySelectorAll('.shooter-picker').forEach(p => {
+                    if (p === container) return;
+                    const id = p.getAttribute('data-shooter-id');
+                    if (id) usedIds.add(id);
+                });
+            }
+            list.querySelectorAll('.shooter-picker-option').forEach(opt => {
+                opt.classList.toggle('option-used', usedIds.has(opt.getAttribute('data-shooter-id')));
+            });
+            panel.hidden = false;
+            search.value = '';
+            applyFilter();
+            search.focus();
+        }
+    });
+
+    return container;
+}
+
+function closeAllPickerPanels() {
+    document.querySelectorAll('.shooter-picker-panel:not([hidden])').forEach(p => {
+        p.hidden = true;
+    });
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.shooter-picker')) {
+        closeAllPickerPanels();
+    }
+});
+
 function buildEditRow(shooterList, existing) {
     const tr = document.createElement('tr');
     tr.className = 'score-edit-row';
 
     const tdShooter = document.createElement('td');
-    const select = document.createElement('select');
-    select.className = 'shooter-select';
-    const blank = document.createElement('option');
-    blank.value = '';
-    blank.textContent = '— select shooter —';
-    select.appendChild(blank);
-    shooterList.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.textContent = s.name;
-        select.appendChild(opt);
-    });
-    if (existing) select.value = existing.shooter_id;
-    tdShooter.appendChild(select);
+    const picker = createShooterPicker(shooterList, existing ? existing.shooter_id : null);
+    tdShooter.appendChild(picker);
     tr.appendChild(tdShooter);
 
     const shots = existing ? (existing.shots || []) : [];
@@ -230,11 +349,11 @@ function gatherTeamRows(tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return rows;
     tbody.querySelectorAll('tr').forEach(tr => {
-        const select = tr.querySelector('.shooter-select');
-        if (select) {
-            const shooterId = select.value;
+        const picker = tr.querySelector('.shooter-picker');
+        if (picker) {
+            const shooterId = picker.getAttribute('data-shooter-id');
             if (!shooterId) return;
-            const name = select.options[select.selectedIndex].text;
+            const name = picker.getAttribute('data-name');
             const shots = Array.from(tr.querySelectorAll('.shot-input')).map(i =>
                 i.value === '' ? 0 : (parseInt(i.value, 10) || 0)
             );
@@ -296,7 +415,7 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
         }
     });
     tbody.addEventListener('change', (e) => {
-        if (e.target.classList.contains('shooter-select')) {
+        if (e.target.classList.contains('shooter-picker')) {
             recalcSummary(params, homeTbodyId, awayTbodyId);
         }
     });
