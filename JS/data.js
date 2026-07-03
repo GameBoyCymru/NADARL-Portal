@@ -80,6 +80,49 @@ const NADARL = (function () {
         return data;
     }
 
+    // A single match record (id + team ids) resolved by date + team names.
+    async function fetchMatch(date, homeName, awayName) {
+        const { data, error } = await db().from('fixture_list')
+            .select('id,date,home_team_id,away_team_id,home_team,away_team,half')
+            .eq('date', date)
+            .eq('home_team', homeName)
+            .eq('away_team', awayName)
+            .maybeSingle();
+        if (error) { console.error('fetchMatch', error); return null; }
+        return data;
+    }
+
+    // All shooters for a team (for the score-entry dropdowns).
+    async function fetchShootersForTeam(teamId) {
+        const { data, error } = await db().from('shooter')
+            .select('id,name,role')
+            .eq('team_id', teamId)
+            .order('name');
+        if (error) { console.error('fetchShootersForTeam', error); return []; }
+        return data;
+    }
+
+    // Replace all scores for one team in a match with the given rows.
+    async function saveTeamScores(matchId, teamId, rows) {
+        const { error: derr } = await db().from('score')
+            .delete()
+            .eq('match_id', matchId)
+            .eq('team_id', teamId);
+        if (derr) { console.error('saveTeamScores delete', derr); return { ok: false, error: derr.message }; }
+        if (!rows.length) return { ok: true };
+        const payload = rows.map(r => ({
+            match_id: matchId,
+            shooter_id: r.shooter_id,
+            team_id: teamId,
+            shots: r.shots,
+            total: r.total,
+            tens: r.tens
+        }));
+        const { error: ierr } = await db().from('score').insert(payload);
+        if (ierr) { console.error('saveTeamScores insert', ierr); return { ok: false, error: ierr.message }; }
+        return { ok: true };
+    }
+
     // Profile of the currently signed-in user (or null if not signed in).
     async function fetchMyProfile() {
         const { data: { user } } = await db().auth.getUser();
@@ -259,6 +302,9 @@ const NADARL = (function () {
         fetchAllShooterStats,
         fetchFixtures,
         fetchMatchScorecard,
+        fetchMatch,
+        fetchShootersForTeam,
+        saveTeamScores,
         fetchMyProfile,
         fetchProfiles,
         updateProfile,

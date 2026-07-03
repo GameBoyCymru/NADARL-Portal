@@ -216,14 +216,19 @@
 
 .score-tables-wrapper {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 40px;
 }
 
 .score-table-column {
-    flex: 1;
     min-width: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+.score-table-column + .score-table-column {
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+    padding-top: 16px;
 }
 
 .score-table-column .score-table {
@@ -246,22 +251,6 @@
 }
 
 @media (max-width: 1120px) {
-    .score-tables-wrapper {
-        flex-direction: column;
-        gap: 0;
-    }
-
-    .score-table-column {
-        flex: none;
-        width: 100%;
-    }
-
-    .score-table-column + .score-table-column {
-        border-top: 2px solid rgba(255, 255, 255, 0.1);
-        padding-top: 16px;
-        margin-top: 40px;
-    }
-
     .score-table-column .score-table {
         min-width: unset;
         width: 100%;
@@ -423,4 +412,118 @@
 
 .rotate-dismiss:hover {
     background: rgba(196, 30, 58, 0.5);
+}
+
+/* ---- Score entry (edit mode) ---- */
+
+.edit-mode .shooter-select {
+    width: 100%;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.edit-mode .shot-input {
+    width: 48px;
+    padding: 6px 4px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    -moz-appearance: textfield;
+}
+
+.edit-mode .shot-input::-webkit-outer-spin-button,
+.edit-mode .shot-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.edit-mode .shot-input:focus {
+    outline: none;
+    border-color: rgba(212, 160, 23, 0.7);
+}
+
+.edit-mode .total-cell {
+    height: 100%;
+}
+
+.edit-mode .total-cell-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 100%;
+}
+
+.remove-row-btn {
+    background: rgba(196, 30, 58, 0.25);
+    color: #f0aeb6;
+    border: 1px solid rgba(196, 30, 58, 0.4);
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+    transition: background-color 0.2s ease;
+}
+
+.remove-row-btn:hover {
+    background: rgba(196, 30, 58, 0.5);
+}
+
+.score-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.score-add-btn,
+.score-save-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s ease;
+}
+
+.score-add-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.score-add-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.score-save-btn {
+    background: rgba(80, 170, 90, 0.35);
+    color: #d6f3da;
+    border-color: rgba(80, 170, 90, 0.6);
+}
+
+.score-save-btn:hover {
+    background: rgba(80, 170, 90, 0.55);
+}
+
+.score-save-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.score-status {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #bfe6c4;
+    font-weight: 600;
 }
