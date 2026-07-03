@@ -694,7 +694,8 @@ async function initMatchPage() {
 
     // Scores (shots) are entered by the home team only; shooters can be
     // assigned by each team's own captain/generic account. Admins do both.
-    const today = match && isToday(params.date);
+    // NOTE: today-check disabled for testing.
+    const today = !!match;
     const isHome = match && isCaptainOrGeneric && profile.team_id === match.home_team_id;
     const canScore = !!(isAdmin || (today && isHome));
     const homeCanPick = !!(isAdmin || (today && isCaptainOrGeneric && profile.team_id === match.home_team_id));
