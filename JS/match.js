@@ -50,6 +50,10 @@ function renderShooterTable(tbodyId, shooters) {
     const minTotal = totals.length ? Math.min(...totals) : 0;
     let html = '';
 
+    if (!shooters.length) {
+        html = '<tr><td colspan="9" class="empty-table-msg">No scores entered yet</td></tr>';
+    }
+
     shooters.forEach((shooter) => {
         let totalClass = 'total-cell';
         if (shooters.length && shooter.total === maxTotal) totalClass += ' total-highest';
@@ -100,12 +104,6 @@ function renderReadOnly(params, rows) {
         .map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total }));
     const awayShooters = rows.filter(r => r.team_name === params.away)
         .map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total }));
-
-    if (!homeShooters.length && !awayShooters.length) {
-        document.querySelector('.score-tables-wrapper').innerHTML =
-            '<div class="no-fixtures">Scores for this match have not been entered yet.</div>';
-        return;
-    }
 
     const homeScores = renderShooterTable('homeShooters', homeShooters);
     const awayScores = renderShooterTable('awayShooters', awayShooters);

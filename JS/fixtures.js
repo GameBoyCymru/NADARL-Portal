@@ -100,7 +100,7 @@ function createFixtureCard(fixture) {
         `;
     }
     const isTodayFixture = isToday(fixture.date);
-    const clickable = isTodayFixture || isAdmin;
+    const clickable = true;
     const clickAttr = clickable
         ? `onclick="window.location.href='match.html?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}&date=${encodeURIComponent(fixture.date)}&venue=${encodeURIComponent(fixture.venue)}'" style="cursor:pointer;"`
         : '';

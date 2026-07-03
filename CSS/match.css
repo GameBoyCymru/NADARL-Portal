@@ -204,6 +204,13 @@
     color: #d0d0d0;
 }
 
+.score-table .empty-table-msg {
+    text-align: center;
+    color: #a0a0a0;
+    font-style: italic;
+    padding: 24px 12px;
+}
+
 .score-table .team-total-row td {
     font-weight: bold;
     font-size: 1rem;
