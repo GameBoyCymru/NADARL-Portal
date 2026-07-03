@@ -139,6 +139,40 @@ const NADARL = (function () {
         }
     }
 
+    // Confirmation / submission status for a match.
+    async function fetchMatchStatus(matchId) {
+        const { data, error } = await db().from('match')
+            .select('id,home_confirmed,away_confirmed,submitted')
+            .eq('id', matchId)
+            .maybeSingle();
+        if (error) { console.error('fetchMatchStatus', error); return null; }
+        return data;
+    }
+
+    // Confirm one side of a match (security definer checks permissions).
+    async function confirmMatchSide(matchId, side) {
+        const { data, error } = await db().rpc('confirm_match_side', { p_match: matchId, p_side: side });
+        if (error) { console.error('confirmMatchSide', error); return { ok: false, error: error.message }; }
+        return { ok: !!data };
+    }
+
+    // Submit (commit) a match once both sides confirmed.
+    async function submitMatch(matchId) {
+        const { data, error } = await db().rpc('submit_match', { p_match: matchId });
+        if (error) { console.error('submitMatch', error); return { ok: false, error: error.message }; }
+        return { ok: !!data };
+    }
+
+    // Live updates for confirmation / submission state.
+    function subscribeMatch(matchId, onChange) {
+        if (!db || !db().channel) return null;
+        return db().channel('match-status-' + matchId)
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'match', filter: 'id=eq.' + matchId },
+                onChange)
+            .subscribe();
+    }
+
     // Profile of the currently signed-in user (or null if not signed in).
     async function fetchMyProfile() {
         const { data: { user } } = await db().auth.getUser();
@@ -323,6 +357,10 @@ const NADARL = (function () {
         saveTeamScores,
         subscribeMatchScores,
         unsubscribeChannel,
+        fetchMatchStatus,
+        confirmMatchSide,
+        submitMatch,
+        subscribeMatch,
         fetchMyProfile,
         fetchProfiles,
         updateProfile,

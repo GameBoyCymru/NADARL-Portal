@@ -143,6 +143,10 @@ const editRights = {
     awayShooters: { pick: false, score: false }
 };
 
+// Confirmation / submission state and context.
+let matchStatus = { home_confirmed: false, away_confirmed: false, submitted: false };
+let confirmCtx = { matchId: null, canScore: false, homePick: false, awayPick: false };
+
 function createShooterPicker(shooterList, selectedId, teamId) {
     const container = document.createElement('div');
     container.className = 'shooter-picker';
@@ -527,6 +531,140 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
 }
 
 // ---------------------------------------------------------------------
+// Confirmation / submission UI
+// ---------------------------------------------------------------------
+
+function buildConfirmArea(side) {
+    const column = side === 'home'
+        ? document.getElementById('homeShooters').closest('.score-table-column')
+        : document.getElementById('awayShooters').closest('.score-table-column');
+    if (!column || column.querySelector('.match-confirm')) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'match-confirm';
+    wrap.setAttribute('data-side', side);
+
+    const statusEl = document.createElement('div');
+    statusEl.className = 'match-confirm-status';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'confirm-btn';
+    confirmBtn.textContent = 'Confirm Results';
+    confirmBtn.addEventListener('click', async () => {
+        confirmBtn.disabled = true;
+        const res = await NADARL.confirmMatchSide(confirmCtx.matchId, side);
+        if (res.ok) {
+            matchStatus = (await NADARL.fetchMatchStatus(confirmCtx.matchId)) || matchStatus;
+        } else {
+            window.alert('Could not confirm: ' + (res.error || 'not permitted'));
+        }
+        refreshConfirmUI();
+    });
+
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'button';
+    submitBtn.className = 'submit-btn';
+    submitBtn.textContent = 'Submit to League';
+    submitBtn.addEventListener('click', async () => {
+        if (!confirm('Submit these results to the league? This cannot be undone.')) return;
+        submitBtn.disabled = true;
+        const res = await NADARL.submitMatch(confirmCtx.matchId);
+        if (res.ok) {
+            matchStatus = (await NADARL.fetchMatchStatus(confirmCtx.matchId)) || matchStatus;
+        } else {
+            window.alert('Could not submit: ' + (res.error || 'not permitted'));
+        }
+        refreshConfirmUI();
+    });
+
+    wrap.appendChild(statusEl);
+    wrap.appendChild(confirmBtn);
+    wrap.appendChild(submitBtn);
+    column.appendChild(wrap);
+}
+
+function refreshConfirmUI() {
+    const { submitted, home_confirmed, away_confirmed } = matchStatus;
+    const both = home_confirmed && away_confirmed;
+
+    // Status text under each table
+    document.querySelectorAll('.match-confirm').forEach(wrap => {
+        const side = wrap.getAttribute('data-side');
+        const confirmed = side === 'home' ? home_confirmed : away_confirmed;
+        const statusEl = wrap.querySelector('.match-confirm-status');
+        const confirmBtn = wrap.querySelector('.confirm-btn');
+        const submitBtn = wrap.querySelector('.submit-btn');
+
+        if (submitted) {
+            statusEl.textContent = 'Results submitted ✓';
+            statusEl.className = 'match-confirm-status submitted';
+            confirmBtn.hidden = true;
+            submitBtn.hidden = true;
+            return;
+        }
+
+        const canConfirm = side === 'home' ? confirmCtx.homePick : confirmCtx.awayPick;
+        statusEl.textContent = confirmed
+            ? (side === 'home' ? 'Home confirmed ✓' : 'Away confirmed ✓')
+            : (side === 'home' ? 'Home: awaiting confirmation' : 'Away: awaiting confirmation');
+        statusEl.className = 'match-confirm-status' + (confirmed ? ' confirmed' : '');
+
+        confirmBtn.hidden = !canConfirm || confirmed;
+        confirmBtn.disabled = false;
+
+        // Submit only on home side, only when both confirmed, only for home team
+        if (side === 'home') {
+            submitBtn.hidden = !(both && confirmCtx.canScore);
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.hidden = true;
+        }
+    });
+
+    // Read-only status bar (shown to everyone)
+    const bar = document.getElementById('matchStatusBar');
+    if (bar) {
+        if (submitted) {
+            bar.textContent = 'Results submitted ✓';
+            bar.className = 'match-status-bar submitted';
+        } else {
+            const h = home_confirmed ? 'Home ✓' : 'Home ✗';
+            const a = away_confirmed ? 'Away ✓' : 'Away ✗';
+            bar.textContent = `Confirmation — ${h}  •  ${a}`;
+            bar.className = 'match-status-bar';
+        }
+    }
+}
+
+async function setupConfirmFlow(match, canScore, homePick, awayPick, isEdit) {
+    if (!match) return;
+    confirmCtx = { matchId: match.id, canScore, homePick, awayPick };
+
+    let bar = document.getElementById('matchStatusBar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'matchStatusBar';
+        bar.className = 'match-status-bar';
+        document.getElementById('matchHeader').appendChild(bar);
+    }
+
+    matchStatus = (await NADARL.fetchMatchStatus(match.id)) || matchStatus;
+
+    if (isEdit) {
+        buildConfirmArea('home');
+        if (match.away_team_id) buildConfirmArea('away');
+    }
+    refreshConfirmUI();
+
+    const channel = NADARL.subscribeMatch(match.id, async () => {
+        matchStatus = (await NADARL.fetchMatchStatus(match.id)) || matchStatus;
+        refreshConfirmUI();
+    });
+    window.addEventListener('beforeunload', () => NADARL.unsubscribeChannel(channel));
+}
+
+// ---------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------
 
@@ -582,6 +720,7 @@ async function initMatchPage() {
             });
             window.addEventListener('beforeunload', () => NADARL.unsubscribeChannel(channel));
         }
+        setupConfirmFlow(match, canScore, homeCanPick, awayCanPick, false);
         return;
     }
 
@@ -611,6 +750,7 @@ async function initMatchPage() {
 
     recalcSummary(params, 'homeShooters', 'awayShooters');
     updateCurrentShooters();
+    setupConfirmFlow(match, canScore, homeCanPick, awayCanPick, true);
 }
 
 document.addEventListener('DOMContentLoaded', initMatchPage);

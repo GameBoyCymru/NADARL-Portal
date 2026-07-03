@@ -617,3 +617,78 @@
     color: #bfe6c4;
     font-weight: 600;
 }
+
+.match-confirm {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.match-confirm-status {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+}
+
+.match-confirm-status.confirmed {
+    color: #bfe6c4;
+    font-weight: 600;
+}
+
+.match-confirm-status.submitted {
+    color: #d4a017;
+    font-weight: 700;
+}
+
+.confirm-btn,
+.submit-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s ease;
+}
+
+.confirm-btn {
+    background: rgba(212, 160, 23, 0.3);
+    color: #f5e6b8;
+    border-color: rgba(212, 160, 23, 0.6);
+}
+
+.confirm-btn:hover {
+    background: rgba(212, 160, 23, 0.5);
+}
+
+.confirm-btn[hidden],
+.submit-btn[hidden] {
+    display: none;
+}
+
+.submit-btn {
+    background: rgba(80, 170, 90, 0.4);
+    color: #d6f3da;
+    border-color: rgba(80, 170, 90, 0.7);
+}
+
+.submit-btn:hover {
+    background: rgba(80, 170, 90, 0.6);
+}
+
+.match-status-bar {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #a0a0a0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.match-status-bar.submitted {
+    color: #d4a017;
+    background: rgba(212, 160, 23, 0.12);
+}
