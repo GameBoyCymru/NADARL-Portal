@@ -179,13 +179,7 @@ function buildEditRow(shooterList, existing) {
     const totalSpan = document.createElement('span');
     totalSpan.className = 'row-total';
     totalSpan.textContent = existing ? existing.total : 0;
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'remove-row-btn';
-    removeBtn.textContent = '\u2715';
-    removeBtn.title = 'Remove shooter';
     totalInner.appendChild(totalSpan);
-    totalInner.appendChild(removeBtn);
     tdTotal.appendChild(totalInner);
     tr.appendChild(tdTotal);
 
@@ -250,7 +244,9 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
     }
 
     existingRows.forEach(r => tbody.appendChild(buildEditRow(shooterList, r)));
-    tbody.appendChild(buildEditRow(shooterList, null));
+    while (tbody.querySelectorAll('tr.score-edit-row').length < 9) {
+        tbody.appendChild(buildEditRow(shooterList, null));
+    }
 
     tbody.addEventListener('input', (e) => {
         if (e.target.classList.contains('shot-input')) {
@@ -263,35 +259,12 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
             recalcSummary(params, homeTbodyId, awayTbodyId);
         }
     });
-    tbody.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-row-btn')) {
-            const tr = e.target.closest('tr');
-            // keep at least one empty row
-            if (tbody.querySelectorAll('tr.score-edit-row').length > 1) {
-                tr.remove();
-                recalcSummary(params, homeTbodyId, awayTbodyId);
-            } else {
-                tr.querySelector('.shooter-select').value = '';
-                Array.from(tr.querySelectorAll('.shot-input')).forEach(i => i.value = '');
-                recalcRowTotal(tr);
-                recalcSummary(params, homeTbodyId, awayTbodyId);
-            }
-        }
-    });
 
-    // Add-shooter button: appended after the table inside its column
+    // Save button: appended after the table inside its column
     const column = tbody.closest('.score-table-column');
     if (column && !column.querySelector('.score-controls')) {
         const controls = document.createElement('div');
         controls.className = 'score-controls';
-
-        const addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.className = 'score-add-btn';
-        addBtn.textContent = '+ Add Shooter';
-        addBtn.addEventListener('click', () => {
-            tbody.appendChild(buildEditRow(shooterList, null));
-        });
 
         const saveBtn = document.createElement('button');
         saveBtn.type = 'button';
@@ -312,7 +285,6 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
                 : 'Save failed: ' + res.error;
         });
 
-        controls.appendChild(addBtn);
         controls.appendChild(saveBtn);
         column.appendChild(controls);
         column.appendChild(status);
