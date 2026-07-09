@@ -222,11 +222,15 @@ const NADARL = (function () {
     }
 
     // Add a shooter to a team (captain of that team or admin). RLS enforces.
+    function normalizeName(name) {
+        return String(name).trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    }
+
     async function addShooter(teamId, { name, role }) {
         const { data, error } = await db().from('shooter')
             .insert({
                 team_id: teamId,
-                name: String(name).trim(),
+                name: normalizeName(name),
                 role: role || null
             })
             .select('id,shooter_no,name,role,team_id')
@@ -237,7 +241,7 @@ const NADARL = (function () {
 
     // Update a shooter's name/role (captain of that team or admin). RLS enforces.
     async function updateShooter(shooterId, { name, role }) {
-        const patch = { name: String(name).trim(), role: role || null };
+        const patch = { name: normalizeName(name), role: role || null };
         const { data, error } = await db().from('shooter')
             .update(patch)
             .eq('id', shooterId)
