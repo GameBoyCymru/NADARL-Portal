@@ -471,7 +471,8 @@ function updateCurrentShooter(tbodyId) {
         const picker = tr.querySelector('.shooter-picker');
         const hasShooter = !!(picker && picker.getAttribute('data-shooter-id'));
         const trigger = picker ? picker.querySelector('.shooter-picker-trigger') : null;
-        if (trigger) trigger.disabled = !rights.pick || !prevHasShooter;
+        const hasScores = Array.from(tr.querySelectorAll('.shot-input')).some(i => i.value !== '');
+        if (trigger) trigger.disabled = !rights.pick || !prevHasShooter || (hasShooter && hasScores);
 
         const isCurrent = !currentFound && !isRowComplete(tr);
         if (isCurrent) {
