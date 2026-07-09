@@ -51,27 +51,19 @@
 }
 
 .team-badge-placeholder {
-    width: 80px;
-    height: 80px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
+    width: 160px;
+    height: 160px;
     margin: 0 auto 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
-    color: #a0a0a0;
     position: relative;
-    overflow: hidden;
 }
 
 .team-badge-placeholder img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    border-radius: 50%;
-    padding: 8px;
 }
 
 .badge-fallback {
@@ -80,16 +72,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 2rem;
     font-weight: bold;
     color: #d4a017;
-}
-
-.team-card .team-name {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #ffffff;
-    margin-bottom: 8px;
 }
 
 .team-venue {

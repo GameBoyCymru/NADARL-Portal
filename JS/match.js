@@ -26,6 +26,14 @@ function isToday(dateStr) {
     return dateStr === `${y}-${m}-${d}`;
 }
 
+function setMatchBadge(selector, teamName, slugMap) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    const slug = slugMap[teamName];
+    if (!slug) { el.textContent = '\uD83C\uDFAF'; return; }
+    el.innerHTML = `<img src="../Images/teams/${slug}.png" alt="${teamName} logo" onerror="this.parentElement.textContent='\uD83C\uDFAF'">`;
+}
+
 // ---------------------------------------------------------------------
 // Handicap (second-half / half=2 matches only)
 // ---------------------------------------------------------------------
@@ -774,6 +782,10 @@ async function initMatchPage() {
     document.getElementById('matchDate').textContent = formatDate(params.date);
     document.getElementById('homeTeamName').textContent = params.home;
     document.getElementById('awayTeamName').textContent = params.away;
+
+    const slugMap = await NADARL.fetchTeamSlugMap();
+    setMatchBadge('.home-team .team-badge-large', params.home, slugMap);
+    setMatchBadge('.away-team .team-badge-large', params.away, slugMap);
     document.getElementById('matchVenue').textContent = `Venue: ${params.venue}`;
     document.getElementById('homeTeamTableTitle').textContent = params.home;
     document.getElementById('awayTeamTableTitle').textContent = params.away;

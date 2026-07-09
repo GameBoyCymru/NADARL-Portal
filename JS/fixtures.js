@@ -1,5 +1,12 @@
 let fixtures = [];
 let isAdmin = false;
+let slugMap = {};
+
+function teamBadgeHtml(teamName) {
+    const slug = slugMap[teamName];
+    if (!slug) return `<div class="team-badge">\uD83C\uDFAF</div>`;
+    return `<div class="team-badge"><img src="../Images/teams/${slug}.png" alt="${escapeHtml(teamName)} logo" onerror="this.parentElement.textContent='\uD83C\uDFAF'"></div>`;
+}
 
 function escapeHtml(s) {
     return String(s)
@@ -92,7 +99,7 @@ function createFixtureCard(fixture) {
         return `
             <div class="fixture-item fixture-bye">
                 <div class="team">
-                    <div class="team-badge">🎯</div>
+                    ${teamBadgeHtml(fixture.homeTeam)}
                     <div class="team-name">${fixture.homeTeam}</div>
                     <span class="bye-badge">BYE</span>
                 </div>
@@ -108,13 +115,13 @@ function createFixtureCard(fixture) {
         <div class="fixture-item" ${clickAttr}>
             <div class="fixture-teams">
                 <div class="team">
-                    <div class="team-badge">🎯</div>
+                    ${teamBadgeHtml(fixture.homeTeam)}
                     <div class="team-name">${fixture.homeTeam}</div>
                     <div class="venue-cell">Home</div>
                 </div>
                 <div class="vs">VS</div>
                 <div class="team">
-                    <div class="team-badge">🎯</div>
+                    ${teamBadgeHtml(fixture.awayTeam)}
                     <div class="team-name">${fixture.awayTeam}</div>
                     <div class="venue-cell">Away</div>
                 </div>
@@ -261,6 +268,7 @@ function renderMobileSeasonFixtures() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     fixtures = await NADARL.fetchFixtures();
+    slugMap = await NADARL.fetchTeamSlugMap();
     // merge in saved exclusions as blocked (no-match) days
     const exclusions = await NADARL.fetchExclusions();
     exclusions.forEach(e => {

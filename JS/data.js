@@ -36,6 +36,14 @@ const NADARL = (function () {
         return data;
     }
 
+    // Map of team name -> slug, for resolving logo image paths.
+    async function fetchTeamSlugMap() {
+        const teams = await fetchTeams();
+        const map = {};
+        teams.forEach(t => { if (t.slug) map[t.name] = t.slug; });
+        return map;
+    }
+
     // Shooter stats for one team (sorted captain > secretary > treasurer > name).
     async function fetchTeamShootersStats(teamId) {
         const { data, error } = await db().from('shooter_stats')
@@ -405,6 +413,7 @@ const NADARL = (function () {
     return {
         fetchTeams,
         fetchTeamByName,
+        fetchTeamSlugMap,
         fetchTeamShootersStats,
         fetchAllShooterStats,
         fetchFixtures,
