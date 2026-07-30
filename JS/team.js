@@ -27,17 +27,17 @@ async function initTeamPage() {
     document.title = `${team.name} - Newport & District Air Rifle League`;
     document.getElementById('teamName').textContent = team.name;
     document.getElementById('teamVenue').textContent = `Venue: ${team.venue}`;
-    document.getElementById('teamSubtitle').textContent = team.name;
 
     const logoImg = document.getElementById('teamLogo');
     const fallback = document.getElementById('logoFallback');
-    logoImg.src = `../Images/teams/${team.slug}.png`;
     logoImg.alt = `${team.name} logo`;
     logoImg.onerror = function () {
-        this.style.display = 'none';
+        this.hidden = true;
         fallback.style.display = 'flex';
         fallback.textContent = team.name.split(' ').map(w => w[0]).join('');
     };
+    logoImg.hidden = false;
+    logoImg.src = `../Images/teams/${team.slug}.png`;
 
     // Captains/admins get a button to toggle the roster editor.
     const editToggle = document.getElementById('editToggleButton');

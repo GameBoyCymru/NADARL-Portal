@@ -779,7 +779,6 @@ async function initMatchPage() {
     }
 
     document.title = `${params.home} vs ${params.away} - Newport & District Air Rifle League`;
-    document.getElementById('matchDate').textContent = formatDate(params.date);
     document.getElementById('homeTeamName').textContent = params.home;
     document.getElementById('awayTeamName').textContent = params.away;
 
