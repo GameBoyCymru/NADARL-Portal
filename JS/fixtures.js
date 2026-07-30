@@ -141,7 +141,7 @@ function createFixtureCardGroup(date, fixtureList, alwaysExpanded = false) {
     return `
         <div class="fixture-card">
             <div class="fixture-header ${clickableClass}" ${onClickAttr}>
-                <span class="fixture-date">${formatDate(date)}</span>
+                <span class="fixture-date">${formatDate(date)} | 8:00pm</span>
                 ${expandIcon}
             </div>
             <div class="${contentClass}">
