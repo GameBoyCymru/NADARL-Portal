@@ -18,7 +18,7 @@ function typeBadge(fixture) {
     if (fixture.half === 2) {
         return '<span class="type-badge type-hc" title="Handicap">HC</span>';
     }
-    return '<span class="type-badge type-wohc" title="Without handicap">Wo/HC</span>';
+    return '<span class="type-badge type-wohc" title="Without handicap">League</span>';
 }
 
 function getTodayDate() {

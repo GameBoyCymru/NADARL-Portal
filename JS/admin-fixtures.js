@@ -332,7 +332,7 @@ const FixturesAdmin = (function () {
                 if (row._bye) tr.className = 'fx-bye-row';
                 const sectionLabel = row.half === 2
                     ? '<span class="fx-half-badge fx-hc" title="Handicap">HC</span>'
-                    : '<span class="fx-half-badge fx-wohc" title="Without handicap">Wo/HC</span>';
+                    : '<span class="fx-half-badge fx-wohc" title="Without handicap">League</span>';
                 const halfLabel = row.subHalf === 1
                     ? '<span class="fx-subhalf-first">1st half</span>'
                     : '<span class="fx-subhalf-second">2nd half</span>';
