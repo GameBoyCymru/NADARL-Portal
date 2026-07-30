@@ -49,8 +49,9 @@ header {
     display: inline-block;
     color: #a0a0a0;
     text-decoration: none;
-    font-size: 0.9rem;
-    margin-bottom: 15px;
+    font-size: 1.1rem;
+    padding: 6px 14px;
+    margin: -6px -14px 9px;
     transition: color 0.3s ease;
 }
 
