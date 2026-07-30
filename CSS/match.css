@@ -90,14 +90,6 @@
     flex-shrink: 0;
 }
 
-.match-venue {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    color: #d4a017;
-    font-size: 0.95rem;
-}
-
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

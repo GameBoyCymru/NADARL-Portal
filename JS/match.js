@@ -785,7 +785,6 @@ async function initMatchPage() {
     const slugMap = await NADARL.fetchTeamSlugMap();
     setMatchBadge('.home-team .team-badge-large', params.home, slugMap);
     setMatchBadge('.away-team .team-badge-large', params.away, slugMap);
-    document.getElementById('matchVenue').textContent = `Venue: ${params.venue}`;
     document.getElementById('homeTeamTableTitle').textContent = params.home;
     document.getElementById('awayTeamTableTitle').textContent = params.away;
 
