@@ -267,11 +267,30 @@ const NADARL = (function () {
         return data;
     }
 
-    // Delete every match (scores cascade-delete). Admin only - RLS enforces.
-    async function clearMatches() {
+    // Whether a season already has any fixtures saved.
+    async function seasonHasMatches(seasonId) {
+        const { count, error } = await db().from('match')
+            .select('id', { count: 'exact', head: true })
+            .eq('season_id', seasonId);
+        if (error) { console.error('seasonHasMatches', error); return false; }
+        return (count || 0) > 0;
+    }
+
+    // Delete a season entirely: its matches (scores cascade-delete), its
+    // exclusions (cascade via FK), then the season row itself. Admin only.
+    async function deleteSeason(seasonId) {
+        const cleared = await clearMatches(seasonId);
+        if (!cleared.ok) return cleared;
+        const { error } = await db().from('season').delete().eq('id', seasonId);
+        if (error) { console.error('deleteSeason', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // Delete every match for one season (scores cascade-delete). Admin only - RLS enforces.
+    async function clearMatches(seasonId) {
         const { error } = await db().from('match')
             .delete()
-            .gte('match_date', '1900-01-01');
+            .eq('season_id', seasonId);
         if (error) { console.error('clearMatches', error); return { ok: false, error: error.message }; }
         return { ok: true };
     }
@@ -297,11 +316,11 @@ const NADARL = (function () {
         }));
     }
 
-    // Delete every exclusion. Admin only - RLS enforces.
-    async function clearExclusions() {
+    // Delete every exclusion for one season. Admin only - RLS enforces.
+    async function clearExclusions(seasonId) {
         const { error } = await db().from('exclusion')
             .delete()
-            .gte('match_date', '1900-01-01');
+            .eq('season_id', seasonId);
         if (error) { console.error('clearExclusions', error); return { ok: false, error: error.message }; }
         return { ok: true };
     }
@@ -435,6 +454,8 @@ const NADARL = (function () {
         addShooter,
         updateShooter,
         fetchSeasons,
+        seasonHasMatches,
+        deleteSeason,
         clearMatches,
         insertMatches,
         fetchExclusions,

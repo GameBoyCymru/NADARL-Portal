@@ -130,9 +130,31 @@ const FixturesAdmin = (function () {
         $('fxAddExclude').addEventListener('click', addExclude);
         $('fxGenerate').addEventListener('click', generate);
         $('fxSave').addEventListener('click', save);
-        $('fxClear').addEventListener('click', clearAll);
         $('fxAddSeason').addEventListener('click', createSeason);
+        $('fxDeleteSeason').addEventListener('click', deleteSeason);
         $('fxSeason').addEventListener('change', applySeasonToMondays);
+    }
+
+    async function deleteSeason() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+        if (!confirm(
+            'Permanently delete season "' + season.name + '" and all of its fixtures and scores? ' +
+            'This cannot be undone.'
+        )) return;
+
+        const btn = $('fxDeleteSeason');
+        btn.disabled = true;
+        const res = await NADARL.deleteSeason(season.id);
+        btn.disabled = false;
+        if (!res.ok) { show('Could not delete season: ' + res.error, 'error'); return; }
+
+        allExclusions = allExclusions.filter(e => e.season_id !== season.id);
+        preview = [];
+        $('fxPreviewWrap').hidden = true;
+        $('fxSave').disabled = true;
+        await refreshSeasons();
+        show('Season "' + season.name + '" deleted.', 'success');
     }
 
     async function createSeason() {
@@ -351,15 +373,14 @@ const FixturesAdmin = (function () {
         if (!preview.length) { show('Generate a preview first.', 'error'); return; }
         const seasonId = $('fxSeason').value;
         if (!seasonId) { show('Pick a season.', 'error'); return; }
-        if (!confirm('This REPLACES all existing fixtures (and their scores). Continue?')) return;
 
-        $('fxSave').disabled = true;
-        const cleared = await NADARL.clearMatches();
-        if (!cleared.ok) {
-            $('fxSave').disabled = false;
-            show('Could not clear existing fixtures: ' + cleared.error, 'error');
+        if (await NADARL.seasonHasMatches(seasonId)) {
+            show('This season already has fixtures saved. Delete the season first if you want to regenerate it.', 'error');
             return;
         }
+        if (!confirm('Save these fixtures for this season?')) return;
+
+        $('fxSave').disabled = true;
         const rows = preview.filter(p => !p._blocked).map(p => ({
             season_id: seasonId,
             match_date: p.match_date,
@@ -381,7 +402,7 @@ const FixturesAdmin = (function () {
             match_date: iso,
             reason: excluded[iso] || 'Bank holiday'
         }));
-        await NADARL.clearExclusions();
+        await NADARL.clearExclusions(seasonId);
         if (exRows.length) {
             const exRes = await NADARL.insertExclusions(exRows);
             if (!exRes.ok) {
@@ -399,21 +420,6 @@ const FixturesAdmin = (function () {
         show('Fixtures saved. ' + rows.length + ' matches across ' +
             new Set(rows.map(r => r.match_date)).size + ' Mondays' +
             (exRows.length ? ', ' + exRows.length + ' exclusions' : '') + '.', 'success');
-    }
-
-    async function clearAll() {
-        if (!confirm('Delete ALL fixtures and their scores?')) return;
-        const res = await NADARL.clearMatches();
-        if (!res.ok) { show('Could not clear fixtures: ' + res.error, 'error'); return; }
-        const exRes = await NADARL.clearExclusions();
-        if (!exRes.ok) { show('Could not clear exclusions: ' + exRes.error, 'error'); return; }
-        allExclusions = [];
-        excluded = {};
-        renderExcluded();
-        preview = [];
-        $('fxPreviewWrap').hidden = true;
-        $('fxSave').disabled = true;
-        show('All fixtures and exclusions cleared.', 'success');
     }
 
     // ---- date helpers ------------------------------------------------

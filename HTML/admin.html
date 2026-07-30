@@ -111,7 +111,10 @@
                 <div class="fx-controls">
                     <div class="fx-field">
                         <label for="fxSeason">Season</label>
-                        <select id="fxSeason"></select>
+                        <div class="fx-season-row">
+                            <select id="fxSeason"></select>
+                            <button type="button" id="fxDeleteSeason" class="shooter-button fx-button-danger">Delete Season</button>
+                        </div>
                     </div>
                     <div class="fx-field">
                         <label for="fxStart">First Monday</label>
@@ -141,7 +144,6 @@
                 <div class="fx-actions">
                     <button type="button" id="fxGenerate" class="shooter-button">Generate Preview</button>
                     <button type="button" id="fxSave" class="shooter-button" disabled>Save Fixtures</button>
-                    <button type="button" id="fxClear" class="shooter-button fx-button-secondary">Clear All</button>
                 </div>
 
                 <div id="fxPreviewWrap" class="table-wrap" hidden>

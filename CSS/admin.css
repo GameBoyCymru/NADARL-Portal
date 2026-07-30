@@ -269,9 +269,21 @@
     cursor: not-allowed;
 }
 
-.fx-button-secondary {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.fx-button-danger {
+    background: rgba(196, 30, 58, 0.15);
+    border: 1px solid rgba(196, 30, 58, 0.5);
+    color: #ff8a8a;
+    white-space: nowrap;
+}
+
+.fx-season-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.fx-season-row select {
+    flex: 1;
 }
 
 .fx-preview {
