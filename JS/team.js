@@ -25,7 +25,6 @@ async function initTeamPage() {
     const canEdit = !!me && (me.role === 'admin' || (me.role === 'captain' && me.team_id === team.id));
 
     document.title = `${team.name} - Newport & District Air Rifle League`;
-    document.getElementById('teamName').textContent = team.name;
     document.getElementById('teamVenue').textContent = `Venue: ${team.venue}`;
 
     const logoImg = document.getElementById('teamLogo');
