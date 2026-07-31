@@ -5,7 +5,7 @@ function renderStats(stats) {
     const tbody = document.getElementById('leagueTable');
 
     if (!stats.length) {
-        tbody.innerHTML = '<tr><td colspan="7">No statistics available for this season yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8">No statistics available for this season yet.</td></tr>';
         return;
     }
 
@@ -19,6 +19,7 @@ function renderStats(stats) {
             <td class="score-cell">${shooter.season_best}</td>
             <td class="score-cell">${shooter.tens}</td>
             <td class="score-cell">${Number(shooter.average).toFixed(1)}</td>
+            <td class="score-cell">${shooter.matches_played}</td>
         </tr>`;
     });
 
@@ -36,7 +37,7 @@ async function loadSeason() {
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
     const tbody = document.getElementById('leagueTable');
-    tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8">Loading…</td></tr>';
 
     const stats = season ? await NADARL.fetchShooterStatsForSeason(season.id) : [];
     renderStats(stats);
@@ -53,7 +54,7 @@ async function initTablePage() {
         document.getElementById('seasonLabel').textContent = 'Season Averages';
         prevButton.disabled = true;
         nextButton.disabled = true;
-        tbody.innerHTML = '<tr><td colspan="7">No statistics available yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8">No statistics available yet.</td></tr>';
         return;
     }
 
