@@ -41,7 +41,7 @@ select
     coalesce(round(avg(sc.total) filter (
         where m.submitted and m.season_id = cur.season_id
     ), 1), 0)                                                                      as average,
-    public.shooter_handicap(sh.id, null)                                           as handicap
+    public.shooter_handicap(sh.id, null::date)                                     as handicap
 from public.shooter sh
 join public.team   t   on t.id  = sh.team_id
 cross join cur
