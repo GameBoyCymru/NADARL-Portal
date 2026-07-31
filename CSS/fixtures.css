@@ -226,6 +226,18 @@
     font-size: 0.95rem;
 }
 
+.admin-clickable {
+    cursor: pointer;
+}
+
+.fixture-table tr.admin-clickable:hover td {
+    background: rgba(196, 30, 58, 0.15);
+}
+
+.mobile-fixture-item.admin-clickable:hover {
+    background: rgba(196, 30, 58, 0.15);
+}
+
 .date-cell {
     color: #a0a0a0;
     font-size: 0.9rem;

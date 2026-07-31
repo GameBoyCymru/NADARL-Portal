@@ -14,6 +14,10 @@ function escapeHtml(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+function matchUrl(fixture) {
+    return `match.html?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}&date=${encodeURIComponent(fixture.date)}&venue=${encodeURIComponent(fixture.venue)}`;
+}
+
 function typeBadge(fixture) {
     if (fixture.half === 2) {
         return '<span class="type-badge type-hc" title="Handicap">HC</span>';
@@ -106,11 +110,7 @@ function createFixtureCard(fixture) {
             </div>
         `;
     }
-    const isTodayFixture = isToday(fixture.date);
-    const clickable = true;
-    const clickAttr = clickable
-        ? `onclick="window.location.href='match.html?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}&date=${encodeURIComponent(fixture.date)}&venue=${encodeURIComponent(fixture.venue)}'" style="cursor:pointer;"`
-        : '';
+    const clickAttr = `onclick="window.location.href='${matchUrl(fixture)}'" style="cursor:pointer;"`;
     return `
         <div class="fixture-item" ${clickAttr}>
             <div class="fixture-teams">
@@ -203,6 +203,10 @@ function renderSeasonFixtures() {
 
             const row = document.createElement('tr');
             row.className = 'fixture-row fixture-detail-row' + altClass;
+            if (isAdmin && !fixture.isBye) {
+                row.classList.add('admin-clickable');
+                row.addEventListener('click', () => { window.location.href = matchUrl(fixture); });
+            }
             row.innerHTML = `
                 <td class="teams-cell">${fixture.homeTeam}</td>
                 <td class="teams-cell">${awayTeamDisplay}</td>
@@ -245,8 +249,11 @@ function renderMobileSeasonFixtures() {
                     </div>
                 `;
             } else {
+                const adminAttrs = isAdmin
+                    ? `class="mobile-fixture-item admin-clickable" onclick="window.location.href='${matchUrl(fixture)}'"`
+                    : `class="mobile-fixture-item"`;
                 html += `
-                    <div class="mobile-fixture-item">
+                    <div ${adminAttrs}>
                         <div class="mobile-fixture-teams">
                             <span class="mobile-team">${fixture.homeTeam}</span>
                         </div>
