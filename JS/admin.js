@@ -23,7 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         accessPanel.hidden = true;
         adminPanel.hidden = false;
+        setupAuthButton();
         await load();
+    }
+
+    function setupAuthButton() {
+        const authButton = document.getElementById('authButton');
+        if (!authButton) return;
+        authButton.hidden = false;
+        authButton.onclick = async () => {
+            authButton.disabled = true;
+            await window.db.auth.signOut();
+            window.location.href = 'fixtures.html';
+        };
     }
 
     async function load() {

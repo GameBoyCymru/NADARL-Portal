@@ -270,7 +270,12 @@ function setupAuthButton(profile) {
     const authButton = document.getElementById('authButton');
     if (!authButton) return;
 
-    if (profile) {
+    if (profile && profile.role === 'admin') {
+        authButton.textContent = 'Admin Panel';
+        authButton.onclick = () => {
+            window.location.href = 'admin.html';
+        };
+    } else if (profile) {
         authButton.textContent = 'Sign Out';
         authButton.onclick = async () => {
             authButton.disabled = true;

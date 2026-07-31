@@ -1,6 +1,28 @@
 let seasons = [];
 let seasonIndex = 0;
 
+function getTodayDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Prefer the season whose date range actually covers today - a season
+// flagged is_current (set when it's created, often in advance) can point
+// at a future season before it has started.
+function pickDefaultSeasonIndex() {
+    const today = getTodayDate();
+    const byDate = seasons.findIndex(s => s.start_date && s.end_date && s.start_date <= today && today <= s.end_date);
+    if (byDate !== -1) return byDate;
+
+    const byCurrentFlag = seasons.findIndex(s => s.is_current);
+    if (byCurrentFlag !== -1) return byCurrentFlag;
+
+    return seasons.length - 1;
+}
+
 function renderStats(stats) {
     const tbody = document.getElementById('leagueTable');
 
@@ -57,8 +79,7 @@ async function initTablePage() {
         return;
     }
 
-    const currentSeason = seasons.find(s => s.is_current);
-    seasonIndex = currentSeason ? seasons.indexOf(currentSeason) : seasons.length - 1;
+    seasonIndex = pickDefaultSeasonIndex();
 
     prevButton.addEventListener('click', () => {
         if (seasonIndex > 0) { seasonIndex--; loadSeason(); }
