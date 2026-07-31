@@ -55,18 +55,24 @@ function showHandicapBanner() {
     header.appendChild(banner);
 }
 
-// Append HC + Adj. columns to every score table header (handicap matches only).
+// Append HC + Total columns to the individual score tables (handicap matches
+// only), relabelling the existing pre-handicap Total column to Pre-HC.
 function ensureHandicapHeaders() {
     if (!isHandicapMatch) return;
-    document.querySelectorAll('.score-table').forEach(tbl => {
-        const tr = tbl.querySelector('thead tr');
+    ['homeScoreTable', 'awayScoreTable'].forEach(id => {
+        const tbl = document.getElementById(id);
+        const tr = tbl && tbl.querySelector('thead tr');
         if (!tr || tr.querySelector('.th-hc')) return;
+
+        const totalHeader = tr.querySelector('th:last-child');
+        if (totalHeader) totalHeader.textContent = 'Pre-HC';
+
         const hc = document.createElement('th');
         hc.className = 'th-hc';
         hc.textContent = 'HC';
         const adj = document.createElement('th');
         adj.className = 'th-adj';
-        adj.textContent = 'Adj.';
+        adj.textContent = 'Total';
         tr.appendChild(hc);
         tr.appendChild(adj);
     });
@@ -95,9 +101,12 @@ function calculateTeamScores(shooters) {
 
 function renderShooterTable(tbodyId, shooters) {
     const tbody = document.getElementById(tbodyId);
-    const totals = shooters.map(s => s.total);
-    const maxTotal = totals.length ? Math.max(...totals) : 0;
-    const minTotal = totals.length ? Math.min(...totals) : 0;
+    // The column that gets the bold total-cell styling + highest/lowest
+    // highlight is whichever one is actually labelled "Total": the
+    // handicap-adjusted score in a handicap match, otherwise the raw total.
+    const rankedTotals = shooters.map(s => isHandicapMatch ? (s.total || 0) + hcFor(s.shooter_id) : s.total);
+    const maxTotal = rankedTotals.length ? Math.max(...rankedTotals) : 0;
+    const minTotal = rankedTotals.length ? Math.min(...rankedTotals) : 0;
     const hcCols = isHandicapMatch ? 2 : 0;
     let html = '';
 
@@ -105,20 +114,23 @@ function renderShooterTable(tbodyId, shooters) {
         html = `<tr><td colspan="${9 + hcCols}" class="empty-table-msg">No scores entered yet</td></tr>`;
     }
 
-    shooters.forEach((shooter) => {
+    shooters.forEach((shooter, index) => {
+        const rankedTotal = rankedTotals[index];
         let totalClass = 'total-cell';
-        if (shooters.length && shooter.total === maxTotal) totalClass += ' total-highest';
-        else if (shooters.length && shooter.total === minTotal) totalClass += ' total-lowest';
+        if (shooters.length && rankedTotal === maxTotal) totalClass += ' total-highest';
+        else if (shooters.length && rankedTotal === minTotal) totalClass += ' total-lowest';
         html += `<tr>`;
         html += `<td class="shooter-cell">${shooter.name}</td>`;
         shooter.scores.forEach(score => {
             html += `<td class="score-cell">${score}</td>`;
         });
-        html += `<td class="${totalClass}">${shooter.total}</td>`;
         if (isHandicapMatch) {
             const hc = hcFor(shooter.shooter_id);
+            html += `<td class="score-cell">${shooter.total}</td>`;
             html += `<td class="score-cell hc-cell">${hc}</td>`;
-            html += `<td class="score-cell adj-cell">${(shooter.total || 0) + hc}</td>`;
+            html += `<td class="${totalClass}">${rankedTotal}</td>`;
+        } else {
+            html += `<td class="${totalClass}">${shooter.total}</td>`;
         }
         html += '</tr>';
     });
@@ -408,47 +420,61 @@ function buildEditRow(shooterList, existing, teamId) {
         tr.appendChild(td);
     }
 
+    const rawTotal = existing ? existing.total : 0;
+
+    if (isHandicapMatch) {
+        const hc = hcFor(existing && existing.shooter_id);
+
+        const tdPreHc = document.createElement('td');
+        tdPreHc.className = 'score-cell row-pre-hc';
+        tdPreHc.textContent = rawTotal;
+        tr.appendChild(tdPreHc);
+
+        const tdHc = document.createElement('td');
+        tdHc.className = 'score-cell hc-cell row-hc';
+        tdHc.textContent = hc;
+        tr.appendChild(tdHc);
+
+        tr.appendChild(buildTotalCell(rawTotal + hc));
+    } else {
+        tr.appendChild(buildTotalCell(rawTotal));
+    }
+
+    return tr;
+}
+
+// The bold, highlighted "Total" cell - the raw total normally, or the
+// handicap-adjusted total in a handicap match (the pre-HC total then gets
+// its own plain column instead).
+function buildTotalCell(value) {
     const tdTotal = document.createElement('td');
     tdTotal.className = 'total-cell';
     const totalInner = document.createElement('div');
     totalInner.className = 'total-cell-inner';
     const totalSpan = document.createElement('span');
     totalSpan.className = 'row-total';
-    totalSpan.textContent = existing ? existing.total : 0;
+    totalSpan.textContent = value;
     totalInner.appendChild(totalSpan);
     tdTotal.appendChild(totalInner);
-    tr.appendChild(tdTotal);
-
-    if (isHandicapMatch) {
-        const hc = hcFor(existing && existing.shooter_id);
-        const tdHc = document.createElement('td');
-        tdHc.className = 'score-cell hc-cell row-hc';
-        tdHc.textContent = hc;
-        tr.appendChild(tdHc);
-        const tdAdj = document.createElement('td');
-        tdAdj.className = 'score-cell adj-cell row-adj';
-        tdAdj.textContent = (existing ? existing.total : 0) + hc;
-        tr.appendChild(tdAdj);
-    }
-
-    return tr;
+    return tdTotal;
 }
 
 function recalcRowTotal(tr) {
     const inputs = tr.querySelectorAll('.shot-input');
     let total = 0;
     inputs.forEach(i => { total += i.value === '' ? 0 : (parseInt(i.value, 10) || 0); });
-    tr.querySelector('.row-total').textContent = total;
+
     if (isHandicapMatch) {
-        const adjCell = tr.querySelector('.row-adj');
-        if (adjCell) {
-            const hc = Number(tr.querySelector('.row-hc').textContent) || 0;
-            adjCell.textContent = total + hc;
-        }
+        const preHcCell = tr.querySelector('.row-pre-hc');
+        if (preHcCell) preHcCell.textContent = total;
+        const hc = Number((tr.querySelector('.row-hc') || {}).textContent) || 0;
+        tr.querySelector('.row-total').textContent = total + hc;
+    } else {
+        tr.querySelector('.row-total').textContent = total;
     }
 }
 
-// Re-read this row's shooter and refresh its HC + adjusted cells (handicap matches).
+// Re-read this row's shooter and refresh its HC + Total cells (handicap matches).
 function refreshRowHandicap(tr) {
     if (!isHandicapMatch || !tr) return;
     const picker = tr.querySelector('.shooter-picker');
@@ -456,9 +482,9 @@ function refreshRowHandicap(tr) {
     const hc = hcFor(sid);
     const hcCell = tr.querySelector('.row-hc');
     if (hcCell) hcCell.textContent = hc;
-    const adjCell = tr.querySelector('.row-adj');
-    const total = Number(tr.querySelector('.row-total').textContent) || 0;
-    if (adjCell) adjCell.textContent = total + hc;
+    const preHc = Number((tr.querySelector('.row-pre-hc') || {}).textContent) || 0;
+    const totalSpan = tr.querySelector('.row-total');
+    if (totalSpan) totalSpan.textContent = preHc + hc;
 }
 
 function isRowComplete(tr) {
