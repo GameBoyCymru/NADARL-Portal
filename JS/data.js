@@ -258,6 +258,13 @@ const NADARL = (function () {
         return { ok: true, shooter: data && data[0] };
     }
 
+    // All shooters' stats for one specific season (League Table season switcher).
+    async function fetchShooterStatsForSeason(seasonId) {
+        const { data, error } = await db().rpc('shooter_stats_for_season', { p_season_id: seasonId });
+        if (error) { console.error('fetchShooterStatsForSeason', error); return []; }
+        return data.sort((a, b) => Number(b.average) - Number(a.average));
+    }
+
     // All seasons, ordered by name.
     async function fetchSeasons() {
         const { data, error } = await db().from('season')
@@ -435,6 +442,7 @@ const NADARL = (function () {
         fetchTeamSlugMap,
         fetchTeamShootersStats,
         fetchAllShooterStats,
+        fetchShooterStatsForSeason,
         fetchFixtures,
         fetchMatchScorecard,
         fetchMatch,
