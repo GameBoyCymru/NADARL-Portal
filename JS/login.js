@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoggedIn(profile);
         showMessage('Signed in successfully. Redirecting…', 'success');
         setLoading(false);
-        setTimeout(() => { window.location.href = '../index.html'; }, 1000);
+        setTimeout(() => { window.location.href = 'fixtures.html'; }, 1000);
     });
 
     logoutButton.addEventListener('click', async () => {

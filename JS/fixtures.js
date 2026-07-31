@@ -266,6 +266,25 @@ function renderMobileSeasonFixtures() {
     container.innerHTML = html;
 }
 
+function setupAuthButton(profile) {
+    const authButton = document.getElementById('authButton');
+    if (!authButton) return;
+
+    if (profile) {
+        authButton.textContent = 'Sign Out';
+        authButton.onclick = async () => {
+            authButton.disabled = true;
+            await window.db.auth.signOut();
+            window.location.reload();
+        };
+    } else {
+        authButton.textContent = 'Match Day Login';
+        authButton.onclick = () => {
+            window.location.href = 'login.html';
+        };
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     fixtures = await NADARL.fetchFixtures();
     slugMap = await NADARL.fetchTeamSlugMap();
@@ -277,6 +296,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fixtures.sort((a, b) => a.date.localeCompare(b.date));
     const profile = await NADARL.fetchMyProfile();
     isAdmin = !!(profile && profile.role === 'admin');
+    setupAuthButton(profile);
     renderTodayFixtures();
     renderSeasonFixtures();
     renderMobileSeasonFixtures();

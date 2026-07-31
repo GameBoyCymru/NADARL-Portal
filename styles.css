@@ -41,8 +41,37 @@ html {
 }
 
 header {
+    position: relative;
     text-align: center;
     margin-bottom: 40px;
+}
+
+.auth-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 6px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0d6c8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+@media (max-width: 600px) {
+    .auth-button {
+        position: static;
+        display: block;
+        margin: 0 auto 12px;
+    }
+}
+
+.auth-button:hover {
+    background: rgba(196, 30, 58, 0.25);
+    color: #ffffff;
 }
 
 .back-link {
