@@ -62,10 +62,11 @@ const NADARL = (function () {
     }
 
     // Fixtures shaped like the old hardcoded objects: { date, homeTeam, awayTeam, venue, isBye }
-    async function fetchFixtures() {
-        const { data, error } = await db().from('fixture_list')
-            .select('*')
-            .order('date');
+    // seasonId is optional - omit to fetch fixtures across every season.
+    async function fetchFixtures(seasonId) {
+        let query = db().from('fixture_list').select('*').order('date');
+        if (seasonId) query = query.eq('season_id', seasonId);
+        const { data, error } = await query;
         if (error) { console.error('fetchFixtures', error); return []; }
         return data.map(f => ({
             id: f.id,
@@ -74,8 +75,31 @@ const NADARL = (function () {
             awayTeam: f.away_team,        // null for BYE
             venue: f.venue,
             isBye: f.is_bye,
-            half: f.half                  // 1 = first half, 2 = second half (handicaps)
+            half: f.half,                 // 1 = first half, 2 = second half (handicaps)
+            seasonId: f.season_id
         }));
+    }
+
+    // Today's date as 'YYYY-MM-DD'.
+    function todayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // The season whose start_date/end_date span covers today, falling back to
+    // the is_current flag, then the most recently-started season, if none do
+    // (e.g. between seasons, or a future season was created ahead of time).
+    function pickCurrentSeason(seasons) {
+        if (!seasons.length) return null;
+        const today = todayDate();
+        const byDate = seasons.find(s => s.start_date && s.end_date && s.start_date <= today && today <= s.end_date);
+        if (byDate) return byDate;
+        const byFlag = seasons.find(s => s.is_current);
+        if (byFlag) return byFlag;
+        return seasons[seasons.length - 1];
     }
 
     // All scorecard rows for a match, resolved by date + the two team names.
@@ -462,6 +486,7 @@ const NADARL = (function () {
         addShooter,
         updateShooter,
         fetchSeasons,
+        pickCurrentSeason,
         seasonHasMatches,
         deleteSeason,
         clearMatches,

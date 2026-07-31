@@ -291,13 +291,18 @@ function setupAuthButton(profile) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    fixtures = await NADARL.fetchFixtures();
+    const seasons = await NADARL.fetchSeasons();
+    const currentSeason = NADARL.pickCurrentSeason(seasons);
+
+    fixtures = await NADARL.fetchFixtures(currentSeason && currentSeason.id);
     slugMap = await NADARL.fetchTeamSlugMap();
-    // merge in saved exclusions as blocked (no-match) days
+    // merge in saved exclusions (for this season only) as blocked (no-match) days
     const exclusions = await NADARL.fetchExclusions();
-    exclusions.forEach(e => {
-        fixtures.push({ date: e.date, isBlocked: true, reason: e.reason });
-    });
+    exclusions
+        .filter(e => !currentSeason || e.season_id === currentSeason.id)
+        .forEach(e => {
+            fixtures.push({ date: e.date, isBlocked: true, reason: e.reason });
+        });
     fixtures.sort((a, b) => a.date.localeCompare(b.date));
     const profile = await NADARL.fetchMyProfile();
     isAdmin = !!(profile && profile.role === 'admin');
