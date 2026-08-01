@@ -289,6 +289,12 @@ const NADARL = (function () {
         return data.sort((a, b) => Number(b.average) - Number(a.average));
     }
 
+    // One team's shooter stats for a specific season (Team page season switcher).
+    async function fetchTeamShootersStatsForSeason(teamId, seasonId) {
+        const stats = await fetchShooterStatsForSeason(seasonId);
+        return sortByRoleThenName(stats.filter(s => s.team_id === teamId));
+    }
+
     // All seasons, ordered by name.
     async function fetchSeasons() {
         const { data, error } = await db().from('season')
@@ -465,6 +471,7 @@ const NADARL = (function () {
         fetchTeamByName,
         fetchTeamSlugMap,
         fetchTeamShootersStats,
+        fetchTeamShootersStatsForSeason,
         fetchAllShooterStats,
         fetchShooterStatsForSeason,
         fetchFixtures,

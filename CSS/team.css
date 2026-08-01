@@ -136,15 +136,18 @@
 
 .roster-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 12px;
-    flex-wrap: wrap;
     margin-bottom: 18px;
 }
 
 .roster-header .section-title {
     margin: 0;
+}
+
+.edit-toggle-row {
+    display: flex;
+    justify-content: center;
 }
 
 .edit-toggle {

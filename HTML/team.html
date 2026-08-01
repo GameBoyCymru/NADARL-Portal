@@ -28,8 +28,14 @@
 
         <section class="section">
             <div class="roster-header">
-                <h2 class="section-title">Team Statistics</h2>
-                <button type="button" id="editToggleButton" class="shooter-button edit-toggle" hidden>Edit Roster</button>
+                <div class="season-nav">
+                    <button type="button" id="seasonPrev" class="season-arrow" aria-label="Previous season">&#8249;</button>
+                    <h2 class="section-title" id="seasonLabel">Season Team Statistics</h2>
+                    <button type="button" id="seasonNext" class="season-arrow" aria-label="Next season">&#8250;</button>
+                </div>
+                <div class="edit-toggle-row">
+                    <button type="button" id="editToggleButton" class="shooter-button edit-toggle" hidden>Edit Roster</button>
+                </div>
             </div>
             <p id="editNotice" class="edit-notice" hidden></p>
             <div id="editMessage" class="login-message" role="alert" hidden></div>

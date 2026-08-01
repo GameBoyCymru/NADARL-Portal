@@ -9,6 +9,25 @@ function padNo(n) {
     return n == null ? '' : String(n).padStart(4, '0');
 }
 
+let currentTeam = null;
+let seasons = [];
+let seasonIndex = 0;
+
+async function loadSeasonStats() {
+    const season = seasons[seasonIndex];
+    const label = document.getElementById('seasonLabel');
+    const prevButton = document.getElementById('seasonPrev');
+    const nextButton = document.getElementById('seasonNext');
+
+    label.textContent = (season ? season.name : 'Season') + ' Team Statistics';
+    prevButton.disabled = seasonIndex <= 0;
+    nextButton.disabled = seasonIndex >= seasons.length - 1;
+
+    const stats = season ? await NADARL.fetchTeamShootersStatsForSeason(currentTeam.id, season.id) : [];
+    const canEdit = !document.getElementById('addShooterPanel').hidden;
+    renderShooters(stats, canEdit);
+}
+
 async function initTeamPage() {
     const params = new URLSearchParams(window.location.search);
     const teamName = params.get('team') || '';
@@ -20,7 +39,11 @@ async function initTeamPage() {
         return;
     }
 
-    const stats = await NADARL.fetchTeamShootersStats(team.id);
+    currentTeam = team;
+    seasons = await NADARL.fetchSeasons();
+    const currentSeason = NADARL.pickCurrentSeason(seasons);
+    seasonIndex = currentSeason ? seasons.indexOf(currentSeason) : seasons.length - 1;
+
     const me = await NADARL.fetchMyProfile();
     const canEdit = !!me && (me.role === 'admin' || (me.role === 'captain' && me.team_id === team.id));
 
@@ -45,14 +68,21 @@ async function initTeamPage() {
         editToggle.addEventListener('click', () => toggleEdit(team));
     }
 
-    renderShooters(stats, false);
+    document.getElementById('seasonPrev').addEventListener('click', () => {
+        if (seasonIndex > 0) { seasonIndex--; loadSeasonStats(); }
+    });
+    document.getElementById('seasonNext').addEventListener('click', () => {
+        if (seasonIndex < seasons.length - 1) { seasonIndex++; loadSeasonStats(); }
+    });
+
+    await loadSeasonStats();
 }
 
 function toggleEdit(team) {
     const panel = document.getElementById('addShooterPanel');
     const nowEditing = panel.hidden; // currently read-only -> entering edit mode
     setEditMode(nowEditing, team);
-    refreshShooters(team.id);
+    refreshShooters();
 }
 
 function setEditMode(editing, team) {
@@ -94,7 +124,7 @@ function wireAddButton(team) {
         nameEl.value = '';
         roleEl.value = '';
         showEditMessage('Added ' + name + '.', 'success');
-        await refreshShooters(team.id);
+        await refreshShooters();
     });
 }
 
@@ -189,7 +219,7 @@ function buildRow(shooter, canEdit) {
                 return;
             }
             showEditMessage('Saved ' + name + '.', 'success');
-            await refreshShooters(shooter.team_id);
+            await refreshShooters();
         });
         tdActions.appendChild(save);
         tr.appendChild(tdActions);
@@ -205,10 +235,8 @@ function tdAppendStat(tr, value) {
     tr.appendChild(td);
 }
 
-async function refreshShooters(teamId) {
-    const stats = await NADARL.fetchTeamShootersStats(teamId);
-    const canEdit = !document.getElementById('addShooterPanel').hidden;
-    renderShooters(stats, canEdit);
+async function refreshShooters() {
+    await loadSeasonStats();
 }
 
 function showEditMessage(text, type) {

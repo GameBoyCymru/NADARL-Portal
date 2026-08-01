@@ -1,4 +1,7 @@
-let fixtures = [];
+let fixtures = [];        // fixtures for the browsed season (Season Fixtures table)
+let todayFixtures = [];   // fixtures for the actual current season (Today's Fixtures card)
+let seasons = [];
+let seasonIndex = 0;
 let isAdmin = false;
 let slugMap = {};
 
@@ -48,7 +51,7 @@ function isToday(dateStr) {
 
 function getNextFixtures() {
     const today = getTodayDate();
-    const futureFixtures = fixtures.filter(f => f.date > today);
+    const futureFixtures = todayFixtures.filter(f => f.date > today);
     const dates = [...new Set(futureFixtures.map(f => f.date))].sort().slice(0, 1);
     const dateSet = new Set(dates);
     return futureFixtures.filter(f => dateSet.has(f.date));
@@ -70,9 +73,9 @@ function groupFixturesByDate(fixtureList) {
 
 function renderTodayFixtures() {
     const container = document.getElementById('todayFixtures');
-    const todayFixtures = fixtures.filter(f => isToday(f.date));
+    const todaysFixtures = todayFixtures.filter(f => isToday(f.date));
 
-    if (todayFixtures.length === 0) {
+    if (todaysFixtures.length === 0) {
         const nextFixtures = getNextFixtures();
         if (nextFixtures.length > 0) {
             document.querySelector('.section-title').textContent = 'Next Fixtures';
@@ -84,7 +87,7 @@ function renderTodayFixtures() {
             container.innerHTML = '<div class="no-fixtures">No upcoming fixtures scheduled</div>';
         }
     } else {
-        const groupedFixtures = groupFixturesByDate(todayFixtures);
+        const groupedFixtures = groupFixturesByDate(todaysFixtures);
         Object.keys(groupedFixtures).forEach(date => {
             container.innerHTML += createFixtureCardGroup(date, groupedFixtures[date], true);
         });
@@ -161,7 +164,13 @@ function toggleFixtureGroup(header) {
 
 function renderSeasonFixtures() {
     const tbody = document.getElementById('seasonFixtures');
+    tbody.innerHTML = '';
     const groupedFixtures = groupFixturesByDate(fixtures);
+
+    if (!fixtures.length) {
+        tbody.innerHTML = '<tr><td colspan="3" class="no-fixtures">No fixtures for this season.</td></tr>';
+        return;
+    }
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const formattedDate = formatDate(date);
@@ -219,6 +228,12 @@ function renderSeasonFixtures() {
 
 function renderMobileSeasonFixtures() {
     const container = document.getElementById('mobileSeasonFixtures');
+
+    if (!fixtures.length) {
+        container.innerHTML = '<div class="no-fixtures">No fixtures for this season.</div>';
+        return;
+    }
+
     const groupedFixtures = groupFixturesByDate(fixtures);
     let html = '';
 
@@ -297,24 +312,54 @@ function setupAuthButton(profile) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const seasons = await NADARL.fetchSeasons();
-    const currentSeason = NADARL.pickCurrentSeason(seasons);
-
-    fixtures = await NADARL.fetchFixtures(currentSeason && currentSeason.id);
-    slugMap = await NADARL.fetchTeamSlugMap();
-    // merge in saved exclusions (for this season only) as blocked (no-match) days
+// Fetches one season's fixtures + its exclusions merged in as blocked
+// (no-match) days, sorted by date. Shared by the "today" (fixed to the
+// actual current season) and "browsed" (season-switcher-driven) loads.
+async function loadSeasonFixtures(season) {
+    const seasonFixtures = await NADARL.fetchFixtures(season && season.id);
     const exclusions = await NADARL.fetchExclusions();
     exclusions
-        .filter(e => !currentSeason || e.season_id === currentSeason.id)
+        .filter(e => !season || e.season_id === season.id)
         .forEach(e => {
-            fixtures.push({ date: e.date, isBlocked: true, reason: e.reason });
+            seasonFixtures.push({ date: e.date, isBlocked: true, reason: e.reason });
         });
-    fixtures.sort((a, b) => a.date.localeCompare(b.date));
+    seasonFixtures.sort((a, b) => a.date.localeCompare(b.date));
+    return seasonFixtures;
+}
+
+async function loadBrowsedSeason() {
+    const season = seasons[seasonIndex];
+    const label = document.getElementById('seasonLabel');
+    const prevButton = document.getElementById('seasonPrev');
+    const nextButton = document.getElementById('seasonNext');
+
+    label.textContent = (season ? season.name : 'Season') + ' Fixtures';
+    prevButton.disabled = seasonIndex <= 0;
+    nextButton.disabled = seasonIndex >= seasons.length - 1;
+
+    fixtures = season ? await loadSeasonFixtures(season) : [];
+    renderSeasonFixtures();
+    renderMobileSeasonFixtures();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    seasons = await NADARL.fetchSeasons();
+    const currentSeason = NADARL.pickCurrentSeason(seasons);
+    seasonIndex = currentSeason ? seasons.indexOf(currentSeason) : seasons.length - 1;
+
+    slugMap = await NADARL.fetchTeamSlugMap();
     const profile = await NADARL.fetchMyProfile();
     isAdmin = !!(profile && profile.role === 'admin');
     setupAuthButton(profile);
+
+    document.getElementById('seasonPrev').addEventListener('click', () => {
+        if (seasonIndex > 0) { seasonIndex--; loadBrowsedSeason(); }
+    });
+    document.getElementById('seasonNext').addEventListener('click', () => {
+        if (seasonIndex < seasons.length - 1) { seasonIndex++; loadBrowsedSeason(); }
+    });
+
+    todayFixtures = await loadSeasonFixtures(currentSeason);
     renderTodayFixtures();
-    renderSeasonFixtures();
-    renderMobileSeasonFixtures();
+    await loadBrowsedSeason();
 });
