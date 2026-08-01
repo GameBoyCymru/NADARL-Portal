@@ -330,8 +330,8 @@
     border-top: 3px solid #d4a017;
 }
 
-.fixture-table .fixture-current-row-end td {
-    border-bottom: 3px solid #d4a017;
+.fixture-table tr.fixture-current-row-end td {
+    border-bottom: 3px solid #d4a017 !important;
 }
 
 .fixture-table .fixture-current-row.fixture-detail-row td {
