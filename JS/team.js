@@ -160,12 +160,12 @@ function buildRow(shooter, canEdit) {
     tr.appendChild(tdName);
 
     // Stats columns (read-only)
+    tdAppendStat(tr, shooter.matches_played);        // Season Matches Shot (current season)
+    tdAppendStat(tr, shooter.total_matches_played);  // Total Matches Shot (all-time)
     tdAppendStat(tr, shooter.best);          // Personal Best (all-time)
     tdAppendStat(tr, shooter.season_best);   // Season Best (current season)
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
-    tdAppendStat(tr, shooter.matches_played);        // Season Matches Shot (current season)
-    tdAppendStat(tr, shooter.total_matches_played);  // Total Matches Shot (all-time)
     tdAppendStat(tr, shooter.handicap);
 
     // Actions (only when editing)
