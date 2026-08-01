@@ -312,6 +312,40 @@
     background: rgba(196, 30, 58, 0.42) !important;
 }
 
+/* The "today / next" fixture date, highlighted in the Season Fixtures table
+   so it's easy to see how far the season has progressed. */
+.fixture-table .fixture-current-row .fixture-date-header {
+    background: rgba(212, 160, 23, 0.45) !important;
+}
+
+.fixture-table .fixture-current-row td:first-child {
+    border-left: 3px solid #d4a017;
+}
+
+.fixture-table .fixture-current-row td:last-child {
+    border-right: 3px solid #d4a017;
+}
+
+.fixture-table .fixture-current-row.fixture-date-row td {
+    border-top: 3px solid #d4a017;
+}
+
+.fixture-table .fixture-current-row-end td {
+    border-bottom: 3px solid #d4a017;
+}
+
+.fixture-table .fixture-current-row.fixture-detail-row td {
+    background: rgba(212, 160, 23, 0.14);
+}
+
+.fixture-table .fixture-current-row.fixture-detail-row:hover td {
+    background: rgba(212, 160, 23, 0.24);
+}
+
+.fixture-table .fixture-current-row.fixture-date-row:not(.fixture-excluded-row):hover td {
+    background: rgba(212, 160, 23, 0.55) !important;
+}
+
 .teams-cell {
     font-weight: 500;
 }
@@ -425,6 +459,17 @@
 
 .mobile-fixture-group-alt .mobile-fixture-summary {
     background: rgba(196, 30, 58, 0.18);
+}
+
+/* The "today / next" fixture date, highlighted in the Season Fixtures list
+   so it's easy to see how far the season has progressed. */
+.mobile-fixture-current {
+    border: 2px solid rgba(212, 160, 23, 0.6);
+}
+
+.mobile-fixture-current .mobile-fixture-summary,
+.mobile-fixture-group-alt.mobile-fixture-current .mobile-fixture-summary {
+    background: rgba(212, 160, 23, 0.3);
 }
 
 .mobile-fixture-summary::-webkit-details-marker {

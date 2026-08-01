@@ -4,6 +4,8 @@ let seasons = [];
 let seasonIndex = 0;
 let isAdmin = false;
 let slugMap = {};
+let highlightDate = null;   // date shown in "Today's Fixtures" (today's, or the next upcoming)
+let currentSeasonId = null; // the actual current season - highlightDate only applies when browsing it
 
 function teamBadgeHtml(teamName) {
     const slug = slugMap[teamName];
@@ -55,6 +57,16 @@ function getNextFixtures() {
     const dates = [...new Set(futureFixtures.map(f => f.date))].sort().slice(0, 1);
     const dateSet = new Set(dates);
     return futureFixtures.filter(f => dateSet.has(f.date));
+}
+
+// The date shown in the "Today's Fixtures" card - today's date if there are
+// fixtures today, otherwise the next upcoming date. Used to highlight the
+// matching row(s) in the Season Fixtures table when that season is browsed.
+function computeHighlightDate() {
+    const today = getTodayDate();
+    if (todayFixtures.some(f => f.date === today)) return today;
+    const next = getNextFixtures();
+    return next.length ? next[0].date : null;
 }
 
 function groupFixturesByDate(fixtureList) {
@@ -172,14 +184,17 @@ function renderSeasonFixtures() {
         return;
     }
 
+    const highlightSeason = seasons[seasonIndex] && seasons[seasonIndex].id === currentSeasonId;
+
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const formattedDate = formatDate(date);
         const group = groupedFixtures[date];
         const altClass = dateIndex % 2 === 1 ? ' fixture-row-alt' : '';
+        const highlightClass = highlightSeason && date === highlightDate ? ' fixture-current-row' : '';
 
         if (group[0] && group[0].isBlocked) {
             const headerRow = document.createElement('tr');
-            headerRow.className = 'fixture-row fixture-date-row fixture-excluded-row' + altClass;
+            headerRow.className = 'fixture-row fixture-date-row fixture-excluded-row' + altClass + highlightClass + (highlightClass ? ' fixture-current-row-end' : '');
             headerRow.innerHTML = `
                 <td class="date-cell fixture-date-header" colspan="3">
                     <div class="fixture-date-inner">
@@ -195,7 +210,7 @@ function renderSeasonFixtures() {
         const typeBadgeHtml = typeBadge(group[0]);
 
         const headerRow = document.createElement('tr');
-        headerRow.className = 'fixture-row fixture-date-row' + altClass;
+        headerRow.className = 'fixture-row fixture-date-row' + altClass + highlightClass;
         headerRow.innerHTML = `
             <td class="date-cell fixture-date-header" colspan="3">
                 <div class="fixture-date-inner">
@@ -210,8 +225,9 @@ function renderSeasonFixtures() {
             const awayTeamDisplay = fixture.isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
             const venueDisplay = fixture.isBye ? '-' : fixture.venue;
 
+            const isLastInGroup = index === group.length - 1;
             const row = document.createElement('tr');
-            row.className = 'fixture-row fixture-detail-row' + altClass;
+            row.className = 'fixture-row fixture-detail-row' + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
             if (isAdmin && !fixture.isBye) {
                 row.classList.add('admin-clickable');
                 row.addEventListener('click', () => { window.location.href = matchUrl(fixture); });
@@ -235,21 +251,23 @@ function renderMobileSeasonFixtures() {
     }
 
     const groupedFixtures = groupFixturesByDate(fixtures);
+    const highlightSeason = seasons[seasonIndex] && seasons[seasonIndex].id === currentSeasonId;
     let html = '';
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const altClass = dateIndex % 2 === 1 ? ' mobile-fixture-group-alt' : '';
+        const highlightClass = highlightSeason && date === highlightDate ? ' mobile-fixture-current' : '';
         const group = groupedFixtures[date];
 
         // blocked (no-match) day: show the reason only, not interactive
         if (group[0] && group[0].isBlocked) {
-            html += `<div class="mobile-fixture-group mobile-fixture-blocked${altClass}">`;
+            html += `<div class="mobile-fixture-group mobile-fixture-blocked${altClass}${highlightClass}">`;
             html += `<div class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">${escapeHtml(group[0].reason)}</span></div>`;
             html += `</div>`;
             return;
         }
 
-        html += `<details class="mobile-fixture-group${altClass}">`;
+        html += `<details class="mobile-fixture-group${altClass}${highlightClass}"${highlightClass ? ' open' : ''}>`;
         html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span> ${typeBadge(group[0])}</summary>`;
         html += `<div class="mobile-fixture-content">`;
 
@@ -359,7 +377,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (seasonIndex < seasons.length - 1) { seasonIndex++; loadBrowsedSeason(); }
     });
 
+    currentSeasonId = currentSeason ? currentSeason.id : null;
     todayFixtures = await loadSeasonFixtures(currentSeason);
+    highlightDate = computeHighlightDate();
     renderTodayFixtures();
     await loadBrowsedSeason();
 });
