@@ -166,7 +166,7 @@ function buildRow(shooter, canEdit) {
     tdAppendStat(tr, shooter.season_best);   // Season Best (current season)
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
-    tdAppendStat(tr, shooter.handicap);
+    tdAppendStat(tr, shooter.handicap == null ? 'N/A' : shooter.handicap);
 
     // Actions (only when editing)
     if (canEdit) {
