@@ -456,7 +456,7 @@ const NADARL = (function () {
         });
         if (error) { console.error('fetchHandicaps', error); return {}; }
         const map = {};
-        (data || []).forEach(r => { map[r.shooter_id] = Number(r.handicap) || 0; });
+        (data || []).forEach(r => { map[r.shooter_id] = r.handicap == null ? null : Number(r.handicap); });
         return map;
     }
 

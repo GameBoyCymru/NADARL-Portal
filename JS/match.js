@@ -45,6 +45,15 @@ function hcFor(shooterId) {
     return isHandicapMatch && shooterId ? (handicapMap[shooterId] || 0) : 0;
 }
 
+// Display text for the HC column: "N/A" when the shooter doesn't have
+// enough season matches yet for a handicap, otherwise the numeric value
+// (which legitimately can be 0).
+function hcDisplay(shooterId) {
+    if (!isHandicapMatch || !shooterId) return 'N/A';
+    const hc = handicapMap[shooterId];
+    return hc == null ? 'N/A' : hc;
+}
+
 function showHandicapBanner() {
     const header = document.getElementById('matchHeader');
     if (!header || document.getElementById('handicapBanner')) return;
@@ -56,7 +65,7 @@ function showHandicapBanner() {
 }
 
 // Append HC + Total columns to the individual score tables (handicap matches
-// only), relabelling the existing pre-handicap Total column to Pre-HC.
+// only), relabelling the existing pre-handicap Total column to Score.
 function ensureHandicapHeaders() {
     if (!isHandicapMatch) return;
     ['homeScoreTable', 'awayScoreTable'].forEach(id => {
@@ -65,7 +74,7 @@ function ensureHandicapHeaders() {
         if (!tr || tr.querySelector('.th-hc')) return;
 
         const totalHeader = tr.querySelector('th:last-child');
-        if (totalHeader) totalHeader.textContent = 'Pre-HC';
+        if (totalHeader) totalHeader.textContent = 'Score';
 
         const hc = document.createElement('th');
         hc.className = 'th-hc';
@@ -125,9 +134,8 @@ function renderShooterTable(tbodyId, shooters) {
             html += `<td class="score-cell">${score}</td>`;
         });
         if (isHandicapMatch) {
-            const hc = hcFor(shooter.shooter_id);
             html += `<td class="score-cell">${shooter.total}</td>`;
-            html += `<td class="score-cell hc-cell">${hc}</td>`;
+            html += `<td class="score-cell hc-cell">${hcDisplay(shooter.shooter_id)}</td>`;
             html += `<td class="${totalClass}">${rankedTotal}</td>`;
         } else {
             html += `<td class="${totalClass}">${shooter.total}</td>`;
@@ -432,7 +440,7 @@ function buildEditRow(shooterList, existing, teamId) {
 
         const tdHc = document.createElement('td');
         tdHc.className = 'score-cell hc-cell row-hc';
-        tdHc.textContent = hc;
+        tdHc.textContent = hcDisplay(existing && existing.shooter_id);
         tr.appendChild(tdHc);
 
         tr.appendChild(buildTotalCell(rawTotal + hc));
@@ -481,7 +489,7 @@ function refreshRowHandicap(tr) {
     const sid = picker ? picker.getAttribute('data-shooter-id') : null;
     const hc = hcFor(sid);
     const hcCell = tr.querySelector('.row-hc');
-    if (hcCell) hcCell.textContent = hc;
+    if (hcCell) hcCell.textContent = hcDisplay(sid);
     const preHc = Number((tr.querySelector('.row-pre-hc') || {}).textContent) || 0;
     const totalSpan = tr.querySelector('.row-total');
     if (totalSpan) totalSpan.textContent = preHc + hc;
