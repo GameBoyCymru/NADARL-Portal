@@ -185,6 +185,7 @@ function renderSeasonFixtures() {
     }
 
     const highlightSeason = seasons[seasonIndex] && seasons[seasonIndex].id === currentSeasonId;
+    const today = getTodayDate();
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const formattedDate = formatDate(date);
@@ -228,8 +229,10 @@ function renderSeasonFixtures() {
             const isLastInGroup = index === group.length - 1;
             const row = document.createElement('tr');
             row.className = 'fixture-row fixture-detail-row' + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
-            if (isAdmin && !fixture.isBye) {
-                row.classList.add('admin-clickable');
+            // Everyone can open past/today's fixtures (to see the completed
+            // match); admins can also open future ones to set up scoring.
+            if (!fixture.isBye && (isAdmin || fixture.date <= today)) {
+                row.classList.add('fixture-clickable');
                 row.addEventListener('click', () => { window.location.href = matchUrl(fixture); });
             }
             row.innerHTML = `
@@ -252,6 +255,7 @@ function renderMobileSeasonFixtures() {
 
     const groupedFixtures = groupFixturesByDate(fixtures);
     const highlightSeason = seasons[seasonIndex] && seasons[seasonIndex].id === currentSeasonId;
+    const today = getTodayDate();
     let html = '';
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
@@ -282,11 +286,14 @@ function renderMobileSeasonFixtures() {
                     </div>
                 `;
             } else {
-                const adminAttrs = isAdmin
-                    ? `class="mobile-fixture-item admin-clickable" onclick="window.location.href='${matchUrl(fixture)}'"`
+                // Everyone can open past/today's fixtures (to see the completed
+                // match); admins can also open future ones to set up scoring.
+                const canOpen = isAdmin || fixture.date <= today;
+                const clickAttrs = canOpen
+                    ? `class="mobile-fixture-item fixture-clickable" onclick="window.location.href='${matchUrl(fixture)}'"`
                     : `class="mobile-fixture-item"`;
                 html += `
-                    <div ${adminAttrs}>
+                    <div ${clickAttrs}>
                         <div class="mobile-fixture-teams">
                             <span class="mobile-team">${fixture.homeTeam}</span>
                         </div>

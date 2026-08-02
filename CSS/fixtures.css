@@ -226,15 +226,15 @@
     font-size: 0.95rem;
 }
 
-.admin-clickable {
+.fixture-clickable {
     cursor: pointer;
 }
 
-.fixture-table tr.admin-clickable:hover td {
+.fixture-table tr.fixture-clickable:hover td {
     background: rgba(196, 30, 58, 0.15);
 }
 
-.mobile-fixture-item.admin-clickable:hover {
+.mobile-fixture-item.fixture-clickable:hover {
     background: rgba(196, 30, 58, 0.15);
 }
 
