@@ -85,15 +85,61 @@ the admin panel (season resets, bulk deletes).
    Accounts panel in `admin.html` for a friendlier UI once at least one
    admin exists.)
 
-**No `pg_dump` file handy?** Fall back to the lighter path: run
-`supabase/schema.sql` then every file in `supabase/migrations/` (in
-filename order) against the new project's SQL Editor to rebuild the empty
-schema — same procedure as first-time setup in the main `README.md` —
-then use the admin panel's **Import Data** button with your most recent
-JSON export to restore the table data.
+**No `pg_dump` file handy?** Fall back to the lighter path below.
+
+## Restoring from the admin-panel JSON export (no `pg_dump`)
+
+This is also the procedure to use for a **test restore** — always do this
+against a scratch project, never production.
+
+1. **Create a throwaway Supabase project.** Dashboard → New Project. Wait
+   for it to finish provisioning.
+2. **Rebuild the empty schema.** In the new project's SQL Editor, run, in
+   order: `supabase/schema.sql`, then every file in
+   `supabase/migrations/` in filename order (they're date-prefixed, so
+   alphabetical = chronological). Don't run `supabase/seed.sql` — you're
+   about to import real data instead.
+3. **Point a local copy of the site at the test project.** Get the new
+   project's URL + anon key (Project Settings → API) and temporarily edit
+   `JS/supabase-keys.js` to point at them — note your real production
+   values first so you can switch back afterwards. Then serve locally
+   (`python3 -m http.server 8000`, or any static server).
+4. **Create an admin account on the test project.** It has no users yet.
+   Sign up via `HTML/login.html` with any email (auto-creates a
+   `user_profile` row with `role = 'pending'`), then promote yourself in
+   the test project's SQL Editor:
+
+   ```sql
+   update public.user_profile set role = 'admin' where email = 'you@example.com';
+   ```
+
+5. **Import the data.** Log into `admin.html` on the test project, go to
+   **Data Backup & Restore**, choose your `nadarl-backup-*.json` file, and
+   click **Import Data**. Watch the status messages — it imports
+   table-by-table, in FK-safe order (`season` → `team` → `shooter` →
+   `match` → `exclusion` → `score` → `handicap_config`), and reports which
+   table it's on if something goes wrong.
+
+   Note: `handicap_config` is *upserted*, not inserted — its migration
+   seeds a default row (`id=1`) as part of rebuilding the schema in step
+   2, so the table is never actually empty the way the others are. Every
+   other table expects to genuinely start empty; running an import twice,
+   or against a project that already has data, will fail on the first
+   duplicate key it hits rather than silently overwrite anything.
+
+6. **Verify.** Check `table.html`, `fixtures.html`, `teams.html` on the
+   test instance actually render the restored data correctly — that's the
+   real point of a test restore, not just "did the import button say ok."
+7. **Clean up.** Revert `JS/supabase-keys.js` to your real production
+   values. Delete the test project, or keep it around for the next dry
+   run.
+
+Login accounts aren't part of the export (see above) — re-create the
+ones you need to test with, same as any other restore.
 
 ## Testing a backup
 
-A backup you've never restored is a guess, not a backup. Periodically
-spin up a scratch Supabase project and run the restore procedure above
-against it, just to confirm the dump actually works end-to-end.
+A backup you've never restored is a guess, not a backup. Periodically run
+either restore procedure above against a scratch project — the `pg_dump`
+one to validate the full Postgres-level backup, the JSON one to validate
+the admin-panel export — just to confirm each actually works end-to-end.
