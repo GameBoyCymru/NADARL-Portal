@@ -544,6 +544,13 @@ const NADARL = (function () {
         };
     }
 
+    // handicap_config is seeded with one row (id=1) directly by its
+    // migration, on-conflict-do-nothing - so it's never actually empty on a
+    // freshly-migrated database, unlike every other table here. Upsert it
+    // instead of insert so restoring the exported config doesn't collide
+    // with that seeded default row.
+    const BACKUP_UPSERT_TABLES = { handicap_config: 'id' };
+
     // Restores a previous exportAllData() snapshot into an EMPTY database
     // whose schema already matches (supabase/schema.sql + migrations
     // applied first). Inserts row-for-row in FK-safe dependency order,
@@ -554,9 +561,13 @@ const NADARL = (function () {
         for (const name of BACKUP_IMPORT_TABLES) {
             const rows = tables[name];
             if (!rows || !rows.length) { if (onProgress) onProgress(name, 0); continue; }
+            const conflictCol = BACKUP_UPSERT_TABLES[name];
             for (let i = 0; i < rows.length; i += BACKUP_CHUNK_SIZE) {
                 const chunk = rows.slice(i, i + BACKUP_CHUNK_SIZE);
-                const { error } = await db().from(name).insert(chunk);
+                const query = conflictCol
+                    ? db().from(name).upsert(chunk, { onConflict: conflictCol })
+                    : db().from(name).insert(chunk);
+                const { error } = await query;
                 if (error) { console.error('importAllData: ' + name, error); return { ok: false, error: name + ': ' + error.message }; }
             }
             if (onProgress) onProgress(name, rows.length);
