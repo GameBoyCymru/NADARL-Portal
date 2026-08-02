@@ -96,6 +96,31 @@
     font-weight: 600;
 }
 
+/* Team standings tables lead with the team name (not a position number),
+   so the left-align/muted-number treatment above needs flipping back. */
+.team-standings-table th:first-child {
+    text-align: left;
+}
+
+.team-standings-table td:first-child {
+    text-align: left;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.team-standings-table th:nth-child(2) {
+    text-align: center;
+}
+
+.team-standings-table td:nth-child(2) {
+    text-align: center;
+    font-weight: normal;
+}
+
+.team-standings-table .team-cell {
+    cursor: default;
+}
+
 @media (max-width: 480px) {
     .league-table th,
     .league-table td {

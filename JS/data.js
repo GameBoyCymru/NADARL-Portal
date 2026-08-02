@@ -295,6 +295,16 @@ const NADARL = (function () {
         return sortByRoleThenName(stats.filter(s => s.team_id === teamId));
     }
 
+    // Team-level W/D/L standings for a season, split by half (1 = no
+    // handicap, 2 = handicap) and league ('A' = top 5, 'B' = ranked 5th-7th).
+    // Returns one row per team per half/league combo (League Table's four
+    // team-standings tables).
+    async function fetchTeamStandingsForSeason(seasonId) {
+        const { data, error } = await db().rpc('team_league_standings', { p_season_id: seasonId });
+        if (error) { console.error('fetchTeamStandingsForSeason', error); return []; }
+        return data;
+    }
+
     // All seasons, ordered by name.
     async function fetchSeasons() {
         const { data, error } = await db().from('season')
@@ -474,6 +484,7 @@ const NADARL = (function () {
         fetchTeamShootersStatsForSeason,
         fetchAllShooterStats,
         fetchShooterStatsForSeason,
+        fetchTeamStandingsForSeason,
         fetchFixtures,
         fetchMatchScorecard,
         fetchMatch,
