@@ -1,3 +1,14 @@
+.intro-lead {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    padding-left: 16px;
+    color: #ffffff;
+    border-left: 3px solid;
+    border-image: linear-gradient(180deg, #c41e3a, #d4a017) 1;
+}
+
 .intro-text {
     font-size: 1rem;
     line-height: 1.8;
@@ -88,7 +99,7 @@
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
     .nav-grid {
         gap: 15px;
     }
@@ -109,6 +120,10 @@
 
     .nav-description {
         font-size: 0.85rem;
+    }
+
+    .intro-lead {
+        font-size: 1.05rem;
     }
 
     .intro-text {

@@ -256,10 +256,19 @@ h1 {
 }
 
 .welcome-logo img {
-    width: 180px;
+    width: 260px;
     height: auto;
     border-radius: 50%;
     mix-blend-mode: screen;
+}
+
+.welcome-photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    margin: 20px 0;
 }
 
 .welcome-text {
@@ -272,9 +281,13 @@ h1 {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
     .welcome-content {
         flex-direction: column;
         text-align: left;
+    }
+
+    .welcome-logo img {
+        width: 160px;
     }
 }
