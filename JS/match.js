@@ -510,6 +510,34 @@ function isRowComplete(tr) {
     return hasShooter && Array.from(inputs).every(i => i.value !== '');
 }
 
+// Colours the highest/lowest Total in a team's editable scorecard, mirroring
+// what renderShooterTable already does for the read-only view. Only rows
+// with a shooter picked and every shot entered count, so in-progress rows
+// don't skew it.
+function updateTotalHighlights(tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const allRows = Array.from(tbody.querySelectorAll('tr.score-edit-row'));
+    allRows.forEach(tr => {
+        const cell = tr.querySelector('.total-cell');
+        if (cell) cell.classList.remove('total-highest', 'total-lowest');
+    });
+
+    const completeRows = allRows.filter(isRowComplete);
+    if (!completeRows.length) return;
+
+    const totals = completeRows.map(tr => Number((tr.querySelector('.row-total') || {}).textContent) || 0);
+    const maxTotal = Math.max(...totals);
+    const minTotal = Math.min(...totals);
+
+    completeRows.forEach((tr, i) => {
+        const cell = tr.querySelector('.total-cell');
+        if (!cell) return;
+        if (totals[i] === maxTotal) cell.classList.add('total-highest');
+        else if (totals[i] === minTotal) cell.classList.add('total-lowest');
+    });
+}
+
 function updateCurrentShooter(tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
@@ -584,6 +612,8 @@ function recalcSummary(params, homeTbodyId, awayTbodyId) {
     const awayScores = calculateTeamScores(awayRows);
     updateHeaderScores(homeScores, awayScores);
     renderMatchSummary(params.home, homeScores, params.away, awayScores);
+    updateTotalHighlights(homeTbodyId);
+    updateTotalHighlights(awayTbodyId);
 }
 
 function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows, editable, params, homeTbodyId, awayTbodyId) {
