@@ -10,11 +10,17 @@ const NADARL = (function () {
 
     const ROLE_ORDER = { captain: 0, secretary: 1, treasurer: 2 };
 
+    // Shooters with a role (captain/secretary/treasurer) always come first,
+    // in that order. Everyone else is sorted by average descending, with
+    // ties (including no average yet, i.e. 0) falling back to name.
     function sortByRoleThenName(rows) {
         return rows.sort((a, b) => {
             const ra = a.role ? ROLE_ORDER[a.role] : 3;
             const rb = b.role ? ROLE_ORDER[b.role] : 3;
             if (ra !== rb) return ra - rb;
+            if (ra === 3) {
+                return Number(b.average) - Number(a.average) || String(a.name).localeCompare(String(b.name));
+            }
             return String(a.name).localeCompare(String(b.name));
         });
     }
@@ -283,10 +289,15 @@ const NADARL = (function () {
     }
 
     // All shooters' stats for one specific season (League Table season switcher).
+    // Ties (including shooters with no average yet, i.e. 0) fall back to
+    // alphabetical order by name instead of whatever order the query returned.
     async function fetchShooterStatsForSeason(seasonId) {
         const { data, error } = await db().rpc('shooter_stats_for_season', { p_season_id: seasonId });
         if (error) { console.error('fetchShooterStatsForSeason', error); return []; }
-        return data.sort((a, b) => Number(b.average) - Number(a.average));
+        return data.sort((a, b) =>
+            Number(b.average) - Number(a.average) ||
+            String(a.name).localeCompare(String(b.name))
+        );
     }
 
     // One team's shooter stats for a specific season (Team page season switcher).
