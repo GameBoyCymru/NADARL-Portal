@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="Images/nadarl-logo.png" alt="NADARL Logo" width="180" />
+  <img src="Images/assets/nadarl-logo.png" alt="NADARL Logo" width="180" />
 
   # NADARL Portal
 
