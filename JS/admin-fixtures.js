@@ -131,8 +131,31 @@ const FixturesAdmin = (function () {
         $('fxGenerate').addEventListener('click', generate);
         $('fxSave').addEventListener('click', save);
         $('fxAddSeason').addEventListener('click', createSeason);
+        $('fxResetScores').addEventListener('click', resetScores);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
         $('fxSeason').addEventListener('change', applySeasonToMondays);
+    }
+
+    // Clears every entered score for the selected season and resets each of
+    // its matches back to unconfirmed/unsubmitted. The fixture schedule
+    // (dates, teams, venues) and excluded Mondays are left exactly as they
+    // are - this only wipes shooter/team stats, not the season's structure.
+    async function resetScores() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+        if (!confirm(
+            'Clear all entered scores for season "' + season.name + '"? ' +
+            'Fixtures and excluded dates are kept - this only resets scores and stats for this season. ' +
+            'This cannot be undone.'
+        )) return;
+
+        const btn = $('fxResetScores');
+        btn.disabled = true;
+        const res = await NADARL.resetSeasonScores(season.id);
+        btn.disabled = false;
+        if (!res.ok) { show('Could not reset scores: ' + res.error, 'error'); return; }
+
+        show('Scores for "' + season.name + '" have been reset.', 'success');
     }
 
     async function deleteSeason() {

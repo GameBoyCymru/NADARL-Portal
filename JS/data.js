@@ -349,6 +349,29 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // Clears every entered score for a season and resets each of its matches
+    // back to unconfirmed/unsubmitted - the fixture schedule itself (dates,
+    // teams, venues, half) is untouched. Admin only - RLS enforces.
+    async function resetSeasonScores(seasonId) {
+        const { data: matches, error: matchError } = await db().from('match')
+            .select('id')
+            .eq('season_id', seasonId);
+        if (matchError) { console.error('resetSeasonScores', matchError); return { ok: false, error: matchError.message }; }
+
+        const matchIds = (matches || []).map(m => m.id);
+        if (!matchIds.length) return { ok: true };
+
+        const { error: scoreError } = await db().from('score').delete().in('match_id', matchIds);
+        if (scoreError) { console.error('resetSeasonScores', scoreError); return { ok: false, error: scoreError.message }; }
+
+        const { error: statusError } = await db().from('match')
+            .update({ submitted: false, home_confirmed: false, away_confirmed: false })
+            .in('id', matchIds);
+        if (statusError) { console.error('resetSeasonScores', statusError); return { ok: false, error: statusError.message }; }
+
+        return { ok: true };
+    }
+
     // All exclusions (no-match Mondays), ordered by date.
     async function fetchExclusions() {
         const { data, error } = await db().from('exclusion')
@@ -508,6 +531,7 @@ const NADARL = (function () {
         seasonHasMatches,
         deleteSeason,
         clearMatches,
+        resetSeasonScores,
         insertMatches,
         fetchExclusions,
         clearExclusions,
