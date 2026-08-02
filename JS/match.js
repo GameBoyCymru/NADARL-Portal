@@ -510,6 +510,18 @@ function isRowComplete(tr) {
     return hasShooter && Array.from(inputs).every(i => i.value !== '');
 }
 
+// True if a team's card has a shooter picked but not all 7 shots entered -
+// blocks that side from confirming (a picked shooter can't be left blank).
+function hasIncompleteRow(tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return false;
+    return Array.from(tbody.querySelectorAll('tr.score-edit-row')).some(tr => {
+        const picker = tr.querySelector('.shooter-picker');
+        const hasShooter = !!(picker && picker.getAttribute('data-shooter-id'));
+        return hasShooter && !isRowComplete(tr);
+    });
+}
+
 // Colours the highest/lowest Total in a team's editable scorecard, mirroring
 // what renderShooterTable already does for the read-only view. Only rows
 // with a shooter picked and every shot entered count, so in-progress rows
@@ -542,6 +554,7 @@ function updateCurrentShooter(tbodyId) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     const rights = editRights[tbodyId] || { pick: false, score: false };
+    const locked = matchStatus.submitted;
     const rows = Array.from(tbody.querySelectorAll('tr.score-edit-row'));
     let currentFound = false;
     let prevHasShooter = true;
@@ -550,7 +563,7 @@ function updateCurrentShooter(tbodyId) {
         const hasShooter = !!(picker && picker.getAttribute('data-shooter-id'));
         const trigger = picker ? picker.querySelector('.shooter-picker-trigger') : null;
         const hasScores = Array.from(tr.querySelectorAll('.shot-input')).some(i => i.value !== '');
-        if (trigger) trigger.disabled = !rights.pick || !prevHasShooter || (hasShooter && hasScores);
+        if (trigger) trigger.disabled = locked || !rights.pick || !prevHasShooter || (hasShooter && hasScores);
 
         const isCurrent = !currentFound && !isRowComplete(tr);
         if (isCurrent) {
@@ -559,7 +572,7 @@ function updateCurrentShooter(tbodyId) {
         } else {
             tr.classList.remove('current-shooter');
         }
-        const shotsEditable = rights.score && hasShooter && (isCurrent || isRowComplete(tr));
+        const shotsEditable = !locked && rights.score && hasShooter && (isCurrent || isRowComplete(tr));
         tr.querySelectorAll('.shot-input').forEach(el => {
             el.disabled = !shotsEditable;
         });
@@ -720,8 +733,13 @@ function buildConfirmArea(side) {
     confirmBtn.type = 'button';
     confirmBtn.className = 'confirm-btn';
     confirmBtn.textContent = 'Confirm Results';
+    const tbodyId = side === 'home' ? 'homeShooters' : 'awayShooters';
     confirmBtn.addEventListener('click', async () => {
         const confirmed = side === 'home' ? matchStatus.home_confirmed : matchStatus.away_confirmed;
+        if (!confirmed && hasIncompleteRow(tbodyId)) {
+            window.alert('Every shooter picked needs all 7 shots entered before this side can be confirmed.');
+            return;
+        }
         confirmBtn.disabled = true;
         const res = confirmed
             ? await NADARL.unconfirmMatchSide(confirmCtx.matchId, side)
@@ -732,6 +750,7 @@ function buildConfirmArea(side) {
             window.alert('Could not update confirmation: ' + (res.error || 'not permitted'));
         }
         refreshConfirmUI();
+        updateCurrentShooters();
     });
 
     const submitBtn = document.createElement('button');
@@ -748,6 +767,7 @@ function buildConfirmArea(side) {
             window.alert('Could not submit: ' + (res.error || 'not permitted'));
         }
         refreshConfirmUI();
+        updateCurrentShooters();
     });
 
     wrap.appendChild(statusEl);
@@ -830,10 +850,12 @@ async function setupConfirmFlow(match, canScore, homePick, awayPick, isEdit) {
         if (match.away_team_id) buildConfirmArea('away');
     }
     refreshConfirmUI();
+    updateCurrentShooters();
 
     const channel = NADARL.subscribeMatch(match.id, async () => {
         matchStatus = (await NADARL.fetchMatchStatus(match.id)) || matchStatus;
         refreshConfirmUI();
+        updateCurrentShooters();
     });
     window.addEventListener('beforeunload', () => NADARL.unsubscribeChannel(channel));
 }
