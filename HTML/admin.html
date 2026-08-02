@@ -157,6 +157,32 @@
                     </table>
                 </div>
             </section>
+
+            <section id="backupPanel" class="fx-section">
+                <h2 class="section-title">Data Backup &amp; Restore</h2>
+                <p class="login-intro">
+                    Download every season, team, shooter, fixture and score as one file and keep it
+                    somewhere safe. To recover after data loss: create a fresh Supabase project, run
+                    <code>supabase/schema.sql</code> then everything in <code>supabase/migrations/</code>
+                    to rebuild the empty database, point the site at the new project, then restore from
+                    a backup file here. This only covers table data — login accounts aren't included
+                    (re-invite admins/captains and reassign their role/team afterwards). For a complete
+                    Postgres-level backup (schema, functions, RLS policies and all), see
+                    <code>supabase/BACKUP_RESTORE.md</code> in the repo.
+                </p>
+
+                <div id="backupMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="fx-actions">
+                    <button type="button" id="backupExport" class="shooter-button">Download Full Export</button>
+                </div>
+
+                <div class="fx-season-create">
+                    <span class="fx-hint">Restore from a previous export (empty database only):</span>
+                    <input type="file" id="backupImportFile" class="fx-file-input" accept="application/json">
+                    <button type="button" id="backupImport" class="shooter-button fx-button-danger" disabled>Import Data</button>
+                </div>
+            </section>
             </div>
         </section>
 
@@ -183,10 +209,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260709"></script>
+    <script src="../JS/data.js?v=20260802"></script>
     <script src="../JS/admin.js"></script>
     <script src="../JS/admin-teams.js"></script>
     <script src="../JS/admin-handicap.js"></script>
     <script src="../JS/admin-fixtures.js"></script>
+    <script src="../JS/admin-backup.js"></script>
 </body>
 </html>

@@ -130,6 +130,14 @@ Row Level Security scopes writes by role:
 | **captain** | Manage own team's shooters + today's home-match scores |
 | **admin** | Full access to all data |
 
+## Backup & Disaster Recovery
+
+Admins can download a full data snapshot (seasons, teams, shooters, fixtures,
+scores) at any time from **Admin → Data Backup & Restore** — no tooling
+required. For full Postgres-level disaster recovery (schema, functions, RLS
+policies, and data in one shot via `pg_dump`/`pg_restore`), see
+[`supabase/BACKUP_RESTORE.md`](supabase/BACKUP_RESTORE.md).
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you'd like to change.

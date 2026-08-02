@@ -185,6 +185,11 @@
     width: 130px;
 }
 
+.fx-file-input {
+    color: #e0d6c8;
+    font-size: 0.85rem;
+}
+
 .fx-current-check {
     display: flex;
     align-items: center;

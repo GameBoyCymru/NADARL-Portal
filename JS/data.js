@@ -510,6 +510,60 @@ const NADARL = (function () {
         return map;
     }
 
+    // ---------------------------------------------------------------------
+    // Full data export / import (admin backup & disaster recovery).
+    // Covers every base table's rows; the shooter_stats/fixture_list/
+    // match_scorecard views are derived and regenerate automatically.
+    // user_profile is exported for reference only, never re-imported - its
+    // id is a foreign key into Supabase's separate auth.users table, which
+    // a freshly-restored project won't have matching rows for. Re-invite
+    // admins/captains after a restore and reassign their role/team instead.
+    // ---------------------------------------------------------------------
+    const BACKUP_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'user_profile'];
+    const BACKUP_IMPORT_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config'];
+    const BACKUP_CHUNK_SIZE = 500;
+
+    // Downloads every row of every table as one JSON snapshot. Admin only -
+    // RLS scopes what each role can see, but only an admin can read every
+    // row of every table.
+    async function exportAllData() {
+        const tables = {};
+        for (const name of BACKUP_TABLES) {
+            const { data, error } = await db().from(name).select('*');
+            if (error) { console.error('exportAllData: ' + name, error); return { ok: false, error: name + ': ' + error.message }; }
+            tables[name] = data || [];
+        }
+        return {
+            ok: true,
+            payload: {
+                exported_at: new Date().toISOString(),
+                source: 'NADARL Portal',
+                format_version: 1,
+                tables
+            }
+        };
+    }
+
+    // Restores a previous exportAllData() snapshot into an EMPTY database
+    // whose schema already matches (supabase/schema.sql + migrations
+    // applied first). Inserts row-for-row in FK-safe dependency order,
+    // preserving the original ids so foreign keys between exported rows
+    // stay intact. onProgress(table, rowCount) fires after each table.
+    async function importAllData(payload, onProgress) {
+        const tables = (payload && payload.tables) || {};
+        for (const name of BACKUP_IMPORT_TABLES) {
+            const rows = tables[name];
+            if (!rows || !rows.length) { if (onProgress) onProgress(name, 0); continue; }
+            for (let i = 0; i < rows.length; i += BACKUP_CHUNK_SIZE) {
+                const chunk = rows.slice(i, i + BACKUP_CHUNK_SIZE);
+                const { error } = await db().from(name).insert(chunk);
+                if (error) { console.error('importAllData: ' + name, error); return { ok: false, error: name + ': ' + error.message }; }
+            }
+            if (onProgress) onProgress(name, rows.length);
+        }
+        return { ok: true };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -553,6 +607,8 @@ const NADARL = (function () {
         deleteTeam,
         fetchHandicapConfig,
         updateHandicapConfig,
-        fetchHandicaps
+        fetchHandicaps,
+        exportAllData,
+        importAllData
     };
 })();
