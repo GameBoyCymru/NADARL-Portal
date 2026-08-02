@@ -47,6 +47,16 @@ function formatDate(dateStr) {
     });
 }
 
+// Same date, split into day/month/year so it can be laid out on 3 lines on
+// narrow screens instead of wrapping mid-word.
+function dateStackHtml(dateStr) {
+    const date = new Date(dateStr);
+    const day = date.toLocaleDateString('en-GB', { day: 'numeric' });
+    const month = date.toLocaleDateString('en-GB', { month: 'short' });
+    const year = date.toLocaleDateString('en-GB', { year: 'numeric' });
+    return `<span class="fixture-date-stack"><span class="fd-day">${day}</span><span class="fd-month">${month}</span><span class="fd-year">${year}</span></span>`;
+}
+
 function isToday(dateStr) {
     return dateStr === getTodayDate();
 }
@@ -266,13 +276,13 @@ function renderMobileSeasonFixtures() {
         // blocked (no-match) day: show the reason only, not interactive
         if (group[0] && group[0].isBlocked) {
             html += `<div class="mobile-fixture-group mobile-fixture-blocked${altClass}${highlightClass}">`;
-            html += `<div class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">${escapeHtml(group[0].reason)}</span></div>`;
+            html += `<div class="mobile-fixture-summary">${dateStackHtml(date)} <span class="mobile-fixture-count">${escapeHtml(group[0].reason)}</span></div>`;
             html += `</div>`;
             return;
         }
 
         html += `<details class="mobile-fixture-group${altClass}${highlightClass}"${highlightClass ? ' open' : ''}>`;
-        html += `<summary class="mobile-fixture-summary">${formatDate(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span> ${typeBadge(group[0])}</summary>`;
+        html += `<summary class="mobile-fixture-summary">${dateStackHtml(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span> ${typeBadge(group[0])}</summary>`;
         html += `<div class="mobile-fixture-content">`;
 
         group.forEach(fixture => {
