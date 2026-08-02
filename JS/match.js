@@ -45,6 +45,14 @@ function hcFor(shooterId) {
     return isHandicapMatch && shooterId ? (handicapMap[shooterId] || 0) : 0;
 }
 
+// A card is 7 shots at a max of 10 each - handicap can push a score up, but
+// never past the maximum a shooter could actually card.
+const MAX_SHOOTER_SCORE = 70;
+
+function effectiveScore(total, hc) {
+    return Math.min(MAX_SHOOTER_SCORE, (total || 0) + (hc || 0));
+}
+
 // Display text for the HC column: "N/A" when the shooter doesn't have
 // enough season matches yet for a handicap, otherwise the numeric value
 // (which legitimately can be 0).
@@ -92,7 +100,7 @@ function ensureHandicapHeaders() {
 function calculateTeamScores(shooters) {
     const indexed = shooters.map((s, i) => {
         const hc = hcFor(s.shooter_id);
-        return { ...s, originalIndex: i, handicap: hc, effective: (s.total || 0) + hc };
+        return { ...s, originalIndex: i, handicap: hc, effective: effectiveScore(s.total, hc) };
     });
     const sorted = indexed.sort((a, b) => b.effective - a.effective);
     const aTeam = sorted.slice(0, 5).reduce((sum, s) => sum + s.effective, 0);
@@ -113,7 +121,7 @@ function renderShooterTable(tbodyId, shooters) {
     // The column that gets the bold total-cell styling + highest/lowest
     // highlight is whichever one is actually labelled "Total": the
     // handicap-adjusted score in a handicap match, otherwise the raw total.
-    const rankedTotals = shooters.map(s => isHandicapMatch ? (s.total || 0) + hcFor(s.shooter_id) : s.total);
+    const rankedTotals = shooters.map(s => isHandicapMatch ? effectiveScore(s.total, hcFor(s.shooter_id)) : s.total);
     const maxTotal = rankedTotals.length ? Math.max(...rankedTotals) : 0;
     const minTotal = rankedTotals.length ? Math.min(...rankedTotals) : 0;
     const hcCols = isHandicapMatch ? 2 : 0;
@@ -443,7 +451,7 @@ function buildEditRow(shooterList, existing, teamId) {
         tdHc.textContent = hcDisplay(existing && existing.shooter_id);
         tr.appendChild(tdHc);
 
-        tr.appendChild(buildTotalCell(rawTotal + hc));
+        tr.appendChild(buildTotalCell(effectiveScore(rawTotal, hc)));
     } else {
         tr.appendChild(buildTotalCell(rawTotal));
     }
@@ -476,7 +484,7 @@ function recalcRowTotal(tr) {
         const preHcCell = tr.querySelector('.row-pre-hc');
         if (preHcCell) preHcCell.textContent = total;
         const hc = Number((tr.querySelector('.row-hc') || {}).textContent) || 0;
-        tr.querySelector('.row-total').textContent = total + hc;
+        tr.querySelector('.row-total').textContent = effectiveScore(total, hc);
     } else {
         tr.querySelector('.row-total').textContent = total;
     }
@@ -492,7 +500,7 @@ function refreshRowHandicap(tr) {
     if (hcCell) hcCell.textContent = hcDisplay(sid);
     const preHc = Number((tr.querySelector('.row-pre-hc') || {}).textContent) || 0;
     const totalSpan = tr.querySelector('.row-total');
-    if (totalSpan) totalSpan.textContent = preHc + hc;
+    if (totalSpan) totalSpan.textContent = effectiveScore(preHc, hc);
 }
 
 function isRowComplete(tr) {
