@@ -2,6 +2,18 @@
     overflow-x: auto;
 }
 
+.standings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.standings-block-title {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #e0d6c8;
+}
+
 .league-table {
     width: 100%;
     border-collapse: separate;
