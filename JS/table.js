@@ -112,7 +112,7 @@ async function loadSeason() {
     const prevButton = document.getElementById('seasonPrev');
     const nextButton = document.getElementById('seasonNext');
 
-    label.textContent = (season ? season.name : 'Season') + ' Standings';
+    label.textContent = season ? season.name : 'Season';
     prevButton.disabled = seasonIndex <= 0;
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
@@ -139,7 +139,7 @@ async function initTablePage() {
     seasons = await NADARL.fetchSeasons();
 
     if (!seasons.length) {
-        document.getElementById('seasonLabel').textContent = 'Season Standings';
+        document.getElementById('seasonLabel').textContent = '';
         prevButton.disabled = true;
         nextButton.disabled = true;
         tbody.innerHTML = '<tr><td colspan="9">No statistics available yet.</td></tr>';

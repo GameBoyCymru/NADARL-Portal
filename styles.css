@@ -134,12 +134,12 @@ h1 {
     justify-content: center;
     flex: 1;
     min-width: 0;
-    gap: 16px;
+    gap: 10px;
     margin-bottom: 20px;
 }
 
 .season-nav .section-title {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
     margin-bottom: 0;
     justify-content: center;
