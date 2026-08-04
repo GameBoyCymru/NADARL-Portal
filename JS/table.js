@@ -1,6 +1,11 @@
 let seasons = [];
 let seasonIndex = 0;
 
+// TODO: bump back up to 50 once the league has enough shooters to test paging properly.
+const STATS_PAGE_SIZE = 30;
+let statsRows = [];
+let statsPage = 0;
+
 const STANDINGS_TABLES = [
     { half: 1, league: 'A', tbodyId: 'standingsA1' },
     { half: 1, league: 'B', tbodyId: 'standingsB1' },
@@ -9,17 +14,33 @@ const STANDINGS_TABLES = [
 ];
 
 function renderStats(stats) {
+    statsRows = stats;
+    statsPage = 0;
+    renderStatsPage();
+}
+
+function setStatsPaginationVisible(visible) {
+    document.getElementById('statsPaginationTop').style.display = visible ? 'flex' : 'none';
+    document.getElementById('statsPaginationBottom').style.display = visible ? 'flex' : 'none';
+}
+
+function renderStatsPage() {
     const tbody = document.getElementById('leagueTable');
 
-    if (!stats.length) {
+    if (!statsRows.length) {
         tbody.innerHTML = '<tr><td colspan="9">No statistics available for this season yet.</td></tr>';
+        setStatsPaginationVisible(false);
         return;
     }
 
+    const pageCount = Math.ceil(statsRows.length / STATS_PAGE_SIZE);
+    const start = statsPage * STATS_PAGE_SIZE;
+    const pageRows = statsRows.slice(start, start + STATS_PAGE_SIZE);
+
     let html = '';
-    stats.forEach((shooter, index) => {
+    pageRows.forEach((shooter, index) => {
         html += `<tr data-team="${shooter.team_name}">
-            <td>${index + 1}</td>
+            <td>${start + index + 1}</td>
             <td class="shooter-name">${shooter.name}</td>
             <td class="team-cell">${shooter.team_name}</td>
             <td class="score-cell">${shooter.matches_played}</td>
@@ -32,6 +53,17 @@ function renderStats(stats) {
     });
 
     tbody.innerHTML = html;
+
+    setStatsPaginationVisible(pageCount > 1);
+    document.querySelectorAll('.stats-page-label').forEach(label => {
+        label.textContent = `Page ${statsPage + 1} of ${pageCount}`;
+    });
+    document.querySelectorAll('.stats-prev').forEach(button => {
+        button.disabled = statsPage <= 0;
+    });
+    document.querySelectorAll('.stats-next').forEach(button => {
+        button.disabled = statsPage >= pageCount - 1;
+    });
 }
 
 // Sorted by points desc, then average desc, then team name - standard
@@ -86,6 +118,7 @@ async function loadSeason() {
 
     const tbody = document.getElementById('leagueTable');
     tbody.innerHTML = '<tr><td colspan="9">Loading…</td></tr>';
+    setStatsPaginationVisible(false);
     STANDINGS_TABLES.forEach(({ tbodyId }) => {
         document.getElementById(tbodyId).innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
     });
@@ -110,6 +143,7 @@ async function initTablePage() {
         prevButton.disabled = true;
         nextButton.disabled = true;
         tbody.innerHTML = '<tr><td colspan="9">No statistics available yet.</td></tr>';
+        setStatsPaginationVisible(false);
         STANDINGS_TABLES.forEach(({ tbodyId }) => {
             document.getElementById(tbodyId).innerHTML = '<tr><td colspan="7">No results available yet.</td></tr>';
         });
@@ -124,6 +158,17 @@ async function initTablePage() {
     });
     nextButton.addEventListener('click', () => {
         if (seasonIndex < seasons.length - 1) { seasonIndex++; loadSeason(); }
+    });
+
+    document.querySelectorAll('.stats-prev').forEach(button => {
+        button.addEventListener('click', () => {
+            if (statsPage > 0) { statsPage--; renderStatsPage(); }
+        });
+    });
+    document.querySelectorAll('.stats-next').forEach(button => {
+        button.addEventListener('click', () => {
+            if (statsPage < Math.ceil(statsRows.length / STATS_PAGE_SIZE) - 1) { statsPage++; renderStatsPage(); }
+        });
     });
 
     tbody.addEventListener('click', function (e) {
