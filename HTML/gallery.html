@@ -15,36 +15,40 @@
         </header>
 
         <section class="section">
-            <h2 class="section-title">Photo Gallery</h2>
+            <div class="gallery-header">
+                <h2 class="section-title">Photo Gallery</h2>
+                <button type="button" id="addGalleryButton" class="gallery-button" hidden>Add Photo</button>
+            </div>
             <p class="gallery-intro">
                 Photos from matches, events, and league activities throughout the seasons.
             </p>
-            <div class="gallery-grid">
-                <div class="gallery-item">
-                    <div class="gallery-placeholder">Photo</div>
-                    <div class="gallery-description">2023 League Champions celebrating their victory at the annual awards ceremony.</div>
+
+            <div id="galleryMessage" class="gallery-message" role="alert" hidden></div>
+
+            <div id="galleryWizard" class="gallery-wizard" hidden>
+                <div class="wizard-step" id="wizardStep1">
+                    <h3 class="wizard-step-title">Step 1 of 2: Description</h3>
+                    <label for="galleryDescriptionInput">Describe this photo</label>
+                    <textarea id="galleryDescriptionInput" class="gallery-textarea" maxlength="300" rows="3" placeholder="e.g. 2023 League Champions celebrating their victory at the annual awards ceremony."></textarea>
+                    <div class="wizard-actions">
+                        <button type="button" id="wizardCancel1" class="gallery-button-secondary">Cancel</button>
+                        <button type="button" id="wizardNext" class="gallery-button">Next</button>
+                    </div>
                 </div>
-                <div class="gallery-item">
-                    <div class="gallery-placeholder">Photo</div>
-                    <div class="gallery-description">Competitors preparing for the winter season tournament finals.</div>
-                </div>
-                <div class="gallery-item">
-                    <div class="gallery-placeholder">Photo</div>
-                    <div class="gallery-description">Junior development program participants during their first competition.</div>
-                </div>
-                <div class="gallery-item">
-                    <div class="gallery-placeholder">Photo</div>
-                    <div class="gallery-description">Team gathering before a crucial league match against rivals.</div>
-                </div>
-                <div class="gallery-item">
-                    <div class="gallery-placeholder">Photo</div>
-                    <div class="gallery-description">Equipment inspection day ensuring all rifles meet competition standards.</div>
-                </div>
-                <div class="gallery-item">
-                    <div class="gallery-placeholder">Photo</div>
-                    <div class="gallery-description">Community outreach event introducing air rifle shooting to newcomers.</div>
+
+                <div class="wizard-step" id="wizardStep2" hidden>
+                    <h3 class="wizard-step-title">Step 2 of 2: Image File</h3>
+                    <label for="galleryFilenameInput">Image filename</label>
+                    <input type="text" id="galleryFilenameInput" class="gallery-input" maxlength="120" placeholder="e.g. champions-2023.jpg">
+                    <p class="wizard-hint">The image file must already be uploaded to the <code>Images/gallery</code> folder on the server with this exact filename.</p>
+                    <div class="wizard-actions">
+                        <button type="button" id="wizardBack" class="gallery-button-secondary">Back</button>
+                        <button type="button" id="wizardSave" class="gallery-button">Save Photo</button>
+                    </div>
                 </div>
             </div>
+
+            <div class="gallery-grid" id="galleryGrid"></div>
         </section>
 
         <footer class="footer">
@@ -74,5 +78,11 @@
             </div>
         </footer>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS/supabase-keys.js"></script>
+    <script src="../JS/supabase-config.js"></script>
+    <script src="../JS/data.js?v=20260805b"></script>
+    <script src="../JS/gallery.js"></script>
 </body>
 </html>

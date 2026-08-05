@@ -575,6 +575,52 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // All gallery photos, newest first.
+    async function fetchGalleryItems() {
+        const { data, error } = await db().from('gallery_item')
+            .select('id,filename,description,created_at')
+            .order('created_at', { ascending: false });
+        if (error) { console.error('fetchGalleryItems', error); return []; }
+        return data;
+    }
+
+    // Add a gallery photo. filename must match an image already uploaded to
+    // Images/gallery/ on the server. Admin only - RLS enforces.
+    async function addGalleryItem({ filename, description }) {
+        const { data, error } = await db().from('gallery_item')
+            .insert({
+                filename: String(filename).trim(),
+                description: String(description || '').trim()
+            })
+            .select('id,filename,description,created_at')
+            .single();
+        if (error) { console.error('addGalleryItem', error); return { ok: false, error: error.message }; }
+        return { ok: true, item: data };
+    }
+
+    // Update a gallery photo's filename/description. Admin only - RLS enforces.
+    async function updateGalleryItem(id, { filename, description }) {
+        const { data, error } = await db().from('gallery_item')
+            .update({
+                filename: String(filename).trim(),
+                description: String(description || '').trim()
+            })
+            .eq('id', id)
+            .select('id,filename,description,created_at')
+            .single();
+        if (error) { console.error('updateGalleryItem', error); return { ok: false, error: error.message }; }
+        return { ok: true, item: data };
+    }
+
+    // Delete a gallery photo. Admin only - RLS enforces.
+    async function deleteGalleryItem(id) {
+        const { error } = await db().from('gallery_item')
+            .delete()
+            .eq('id', id);
+        if (error) { console.error('deleteGalleryItem', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -620,6 +666,10 @@ const NADARL = (function () {
         updateHandicapConfig,
         fetchHandicaps,
         exportAllData,
-        importAllData
+        importAllData,
+        fetchGalleryItems,
+        addGalleryItem,
+        updateGalleryItem,
+        deleteGalleryItem
     };
 })();
