@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gallery - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/gallery.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/gallery.css?v=20260806b">
 </head>
 <body>
     <div class="container">
@@ -17,13 +17,24 @@
         <section class="section">
             <div class="gallery-header">
                 <h2 class="section-title">Photo Gallery</h2>
-                <button type="button" id="addGalleryButton" class="gallery-button" hidden>Add Photo</button>
+                <div class="gallery-header-actions">
+                    <button type="button" id="reorderGalleryButton" class="gallery-button-secondary" hidden>Reorder Photos</button>
+                    <button type="button" id="addGalleryButton" class="gallery-button" hidden>Add Photo</button>
+                </div>
             </div>
             <p class="gallery-intro">
                 Photos from matches, events, and league activities throughout the seasons.
             </p>
 
             <div id="galleryMessage" class="gallery-message" role="alert" hidden></div>
+
+            <div id="reorderToolbar" class="reorder-toolbar" hidden>
+                <p class="reorder-hint">Use the arrows to move photos, then save your new order.</p>
+                <div class="reorder-toolbar-actions">
+                    <button type="button" id="reorderCancel" class="gallery-button-secondary">Cancel</button>
+                    <button type="button" id="reorderSave" class="gallery-button">Save Order</button>
+                </div>
+            </div>
 
             <div id="galleryWizard" class="gallery-wizard" hidden>
                 <div class="wizard-step" id="wizardStep1">
@@ -83,7 +94,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260805b"></script>
+    <script src="../JS/data.js?v=20260806"></script>
     <script src="../JS/gallery.js"></script>
 </body>
 </html>

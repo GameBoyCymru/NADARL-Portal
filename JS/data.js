@@ -575,10 +575,12 @@ const NADARL = (function () {
         return { ok: true };
     }
 
-    // All gallery photos, newest first.
+    // All gallery photos. Manually ordered items (sort_order set) come
+    // first in that order; the rest fall back to newest-first.
     async function fetchGalleryItems() {
         const { data, error } = await db().from('gallery_item')
-            .select('id,filename,description,created_at')
+            .select('id,filename,description,created_at,sort_order')
+            .order('sort_order', { ascending: true, nullsFirst: false })
             .order('created_at', { ascending: false });
         if (error) { console.error('fetchGalleryItems', error); return []; }
         return data;
@@ -618,6 +620,17 @@ const NADARL = (function () {
             .delete()
             .eq('id', id);
         if (error) { console.error('deleteGalleryItem', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // Persist a new display order for gallery photos. orderedIds is the
+    // full list of item ids in the desired order. Admin only - RLS enforces.
+    async function reorderGalleryItems(orderedIds) {
+        const results = await Promise.all(orderedIds.map((id, index) =>
+            db().from('gallery_item').update({ sort_order: index }).eq('id', id)
+        ));
+        const failed = results.find(r => r.error);
+        if (failed) { console.error('reorderGalleryItems', failed.error); return { ok: false, error: failed.error.message }; }
         return { ok: true };
     }
 
@@ -670,6 +683,7 @@ const NADARL = (function () {
         fetchGalleryItems,
         addGalleryItem,
         updateGalleryItem,
-        deleteGalleryItem
+        deleteGalleryItem,
+        reorderGalleryItems
     };
 })();

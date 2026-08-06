@@ -19,6 +19,8 @@ function hideGalleryMessage() {
 let galleryItems = [];
 let isAdmin = false;
 let editingItemId = null;
+let reorderMode = false;
+let reorderWorkingItems = [];
 
 function buildViewHtml(item) {
     return `
@@ -45,8 +47,16 @@ function buildEditFormHtml(item) {
     `;
 }
 
+function buildReorderControlsHtml(item, index, total) {
+    return `
+        <div class="gallery-reorder-controls">
+            <button type="button" class="gallery-move-button gallery-move-up" data-id="${item.id}" ${index === 0 ? 'disabled' : ''}>&#8593; Up</button>
+            <button type="button" class="gallery-move-button gallery-move-down" data-id="${item.id}" ${index === total - 1 ? 'disabled' : ''}>&#8595; Down</button>
+        </div>
+    `;
+}
+
 function renderGallery(items) {
-    galleryItems = items;
     const grid = document.getElementById('galleryGrid');
 
     if (!items.length) {
@@ -54,21 +64,78 @@ function renderGallery(items) {
         return;
     }
 
-    grid.innerHTML = items.map(item => `
-        <div class="gallery-item" data-id="${item.id}">
+    grid.innerHTML = items.map((item, index) => `
+        <div class="gallery-item${reorderMode ? ' reorder-active' : ''}" data-id="${item.id}">
             <img class="gallery-photo" src="../Images/gallery/${escapeHtml(item.filename)}" alt="${escapeHtml(item.description || '')}" loading="lazy">
-            ${editingItemId === item.id ? buildEditFormHtml(item) : buildViewHtml(item)}
+            ${reorderMode ? buildReorderControlsHtml(item, index, items.length) : (editingItemId === item.id ? buildEditFormHtml(item) : buildViewHtml(item))}
         </div>
     `).join('');
 }
 
 async function loadGallery() {
-    const items = await NADARL.fetchGalleryItems();
-    renderGallery(items);
+    galleryItems = await NADARL.fetchGalleryItems();
+    renderGallery(galleryItems);
+}
+
+function moveReorderItem(id, direction) {
+    const idx = reorderWorkingItems.findIndex(i => i.id === id);
+    const swapIdx = idx + direction;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= reorderWorkingItems.length) return;
+    [reorderWorkingItems[idx], reorderWorkingItems[swapIdx]] = [reorderWorkingItems[swapIdx], reorderWorkingItems[idx]];
+    renderGallery(reorderWorkingItems);
+}
+
+function enterReorderMode() {
+    reorderMode = true;
+    reorderWorkingItems = galleryItems.slice();
+    editingItemId = null;
+    document.getElementById('addGalleryButton').hidden = true;
+    document.getElementById('reorderGalleryButton').hidden = true;
+    document.getElementById('reorderToolbar').hidden = false;
+    renderGallery(reorderWorkingItems);
+}
+
+function exitReorderMode() {
+    reorderMode = false;
+    reorderWorkingItems = [];
+    document.getElementById('reorderToolbar').hidden = true;
+    if (isAdmin) {
+        document.getElementById('addGalleryButton').hidden = false;
+        document.getElementById('reorderGalleryButton').hidden = false;
+    }
+    renderGallery(galleryItems);
+}
+
+function wireReorderToolbar() {
+    document.getElementById('reorderGalleryButton').addEventListener('click', enterReorderMode);
+    document.getElementById('reorderCancel').addEventListener('click', exitReorderMode);
+
+    document.getElementById('reorderSave').addEventListener('click', async () => {
+        if (!confirm('Save this new photo order?')) return;
+
+        const saveButton = document.getElementById('reorderSave');
+        saveButton.disabled = true;
+        const res = await NADARL.reorderGalleryItems(reorderWorkingItems.map(item => item.id));
+        saveButton.disabled = false;
+
+        if (!res.ok) {
+            showGalleryMessage('Could not save photo order: ' + res.error, 'error');
+            return;
+        }
+
+        exitReorderMode();
+        await loadGallery();
+    });
 }
 
 function wireGalleryGrid() {
     document.getElementById('galleryGrid').addEventListener('click', async (e) => {
+        const upBtn = e.target.closest('.gallery-move-up');
+        if (upBtn) { moveReorderItem(upBtn.dataset.id, -1); return; }
+
+        const downBtn = e.target.closest('.gallery-move-down');
+        if (downBtn) { moveReorderItem(downBtn.dataset.id, 1); return; }
+
         const editBtn = e.target.closest('.gallery-item-edit');
         if (editBtn) {
             editingItemId = editBtn.dataset.id;
@@ -182,8 +249,10 @@ async function initGalleryPage() {
     isAdmin = !!me && me.role === 'admin';
     if (isAdmin) {
         document.getElementById('addGalleryButton').hidden = false;
+        document.getElementById('reorderGalleryButton').hidden = false;
     }
     wireWizard();
+    wireReorderToolbar();
     wireGalleryGrid();
     await loadGallery();
 }
