@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gallery - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/gallery.css?v=20260806c">
+    <link rel="stylesheet" href="../CSS/gallery.css?v=20260806d">
 </head>
 <body>
     <div class="container">
@@ -61,6 +61,20 @@
 
             <div class="gallery-grid" id="galleryGrid"></div>
         </section>
+
+        <div class="gallery-lightbox" id="galleryLightbox" hidden>
+            <div class="gallery-lightbox-backdrop" id="galleryLightboxBackdrop"></div>
+            <div class="gallery-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Photo view">
+                <button type="button" class="gallery-lightbox-close" id="galleryLightboxClose" aria-label="Close">&times;</button>
+                <button type="button" class="gallery-lightbox-nav gallery-lightbox-prev" id="galleryLightboxPrev" aria-label="Previous image" hidden>&#8249;</button>
+                <img class="gallery-lightbox-image" id="galleryLightboxImage" src="" alt="">
+                <button type="button" class="gallery-lightbox-nav gallery-lightbox-next" id="galleryLightboxNext" aria-label="Next image" hidden>&#8250;</button>
+                <div class="gallery-lightbox-caption">
+                    <p class="gallery-lightbox-description" id="galleryLightboxDescription"></p>
+                    <span class="gallery-lightbox-counter" id="galleryLightboxCounter" hidden></span>
+                </div>
+            </div>
+        </div>
 
         <footer class="footer">
             <div class="footer-content">

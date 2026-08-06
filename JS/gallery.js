@@ -21,6 +21,9 @@ let isAdmin = false;
 let editingItemId = null;
 let reorderMode = false;
 let reorderWorkingItems = [];
+let lightboxImages = [];
+let lightboxIndex = 0;
+let lightboxDescription = '';
 
 function buildViewHtml(item) {
     return `
@@ -128,8 +131,70 @@ function wireReorderToolbar() {
     });
 }
 
+// Each gallery item only has one image today, but the lightbox already
+// works off an image list so a future multi-image item can just supply
+// item.images and get prev/next navigation for free.
+function openLightbox(item) {
+    lightboxImages = item.images && item.images.length ? item.images : [item.filename];
+    lightboxIndex = 0;
+    lightboxDescription = item.description || '';
+    renderLightbox();
+    document.getElementById('galleryLightbox').hidden = false;
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+    document.getElementById('galleryLightbox').hidden = true;
+    document.body.style.overflow = '';
+}
+
+function moveLightbox(direction) {
+    if (lightboxImages.length < 2) return;
+    lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+    renderLightbox();
+}
+
+function renderLightbox() {
+    const filename = lightboxImages[lightboxIndex];
+    const image = document.getElementById('galleryLightboxImage');
+    image.src = '../Images/gallery/' + filename;
+    image.alt = lightboxDescription;
+
+    document.getElementById('galleryLightboxDescription').textContent = lightboxDescription;
+
+    const hasMultiple = lightboxImages.length > 1;
+    document.getElementById('galleryLightboxPrev').hidden = !hasMultiple;
+    document.getElementById('galleryLightboxNext').hidden = !hasMultiple;
+
+    const counter = document.getElementById('galleryLightboxCounter');
+    counter.hidden = !hasMultiple;
+    counter.textContent = (lightboxIndex + 1) + ' / ' + lightboxImages.length;
+}
+
+function wireLightbox() {
+    document.getElementById('galleryLightboxClose').addEventListener('click', closeLightbox);
+    document.getElementById('galleryLightboxBackdrop').addEventListener('click', closeLightbox);
+    document.getElementById('galleryLightboxPrev').addEventListener('click', () => moveLightbox(-1));
+    document.getElementById('galleryLightboxNext').addEventListener('click', () => moveLightbox(1));
+
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('galleryLightbox').hidden) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') moveLightbox(-1);
+        if (e.key === 'ArrowRight') moveLightbox(1);
+    });
+}
+
 function wireGalleryGrid() {
     document.getElementById('galleryGrid').addEventListener('click', async (e) => {
+        const photo = e.target.closest('.gallery-photo');
+        if (photo && !reorderMode) {
+            const id = photo.closest('.gallery-item').dataset.id;
+            const item = galleryItems.find(i => i.id === id);
+            if (item) openLightbox(item);
+            return;
+        }
+
         const upBtn = e.target.closest('.gallery-move-up');
         if (upBtn) { moveReorderItem(upBtn.dataset.id, -1); return; }
 
@@ -254,6 +319,7 @@ async function initGalleryPage() {
     wireWizard();
     wireReorderToolbar();
     wireGalleryGrid();
+    wireLightbox();
     await loadGallery();
 }
 
