@@ -50,6 +50,10 @@
     color: #e0d6c8;
 }
 
+.reorder-toolbar[hidden] {
+    display: none;
+}
+
 .reorder-toolbar {
     display: flex;
     align-items: center;
