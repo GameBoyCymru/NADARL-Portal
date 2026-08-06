@@ -147,6 +147,39 @@
     border-color: #c41e3a;
 }
 
+.gallery-filename-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gallery-filename-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.gallery-filename-row .gallery-input {
+    flex: 1;
+}
+
+.gallery-filename-remove {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0d6c8;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.gallery-add-filename-button {
+    margin-top: 10px;
+}
+
 .wizard-hint {
     font-size: 0.8rem;
     color: #a0a0a0;
@@ -212,6 +245,10 @@
     border-color: rgba(196, 30, 58, 0.4);
 }
 
+.gallery-photo-wrap {
+    position: relative;
+}
+
 .gallery-photo {
     aspect-ratio: 4/3;
     width: 100%;
@@ -223,6 +260,19 @@
 
 .gallery-item.reorder-active .gallery-photo {
     cursor: default;
+}
+
+.gallery-photo-count {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    pointer-events: none;
 }
 
 .gallery-description {
@@ -264,6 +314,10 @@
 .gallery-edit-form label {
     font-size: 0.8rem;
     color: #e0d6c8;
+}
+
+.gallery-edit-form .gallery-add-filename-button {
+    align-self: flex-start;
 }
 
 .gallery-edit-menu {

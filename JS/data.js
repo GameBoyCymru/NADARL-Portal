@@ -575,46 +575,53 @@ const NADARL = (function () {
         return { ok: true };
     }
 
-    // All gallery photos. Manually ordered items (sort_order set) come
-    // first in that order; the rest fall back to newest-first.
+    // All gallery items, each with its list of images (filenames, in display
+    // order). Manually ordered items (sort_order set) come first in that
+    // order; the rest fall back to newest-first.
     async function fetchGalleryItems() {
         const { data, error } = await db().from('gallery_item')
-            .select('id,filename,description,created_at,sort_order')
+            .select('id,description,created_at,sort_order,gallery_item_image(filename,sort_order)')
             .order('sort_order', { ascending: true, nullsFirst: false })
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .order('sort_order', { ascending: true, foreignTable: 'gallery_item_image' });
         if (error) { console.error('fetchGalleryItems', error); return []; }
-        return data;
+        return data.map(item => ({
+            ...item,
+            images: (item.gallery_item_image || []).map(img => img.filename)
+        }));
     }
 
-    // Add a gallery photo. filename must match an image already uploaded to
-    // Images/gallery/ on the server. Admin only - RLS enforces.
-    async function addGalleryItem({ filename, description }) {
-        const { data, error } = await db().from('gallery_item')
-            .insert({
-                filename: String(filename).trim(),
-                description: String(description || '').trim()
-            })
-            .select('id,filename,description,created_at')
-            .single();
+    // Add a gallery item with one or more images. Each filename must match
+    // an image already uploaded to Images/gallery/ on the server. The
+    // gallery_item row and its gallery_item_image rows are written together
+    // in one transaction (see save_gallery_item). Admin only - RLS enforces.
+    async function addGalleryItem({ filenames, description }) {
+        const { data, error } = await db().rpc('save_gallery_item', {
+            p_id: null,
+            p_description: description || '',
+            p_filenames: filenames
+        });
         if (error) { console.error('addGalleryItem', error); return { ok: false, error: error.message }; }
-        return { ok: true, item: data };
+        const images = filenames.map(f => String(f).trim()).filter(Boolean);
+        return { ok: true, item: { ...data[0], images } };
     }
 
-    // Update a gallery photo's filename/description. Admin only - RLS enforces.
-    async function updateGalleryItem(id, { filename, description }) {
-        const { data, error } = await db().from('gallery_item')
-            .update({
-                filename: String(filename).trim(),
-                description: String(description || '').trim()
-            })
-            .eq('id', id)
-            .select('id,filename,description,created_at')
-            .single();
+    // Update a gallery item's description and image list (the image list is
+    // replaced wholesale, atomically - see save_gallery_item).
+    // Admin only - RLS enforces.
+    async function updateGalleryItem(id, { filenames, description }) {
+        const { data, error } = await db().rpc('save_gallery_item', {
+            p_id: id,
+            p_description: description || '',
+            p_filenames: filenames
+        });
         if (error) { console.error('updateGalleryItem', error); return { ok: false, error: error.message }; }
-        return { ok: true, item: data };
+        const images = filenames.map(f => String(f).trim()).filter(Boolean);
+        return { ok: true, item: { ...data[0], images } };
     }
 
-    // Delete a gallery photo. Admin only - RLS enforces.
+    // Delete a gallery item (its images are removed too, via cascade).
+    // Admin only - RLS enforces.
     async function deleteGalleryItem(id) {
         const { error } = await db().from('gallery_item')
             .delete()
