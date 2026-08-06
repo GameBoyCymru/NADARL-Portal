@@ -92,7 +92,7 @@ function renderGallery(items) {
 
     grid.innerHTML = items.map((item, index) => {
         const images = item.images || [];
-        const countBadge = images.length > 1 ? `<span class="gallery-photo-count">${images.length} photos</span>` : '';
+        const countBadge = images.length > 1 ? `<span class="gallery-photo-count"><span class="gallery-photo-count-icon" aria-hidden="true">&#128247;</span>${images.length}</span>` : '';
         return `
         <div class="gallery-item${reorderMode ? ' reorder-active' : ''}" data-id="${item.id}">
             <div class="gallery-photo-wrap">
