@@ -12,6 +12,7 @@ function padNo(n) {
 let currentTeam = null;
 let seasons = [];
 let seasonIndex = 0;
+let isAdmin = false;
 
 async function loadSeasonStats() {
     const season = seasons[seasonIndex];
@@ -45,7 +46,8 @@ async function initTeamPage() {
     seasonIndex = currentSeason ? seasons.indexOf(currentSeason) : seasons.length - 1;
 
     const me = await NADARL.fetchMyProfile();
-    const canEdit = !!me && (me.role === 'admin' || (me.role === 'captain' && me.team_id === team.id));
+    isAdmin = !!me && me.role === 'admin';
+    const canEdit = isAdmin || !!(me && me.role === 'captain' && me.team_id === team.id);
 
     document.title = `${team.name} - Newport & District Air Rifle League`;
     document.getElementById('teamVenue').textContent = `Venue: ${team.venue}`;
@@ -191,7 +193,26 @@ function buildRow(shooter, canEdit) {
 
     // Stats columns (read-only)
     tdAppendStat(tr, shooter.matches_played);        // Season Matches Shot (current season)
-    tdAppendStat(tr, shooter.best);          // Personal Best (all-time)
+
+    // Personal Best (all-time) - admins editing the roster get an override
+    // input instead of the plain figure, for shooters with pre-site history.
+    if (canEdit && isAdmin) {
+        const tdBest = document.createElement('td');
+        tdBest.className = 'score-cell';
+        const pbInput = document.createElement('input');
+        pbInput.type = 'number';
+        pbInput.min = '0';
+        pbInput.max = '70';
+        pbInput.className = 'shooter-input pb-override-input';
+        pbInput.title = 'Override this shooter\'s all-time Personal Best (admin only). Leave blank to use the site-recorded best.';
+        pbInput.placeholder = String(shooter.best);
+        pbInput.value = shooter.pb_override != null ? shooter.pb_override : '';
+        tdBest.appendChild(pbInput);
+        tr.appendChild(tdBest);
+    } else {
+        tdAppendStat(tr, shooter.best);
+    }
+
     tdAppendStat(tr, shooter.season_best);   // Season Best (current season)
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
@@ -208,10 +229,13 @@ function buildRow(shooter, canEdit) {
         save.addEventListener('click', async () => {
             const nameInput = tr.querySelector('.shooter-input');
             const roleSelect = tr.querySelector('.shooter-select');
+            const pbInput = tr.querySelector('.pb-override-input');
             const name = nameInput.value.trim();
             if (!name) { showEditMessage('Shooter name cannot be empty.', 'error'); return; }
+            const patch = { name, role: roleSelect.value };
+            if (isAdmin && pbInput) patch.pb_override = pbInput.value === '' ? null : pbInput.value;
             save.disabled = true;
-            const res = await NADARL.updateShooter(shooter.shooter_id, { name, role: roleSelect.value });
+            const res = await NADARL.updateShooter(shooter.shooter_id, patch);
             save.disabled = false;
             if (!res.ok) {
                 showEditMessage('Could not save: ' + res.error, 'error');

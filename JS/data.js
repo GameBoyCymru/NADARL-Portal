@@ -278,12 +278,17 @@ const NADARL = (function () {
     }
 
     // Update a shooter's name/role (captain of that team or admin). RLS enforces.
-    async function updateShooter(shooterId, { name, role }) {
+    // pb_override is admin-only - a DB trigger rejects the write for anyone
+    // else, so only pass it when the caller is actually an admin.
+    async function updateShooter(shooterId, { name, role, pb_override }) {
         const patch = { name: normalizeName(name), role: role || null };
+        if (pb_override !== undefined) {
+            patch.pb_override = pb_override === null || pb_override === '' ? null : Number(pb_override);
+        }
         const { data, error } = await db().from('shooter')
             .update(patch)
             .eq('id', shooterId)
-            .select('id,shooter_no,name,role,team_id');
+            .select('id,shooter_no,name,role,team_id,pb_override');
         if (error) { console.error('updateShooter', error); return { ok: false, error: error.message }; }
         return { ok: true, shooter: data && data[0] };
     }

@@ -184,6 +184,11 @@
     color: #000000;
 }
 
+.pb-override-input {
+    max-width: 70px;
+    text-align: center;
+}
+
 .shooter-button {
     padding: 8px 16px;
     border: none;
