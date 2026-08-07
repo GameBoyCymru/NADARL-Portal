@@ -85,7 +85,7 @@
                 <p class="login-intro">
                     Handicaps apply to second-half (HC) fixtures and are based on each shooter's
                     average over their last 3 matches. The formula is
-                    <code>max(0, round((target &minus; avg) &times; factor))</code>.
+                    <code>max(0, round(((target &minus; avg) &divide; divisor &minus; offset) &times; factor))</code>.
                 </p>
 
                 <div id="handicapMessage" class="login-message" role="alert" hidden></div>
@@ -93,6 +93,10 @@
                 <div class="fx-season-create">
                     <span class="fx-hint">Target score:</span>
                     <input type="number" id="handicapTarget" class="fx-text-input" min="0" step="1" style="width:90px;">
+                    <span class="fx-hint">Divisor:</span>
+                    <input type="number" id="handicapDivisor" class="fx-text-input" min="0.01" step="0.1" style="width:90px;">
+                    <span class="fx-hint">Offset:</span>
+                    <input type="number" id="handicapOffset" class="fx-text-input" step="0.01" style="width:90px;">
                     <span class="fx-hint">Factor:</span>
                     <input type="number" id="handicapFactor" class="fx-text-input" min="0" step="0.1" style="width:90px;">
                     <button type="button" id="handicapSave" class="shooter-button">Save</button>
@@ -210,7 +214,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260802b"></script>
+    <script src="../JS/data.js?v=20260807"></script>
     <script src="../JS/admin.js"></script>
     <script src="../JS/admin-teams.js"></script>
     <script src="../JS/admin-handicap.js"></script>

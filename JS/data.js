@@ -471,25 +471,29 @@ const NADARL = (function () {
         return { ok: true, count: data ? data.length : 0 };
     }
 
-    // Handicap formula config (single row). { target, factor }.
+    // Handicap formula config (single row): max(0, round((((target - avg) /
+    // divisor) - offset_value) * factor)). { target, divisor, offset_value, factor }.
+    const HANDICAP_CONFIG_DEFAULTS = { target: 70, divisor: 2, offset_value: 0.95, factor: 1.4 };
     async function fetchHandicapConfig() {
         const { data, error } = await db().from('handicap_config')
-            .select('target,factor')
+            .select('target,divisor,offset_value,factor')
             .eq('id', 1)
             .maybeSingle();
-        if (error) { console.error('fetchHandicapConfig', error); return { target: 70, factor: 1 }; }
-        return data || { target: 70, factor: 1 };
+        if (error) { console.error('fetchHandicapConfig', error); return { ...HANDICAP_CONFIG_DEFAULTS }; }
+        return data || { ...HANDICAP_CONFIG_DEFAULTS };
     }
 
     // Update the handicap formula. Admin only - RLS enforces.
-    async function updateHandicapConfig({ target, factor }) {
+    async function updateHandicapConfig({ target, divisor, offset_value, factor }) {
         const patch = {};
         if (target !== undefined) patch.target = Number(target);
+        if (divisor !== undefined) patch.divisor = Number(divisor);
+        if (offset_value !== undefined) patch.offset_value = Number(offset_value);
         if (factor !== undefined) patch.factor = Number(factor);
         const { data, error } = await db().from('handicap_config')
             .update(patch)
             .eq('id', 1)
-            .select('target,factor')
+            .select('target,divisor,offset_value,factor')
             .maybeSingle();
         if (error) { console.error('updateHandicapConfig', error); return { ok: false, error: error.message }; }
         return { ok: true, config: data };
