@@ -218,6 +218,7 @@ function updateHeaderScores(homeScores, awayScores) {
 // ---------------------------------------------------------------------
 
 const SHOT_COUNT = 7;
+const SHOT_ADVANCE_DELAY_MS = 5000; // time to let "1" become "10" before auto-advancing
 
 // Per-table edit rights, set in initMatchPage.
 //   pick  -> can assign shooters (each team's own captain/generic)
@@ -426,10 +427,14 @@ function buildEditRow(shooterList, existing, teamId) {
     for (let i = 0; i < SHOT_COUNT; i++) {
         const td = document.createElement('td');
         const input = document.createElement('input');
-        input.type = 'number';
+        // type="text" + inputmode="numeric" instead of type="number": a
+        // native number input still accepts "e", "+", "-", "." as valid
+        // (partial) input even though they can never be a real shot score.
+        // Digits are enforced entirely in JS instead (see the input listener).
+        input.type = 'text';
         input.inputMode = 'numeric';
-        input.min = '0';
-        input.max = '10';
+        input.pattern = '[0-9]*';
+        input.autocomplete = 'off';
         input.className = 'shot-input';
         input.value = shots[i] != null ? shots[i] : '';
         td.appendChild(input);
@@ -556,25 +561,33 @@ function updateCurrentShooter(tbodyId) {
     const rights = editRights[tbodyId] || { pick: false, score: false };
     const locked = matchStatus.submitted;
     const rows = Array.from(tbody.querySelectorAll('tr.score-edit-row'));
-    let currentFound = false;
+    // The current (in-progress) row is the first one not yet fully shot. Only
+    // it, plus the one shooter directly before it, can still have scores
+    // edited - anything further back is locked, so a mistake more than one
+    // shooter ago can't accidentally be changed after the fact.
+    const foundIndex = rows.findIndex(tr => !isRowComplete(tr));
+    const currentIndex = foundIndex === -1 ? rows.length : foundIndex;
     let prevHasShooter = true;
-    rows.forEach(tr => {
+    rows.forEach((tr, index) => {
         const picker = tr.querySelector('.shooter-picker');
         const hasShooter = !!(picker && picker.getAttribute('data-shooter-id'));
         const trigger = picker ? picker.querySelector('.shooter-picker-trigger') : null;
         const hasScores = Array.from(tr.querySelectorAll('.shot-input')).some(i => i.value !== '');
         if (trigger) trigger.disabled = locked || !rights.pick || !prevHasShooter || (hasShooter && hasScores);
 
-        const isCurrent = !currentFound && !isRowComplete(tr);
-        if (isCurrent) {
-            tr.classList.add('current-shooter');
-            currentFound = true;
-        } else {
-            tr.classList.remove('current-shooter');
-        }
-        const shotsEditable = !locked && rights.score && hasShooter && (isCurrent || isRowComplete(tr));
-        tr.querySelectorAll('.shot-input').forEach(el => {
-            el.disabled = !shotsEditable;
+        const isCurrent = index === currentIndex;
+        tr.classList.toggle('current-shooter', isCurrent);
+        const isRecentlyCompleted = index === currentIndex - 1 && isRowComplete(tr);
+        const shotsEditable = !locked && rights.score && hasShooter && (isCurrent || isRecentlyCompleted);
+        // Within an editable row, only the next empty shot box (plus every box
+        // already filled before it) is enabled - later boxes stay disabled
+        // until it's filled, so a shot can't be skipped by mistake. A fully
+        // complete row (all 7 filled) leaves every box open for correction.
+        const shotInputs = Array.from(tr.querySelectorAll('.shot-input'));
+        let firstEmptyIndex = shotInputs.findIndex(i => i.value === '');
+        if (firstEmptyIndex === -1) firstEmptyIndex = shotInputs.length;
+        shotInputs.forEach((el, idx) => {
+            el.disabled = !shotsEditable || idx > firstEmptyIndex;
         });
         tr.classList.toggle('row-locked', !shotsEditable);
 
@@ -644,19 +657,57 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
         tbody.appendChild(buildEditRow(shooterList, null, teamId));
     }
 
+    // Filling the active box auto-advances focus to the next one, so
+    // sequential entry stays quick despite the boxes ahead being locked. It's
+    // debounced so a two-digit "10" has time to finish before advancing -
+    // typing "1" alone doesn't instantly jump away and strand the "0".
+    let advanceTimer = null;
+    function scheduleAdvance(tr, input) {
+        if (advanceTimer) clearTimeout(advanceTimer);
+        advanceTimer = setTimeout(() => {
+            advanceTimer = null;
+            if (document.activeElement !== input) return;
+            const shotInputs = Array.from(tr.querySelectorAll('.shot-input'));
+            const nextInput = shotInputs[shotInputs.indexOf(input) + 1];
+            if (nextInput && !nextInput.disabled) nextInput.focus();
+        }, SHOT_ADVANCE_DELAY_MS);
+    }
+
+    tbody.addEventListener('keydown', (e) => {
+        if (e.target.classList.contains('shot-input') && e.key === 'Enter' && e.target.value !== '') {
+            e.preventDefault();
+            scheduleAdvance(e.target.closest('tr'), e.target);
+        }
+    });
+
     tbody.addEventListener('input', (e) => {
         if (e.target.classList.contains('shot-input')) {
+            const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+            if (digitsOnly !== e.target.value) e.target.value = digitsOnly;
             const v = e.target.value;
-            if (v !== '') {
+            const filledNow = v !== '';
+            if (filledNow) {
                 let n = parseInt(v, 10);
-                if (isNaN(n)) n = 0;
-                if (n < 0) n = 0;
                 if (n > 10) n = 10;
                 if (String(n) !== v) e.target.value = n;
             }
-            recalcRowTotal(e.target.closest('tr'));
+            const tr = e.target.closest('tr');
+            recalcRowTotal(tr);
             recalcSummary(params, homeTbodyId, awayTbodyId);
             updateCurrentShooters();
+            if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+            if (filledNow) {
+                // A value of 1 could still become 10, so give it a moment
+                // before advancing; anything else (2-9, or a cleared/retyped
+                // 10) is unambiguous and advances immediately.
+                if (v === '1') {
+                    scheduleAdvance(tr, e.target);
+                } else {
+                    const shotInputs = Array.from(tr.querySelectorAll('.shot-input'));
+                    const nextInput = shotInputs[shotInputs.indexOf(e.target) + 1];
+                    if (nextInput && !nextInput.disabled) nextInput.focus();
+                }
+            }
             scheduleSave();
         }
     });

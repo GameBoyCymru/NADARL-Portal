@@ -599,6 +599,11 @@
     cursor: not-allowed;
 }
 
+.edit-mode .shot-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .edit-mode .total-cell-inner {
     display: flex;
     align-items: center;
