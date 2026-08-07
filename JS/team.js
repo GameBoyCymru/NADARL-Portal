@@ -194,8 +194,11 @@ function buildRow(shooter, canEdit) {
     // Stats columns (read-only)
     tdAppendStat(tr, shooter.matches_played);        // Season Matches Shot (current season)
 
-    // Personal Best (all-time) - admins editing the roster get an override
+    // Personal Best (all-time) - admins editing the roster get an editable
     // input instead of the plain figure, for shooters with pre-site history.
+    // This is a one-off seed/correction, not a standing override: once set,
+    // a real submitted match that beats it updates it automatically from
+    // then on, and it survives a season score reset.
     if (canEdit && isAdmin) {
         const tdBest = document.createElement('td');
         tdBest.className = 'score-cell';
@@ -204,7 +207,7 @@ function buildRow(shooter, canEdit) {
         pbInput.min = '0';
         pbInput.max = '70';
         pbInput.className = 'shooter-input pb-override-input';
-        pbInput.title = 'Override this shooter\'s all-time Personal Best (admin only). Leave blank to use the site-recorded best.';
+        pbInput.title = 'Set this shooter\'s all-time Personal Best (admin only) - e.g. to seed history from before this site. Future matches that beat it update it automatically. Leave blank to use the site-recorded best.';
         pbInput.placeholder = String(shooter.best);
         pbInput.value = shooter.pb_override != null ? shooter.pb_override : '';
         tdBest.appendChild(pbInput);

@@ -278,17 +278,21 @@ const NADARL = (function () {
     }
 
     // Update a shooter's name/role (captain of that team or admin). RLS enforces.
-    // pb_override is admin-only - a DB trigger rejects the write for anyone
-    // else, so only pass it when the caller is actually an admin.
+    // pb_override (DB column: personal_best) is admin-only - a DB trigger
+    // rejects the write for anyone else, so only pass it when the caller is
+    // actually an admin. It's a one-off seed/correction, not a standing
+    // formula: real submitted matches ratchet it up automatically from then
+    // on (see 2026-08-07-shooter-personal-best-persist.sql), surviving even
+    // a season score reset.
     async function updateShooter(shooterId, { name, role, pb_override }) {
         const patch = { name: normalizeName(name), role: role || null };
         if (pb_override !== undefined) {
-            patch.pb_override = pb_override === null || pb_override === '' ? null : Number(pb_override);
+            patch.personal_best = pb_override === null || pb_override === '' ? null : Number(pb_override);
         }
         const { data, error } = await db().from('shooter')
             .update(patch)
             .eq('id', shooterId)
-            .select('id,shooter_no,name,role,team_id,pb_override');
+            .select('id,shooter_no,name,role,team_id,pb_override:personal_best');
         if (error) { console.error('updateShooter', error); return { ok: false, error: error.message }; }
         return { ok: true, shooter: data && data[0] };
     }
