@@ -106,9 +106,10 @@
             <section id="fixturesPanel" class="fx-section">
                 <h2 class="section-title">Fixtures</h2>
                 <p class="login-intro">
-                    Generate a double round-robin (every team plays every other team, home and away).
-                    Each round falls on a Monday. With an odd number of teams one team gets a BYE each
-                    week. Excluded Mondays are skipped, shifting that round to the next available Monday.
+                    Manage seasons. The automatic fixture generator and the excluded-Mondays manager have
+                    been removed and are being rebuilt as a combined Events/Exclusions wizard (so
+                    competitions can become real fixtures instead of just blocking a date) - there's
+                    currently no way to bulk-add fixtures or manage exclusions from this panel.
                 </p>
 
                 <div id="fxMessage" class="login-message" role="alert" hidden></div>
@@ -122,10 +123,6 @@
                             <button type="button" id="fxDeleteSeason" class="shooter-button fx-button-danger">Delete Season</button>
                         </div>
                     </div>
-                    <div class="fx-field">
-                        <label for="fxStart">First Monday</label>
-                        <select id="fxStart"></select>
-                    </div>
                 </div>
 
                 <div class="fx-season-create">
@@ -133,32 +130,6 @@
                     <input type="text" id="fxNewSeasonName" class="fx-text-input" placeholder="2026-27" maxlength="20">
                     <label class="fx-current-check"><input type="checkbox" id="fxNewSeasonCurrent" checked> Current season</label>
                     <button type="button" id="fxAddSeason" class="shooter-button">Add Season</button>
-                </div>
-
-                <div class="fx-exclude">
-                    <div class="fx-field fx-exclude-field">
-                        <label for="fxExcludeDate">Exclude a Monday (no matches that week)</label>
-                        <div class="fx-exclude-row">
-                            <select id="fxExcludeDate"></select>
-                            <input type="text" id="fxExcludeReason" class="fx-text-input" placeholder="Reason (e.g. Catch Up)" maxlength="40">
-                            <button type="button" id="fxAddExclude" class="shooter-button">Add</button>
-                        </div>
-                    </div>
-                    <div class="fx-excluded-list" id="fxExcludedList"></div>
-                </div>
-
-                <div class="fx-actions">
-                    <button type="button" id="fxGenerate" class="shooter-button">Generate Preview</button>
-                    <button type="button" id="fxSave" class="shooter-button" disabled>Save Fixtures</button>
-                </div>
-
-                <div id="fxPreviewWrap" class="table-wrap" hidden>
-                    <table class="admin-table fx-preview">
-                        <thead>
-                            <tr><th>Type</th><th>Home</th><th>Away</th><th>Venue</th></tr>
-                        </thead>
-                        <tbody id="fxPreviewBody"></tbody>
-                    </table>
                 </div>
             </section>
 
@@ -214,11 +185,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260807"></script>
+    <script src="../JS/data.js?v=20260807c"></script>
     <script src="../JS/admin.js"></script>
     <script src="../JS/admin-teams.js"></script>
     <script src="../JS/admin-handicap.js"></script>
-    <script src="../JS/admin-fixtures.js"></script>
+    <script src="../JS/admin-fixtures.js?v=20260807b"></script>
     <script src="../JS/admin-backup.js"></script>
 </body>
 </html>

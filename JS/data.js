@@ -415,6 +415,16 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // Delete a single exclusion. Admin only - RLS enforces.
+    async function deleteExclusion(seasonId, matchDate) {
+        const { error } = await db().from('exclusion')
+            .delete()
+            .eq('season_id', seasonId)
+            .eq('match_date', matchDate);
+        if (error) { console.error('deleteExclusion', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
     // Bulk insert exclusions. rows: [{ season_id, match_date, reason }].
     async function insertExclusions(rows) {
         const { error } = await db().from('exclusion').insert(rows);
@@ -691,6 +701,7 @@ const NADARL = (function () {
         fetchExclusions,
         clearExclusions,
         insertExclusions,
+        deleteExclusion,
         addSeason,
         addTeam,
         updateTeam,
