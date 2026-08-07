@@ -325,8 +325,6 @@ function createShooterPicker(shooterList, selectedId, teamId) {
         });
         list.appendChild(noneOpt);
 
-        shooterList.forEach(s => list.appendChild(buildOption(s)));
-
         const newOpt = document.createElement('button');
         newOpt.type = 'button';
         newOpt.className = 'shooter-picker-option shooter-picker-new';
@@ -354,6 +352,8 @@ function createShooterPicker(shooterList, selectedId, teamId) {
             selectShooter(res.shooter);
         });
         list.appendChild(newOpt);
+
+        shooterList.forEach(s => list.appendChild(buildOption(s)));
     }
     container.populateList = populate;
     populate();
