@@ -7,6 +7,7 @@ let statsRows = [];
 let statsPage = 0;
 let statsSortKey = null;
 let statsSortDir = 1;
+let highlightedTeam = null;
 
 const STANDINGS_TABLES = [
     { half: 1, league: 'A', tbodyId: 'standingsA1' },
@@ -87,7 +88,8 @@ function renderStatsPage() {
 
     let html = '';
     pageRows.forEach((shooter) => {
-        html += `<tr data-team="${shooter.team_name}">
+        const highlightClass = shooter.team_name === highlightedTeam ? ' team-highlight' : '';
+        html += `<tr data-team="${shooter.team_name}" class="${highlightClass.trim()}">
             <td>${shooter.rank}</td>
             <td class="shooter-name">${shooter.name}</td>
             <td class="team-cell">${shooter.team_name}</td>
@@ -167,6 +169,7 @@ async function loadSeason() {
     const tbody = document.getElementById('leagueTable');
     tbody.innerHTML = '<tr><td colspan="9">Loading…</td></tr>';
     setStatsPaginationVisible(false);
+    highlightedTeam = null;
     STANDINGS_TABLES.forEach(({ tbodyId }) => {
         document.getElementById(tbodyId).innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
     });
@@ -241,14 +244,8 @@ async function initTablePage() {
         const cell = e.target.closest('.team-cell');
         if (!cell) return;
         const team = cell.closest('tr').dataset.team;
-        const highlighted = tbody.querySelectorAll('tr.team-highlight');
-        const isAlreadyHighlighted = cell.closest('tr').classList.contains('team-highlight');
-        highlighted.forEach(row => row.classList.remove('team-highlight'));
-        if (!isAlreadyHighlighted) {
-            tbody.querySelectorAll('tr').forEach(row => {
-                if (row.dataset.team === team) row.classList.add('team-highlight');
-            });
-        }
+        highlightedTeam = highlightedTeam === team ? null : team;
+        renderStatsPage();
     });
 
     await loadSeason();
