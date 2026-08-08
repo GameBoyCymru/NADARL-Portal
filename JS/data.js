@@ -288,34 +288,6 @@ const NADARL = (function () {
         return { ok: true, shooter: data && data[0] };
     }
 
-    // Admin-only seed/correction for one shooter's Season Best in a specific
-    // season. Persisted per (shooter, season) in shooter_season_best;
-    // ratchets up automatically as real submitted matches beat it, and is
-    // cleared when that season's scores are reset (see resetSeason) - a
-    // shooter's all-time "Personal Best" is just the highest of these across
-    // every season, so resetting a season also removes its contribution to
-    // that. A null/empty value removes the override entirely rather than
-    // storing null, so a reset season starts clean.
-    async function updateShooterSeasonBest(shooterId, seasonId, value) {
-        if (value === null || value === '') {
-            const { error } = await db().from('shooter_season_best')
-                .delete()
-                .eq('shooter_id', shooterId)
-                .eq('season_id', seasonId);
-            if (error) { console.error('updateShooterSeasonBest', error); return { ok: false, error: error.message }; }
-            return { ok: true };
-        }
-        const { data, error } = await db().from('shooter_season_best')
-            .upsert(
-                { shooter_id: shooterId, season_id: seasonId, personal_best: Number(value) },
-                { onConflict: 'shooter_id,season_id' }
-            )
-            .select('shooter_id,season_id,personal_best')
-            .maybeSingle();
-        if (error) { console.error('updateShooterSeasonBest', error); return { ok: false, error: error.message }; }
-        return { ok: true, seasonBest: data };
-    }
-
     // All shooters' stats for one specific season (League Table season switcher).
     // Ties (including shooters with no average yet, i.e. 0) fall back to
     // alphabetical order by name instead of whatever order the query returned.
@@ -747,7 +719,6 @@ const NADARL = (function () {
         updateProfile,
         addShooter,
         updateShooter,
-        updateShooterSeasonBest,
         fetchSeasons,
         pickCurrentSeason,
         seasonHasMatches,

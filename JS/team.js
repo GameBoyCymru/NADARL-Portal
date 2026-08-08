@@ -12,7 +12,6 @@ function padNo(n) {
 let currentTeam = null;
 let seasons = [];
 let seasonIndex = 0;
-let seasonId = null;
 let isAdmin = false;
 
 let currentStats = [];
@@ -56,7 +55,6 @@ async function loadSeasonStats() {
     prevButton.disabled = seasonIndex <= 0;
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
-    seasonId = season ? season.id : null;
     currentStats = season ? await NADARL.fetchTeamShootersStatsForSeason(currentTeam.id, season.id) : [];
     const canEdit = !document.getElementById('addShooterPanel').hidden;
     renderShooters(sortedStats(), canEdit);
@@ -246,34 +244,12 @@ function buildRow(shooter, canEdit) {
     // Stats columns (read-only)
     tdAppendStat(tr, shooter.matches_played);        // Season Matches Shot (current season)
 
-    // Personal Best (all-time) is always read-only here: it's just the
-    // highest Season Best across every season (see Season Best below), not
-    // its own value to edit.
+    // Personal Best (all-time) and Season Best (current season) are both
+    // always read-only here: Personal Best is just the highest Season Best
+    // across every season, and Season Best itself is purely computed from
+    // real submitted matches now - no manual override for either.
     tdAppendStat(tr, shooter.best);
-
-    // Season Best (current season) - admins editing the roster get an
-    // editable input, scoped to whichever season is currently selected.
-    // A one-off seed/correction, not a standing override: once set, a real
-    // submitted match that beats it updates it automatically from then on.
-    // Cleared if this season's scores are ever reset (see resetSeason),
-    // which also drops its contribution to this shooter's all-time best.
-    if (canEdit && isAdmin) {
-        const tdSeasonBest = document.createElement('td');
-        tdSeasonBest.className = 'score-cell';
-        const sbInput = document.createElement('input');
-        sbInput.type = 'number';
-        sbInput.min = '0';
-        sbInput.max = '70';
-        sbInput.className = 'shooter-input season-best-override-input';
-        sbInput.title = 'Set this shooter\'s Season Best for the currently selected season (admin only). Future matches that beat it update it automatically. Cleared if this season\'s scores are reset. Leave blank to use the site-recorded best.';
-        sbInput.placeholder = String(shooter.season_best);
-        sbInput.value = shooter.season_best_override != null ? shooter.season_best_override : '';
-        tdSeasonBest.appendChild(sbInput);
-        tr.appendChild(tdSeasonBest);
-    } else {
-        tdAppendStat(tr, shooter.season_best);
-    }
-
+    tdAppendStat(tr, shooter.season_best);
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
     tdAppendStat(tr, shooter.handicap == null ? 'N/A' : shooter.handicap);
@@ -289,28 +265,16 @@ function buildRow(shooter, canEdit) {
         save.addEventListener('click', async () => {
             const nameInput = tr.querySelector('.shooter-input');
             const roleSelect = tr.querySelector('.shooter-select');
-            const sbInput = tr.querySelector('.season-best-override-input');
             const name = nameInput.value.trim();
             if (!name) { showEditMessage('Shooter name cannot be empty.', 'error'); return; }
             const patch = { name, role: roleSelect.value };
             save.disabled = true;
             const res = await NADARL.updateShooter(shooter.shooter_id, patch);
+            save.disabled = false;
             if (!res.ok) {
-                save.disabled = false;
                 showEditMessage('Could not save: ' + res.error, 'error');
                 return;
             }
-            if (isAdmin && sbInput && seasonId) {
-                const sbRes = await NADARL.updateShooterSeasonBest(
-                    shooter.shooter_id, seasonId, sbInput.value === '' ? null : sbInput.value
-                );
-                if (!sbRes.ok) {
-                    save.disabled = false;
-                    showEditMessage('Could not save season best: ' + sbRes.error, 'error');
-                    return;
-                }
-            }
-            save.disabled = false;
             showEditMessage('Saved ' + name + '.', 'success');
             await refreshShooters();
         });
