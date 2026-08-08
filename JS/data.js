@@ -297,6 +297,33 @@ const NADARL = (function () {
         return { ok: true, shooter: data && data[0] };
     }
 
+    // Admin-only seed/correction for one shooter's Season Best in a specific
+    // season - the season-scoped counterpart to updateShooter's pb_override.
+    // Persisted per (shooter, season) in shooter_season_best; ratchets up
+    // automatically as real submitted matches beat it, and - unlike the
+    // all-time personal_best - is cleared when that season's scores are
+    // reset (see resetSeasonScores). A null/empty value removes the override
+    // entirely rather than storing null, so a reset season starts clean.
+    async function updateShooterSeasonBest(shooterId, seasonId, value) {
+        if (value === null || value === '') {
+            const { error } = await db().from('shooter_season_best')
+                .delete()
+                .eq('shooter_id', shooterId)
+                .eq('season_id', seasonId);
+            if (error) { console.error('updateShooterSeasonBest', error); return { ok: false, error: error.message }; }
+            return { ok: true };
+        }
+        const { data, error } = await db().from('shooter_season_best')
+            .upsert(
+                { shooter_id: shooterId, season_id: seasonId, personal_best: Number(value) },
+                { onConflict: 'shooter_id,season_id' }
+            )
+            .select('shooter_id,season_id,personal_best')
+            .maybeSingle();
+        if (error) { console.error('updateShooterSeasonBest', error); return { ok: false, error: error.message }; }
+        return { ok: true, seasonBest: data };
+    }
+
     // All shooters' stats for one specific season (League Table season switcher).
     // Ties (including shooters with no average yet, i.e. 0) fall back to
     // alphabetical order by name instead of whatever order the query returned.
@@ -396,8 +423,17 @@ const NADARL = (function () {
 
     // Clears every entered score for a season and resets each of its matches
     // back to unconfirmed/unsubmitted - the fixture schedule itself (dates,
-    // teams, venues, half) is untouched. Admin only - RLS enforces.
+    // teams, venues, half) is untouched. Also clears that season's persisted
+    // Season Best records (shooter_season_best) - unlike the all-time
+    // Personal Best, a season's best is meant to reset along with its scores.
+    // Other seasons' bests (including this shooter's all-time Personal Best)
+    // are untouched. Admin only - RLS enforces.
     async function resetSeasonScores(seasonId) {
+        const { error: sbError } = await db().from('shooter_season_best')
+            .delete()
+            .eq('season_id', seasonId);
+        if (sbError) { console.error('resetSeasonScores', sbError); return { ok: false, error: sbError.message }; }
+
         const { data: matches, error: matchError } = await db().from('match')
             .select('id')
             .eq('season_id', seasonId);
@@ -718,6 +754,7 @@ const NADARL = (function () {
         updateProfile,
         addShooter,
         updateShooter,
+        updateShooterSeasonBest,
         fetchSeasons,
         pickCurrentSeason,
         seasonHasMatches,

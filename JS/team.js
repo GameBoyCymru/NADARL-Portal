@@ -12,6 +12,7 @@ function padNo(n) {
 let currentTeam = null;
 let seasons = [];
 let seasonIndex = 0;
+let seasonId = null;
 let isAdmin = false;
 
 let currentStats = [];
@@ -55,6 +56,7 @@ async function loadSeasonStats() {
     prevButton.disabled = seasonIndex <= 0;
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
+    seasonId = season ? season.id : null;
     currentStats = season ? await NADARL.fetchTeamShootersStatsForSeason(currentTeam.id, season.id) : [];
     const canEdit = !document.getElementById('addShooterPanel').hidden;
     renderShooters(sortedStats(), canEdit);
@@ -266,7 +268,28 @@ function buildRow(shooter, canEdit) {
         tdAppendStat(tr, shooter.best);
     }
 
-    tdAppendStat(tr, shooter.season_best);   // Season Best (current season)
+    // Season Best (current season) - admins editing the roster get an
+    // editable input, scoped to whichever season is currently selected.
+    // Same one-off seed/correction semantics as Personal Best above, except
+    // this one is cleared if the season's scores are ever reset instead of
+    // surviving it (see resetSeasonScores).
+    if (canEdit && isAdmin) {
+        const tdSeasonBest = document.createElement('td');
+        tdSeasonBest.className = 'score-cell';
+        const sbInput = document.createElement('input');
+        sbInput.type = 'number';
+        sbInput.min = '0';
+        sbInput.max = '70';
+        sbInput.className = 'shooter-input season-best-override-input';
+        sbInput.title = 'Set this shooter\'s Season Best for the currently selected season (admin only). Future matches that beat it update it automatically. Cleared if this season\'s scores are reset. Leave blank to use the site-recorded best.';
+        sbInput.placeholder = String(shooter.season_best);
+        sbInput.value = shooter.season_best_override != null ? shooter.season_best_override : '';
+        tdSeasonBest.appendChild(sbInput);
+        tr.appendChild(tdSeasonBest);
+    } else {
+        tdAppendStat(tr, shooter.season_best);
+    }
+
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
     tdAppendStat(tr, shooter.handicap == null ? 'N/A' : shooter.handicap);
@@ -283,17 +306,29 @@ function buildRow(shooter, canEdit) {
             const nameInput = tr.querySelector('.shooter-input');
             const roleSelect = tr.querySelector('.shooter-select');
             const pbInput = tr.querySelector('.pb-override-input');
+            const sbInput = tr.querySelector('.season-best-override-input');
             const name = nameInput.value.trim();
             if (!name) { showEditMessage('Shooter name cannot be empty.', 'error'); return; }
             const patch = { name, role: roleSelect.value };
             if (isAdmin && pbInput) patch.pb_override = pbInput.value === '' ? null : pbInput.value;
             save.disabled = true;
             const res = await NADARL.updateShooter(shooter.shooter_id, patch);
-            save.disabled = false;
             if (!res.ok) {
+                save.disabled = false;
                 showEditMessage('Could not save: ' + res.error, 'error');
                 return;
             }
+            if (isAdmin && sbInput && seasonId) {
+                const sbRes = await NADARL.updateShooterSeasonBest(
+                    shooter.shooter_id, seasonId, sbInput.value === '' ? null : sbInput.value
+                );
+                if (!sbRes.ok) {
+                    save.disabled = false;
+                    showEditMessage('Could not save season best: ' + sbRes.error, 'error');
+                    return;
+                }
+            }
+            save.disabled = false;
             showEditMessage('Saved ' + name + '.', 'success');
             await refreshShooters();
         });
