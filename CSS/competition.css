@@ -1,0 +1,43 @@
+.comp-header {
+    text-align: center;
+    padding: 30px 25px;
+}
+
+.comp-name {
+    font-size: 1.6rem;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.comp-meta {
+    color: #d4a017;
+    font-size: 1rem;
+    margin-bottom: 8px;
+}
+
+.comp-description {
+    color: #e0d6c8;
+    font-size: 0.95rem;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.event-detail-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.event-detail-label {
+    font-size: 0.9rem;
+    color: #d4a017;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.event-detail p {
+    color: #e0d6c8;
+    font-size: 1rem;
+    line-height: 1.5;
+}

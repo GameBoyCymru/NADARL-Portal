@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event - Newport & District Air Rifle League</title>
+    <link rel="stylesheet" href="../styles.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/login.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/competition.css?v=20260808">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="fixtures.html" class="back-link">&larr; Back to Fixtures</a>
+            <h1>Newport & District Air Rifle League</h1>
+        </header>
+
+        <section class="section comp-header">
+            <h2 id="evName" class="comp-name">Loading&hellip;</h2>
+            <p id="evMeta" class="comp-meta"></p>
+        </section>
+
+        <section class="section" id="evDetailsSection" hidden>
+            <div class="event-detail-grid">
+                <div class="event-detail" id="evAttireBlock" hidden>
+                    <h3 class="event-detail-label">Attire</h3>
+                    <p id="evAttire"></p>
+                </div>
+                <div class="event-detail" id="evDescriptionBlock" hidden>
+                    <h3 class="event-detail-label">Details</h3>
+                    <p id="evDescription"></p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../index.html">Home</a>
+                    <a href="fixtures.html">Fixtures</a>
+                    <a href="teams.html">Teams</a>
+                    <a href="table.html">League Table</a>
+                    <a href="summer-league.html">Summer League</a>
+                    <a href="gallery.html">Gallery</a>
+                    <a href="history.html">History</a>
+                    <a href="committee.html">Committee</a>
+                    <a href="sales.html">For Sale</a>
+                    <a href="join.html">Join Us</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; <script>document.write(new Date().getFullYear())</script> Newport & District Air Rifle League</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <div class="rotate-overlay" id="rotateOverlay">
+        <div class="rotate-overlay-content">
+            <div class="rotate-icon">&#x1F4F2;</div>
+            <h2>Rotate Your Device</h2>
+            <p>For the best experience viewing this page, please rotate your phone to landscape mode.</p>
+            <button type="button" class="rotate-dismiss" id="rotateDismiss">Got it</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS/supabase-keys.js"></script>
+    <script src="../JS/supabase-config.js"></script>
+    <script src="../JS/data.js?v=20260808c"></script>
+    <script src="../JS/event.js?v=20260808"></script>
+</body>
+</html>

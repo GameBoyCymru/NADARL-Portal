@@ -458,6 +458,249 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // Update one exclusion's date/reason. Admin only - RLS enforces.
+    async function updateExclusion(id, { match_date, reason }) {
+        const { data, error } = await db().from('exclusion')
+            .update({ match_date, reason })
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('updateExclusion', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // Keeps a season's match schedule contiguous around a calendar entry
+    // (exception/competition/event) being added or removed: shifts every
+    // match in that season on/after p_cutoff_date by p_delta_days (+7 to
+    // make room for a new entry, -7 to close the gap a deleted one leaves).
+    // A no-op if there's nothing to shift. Admin only - the RPC itself
+    // checks is_admin(), same as confirm_match_side etc.
+    async function shiftSeasonFixtures(seasonId, cutoffDate, deltaDays) {
+        const { error } = await db().rpc('shift_season_fixtures', {
+            p_season_id: seasonId,
+            p_cutoff_date: cutoffDate,
+            p_delta_days: deltaDays
+        });
+        if (error) { console.error('shiftSeasonFixtures', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // ---------------------------------------------------------------------
+    // Competitions - a season-scoped calendar entry with its own results
+    // page (competition.html). Generic MVP: a name/venue/description plus a
+    // shooter+score entry list (competition_entry) - not yet split into
+    // bespoke per-competition-type shapes.
+    // ---------------------------------------------------------------------
+
+    // All competitions, optionally scoped to one season, ordered by date.
+    async function fetchCompetitions(seasonId) {
+        let query = db().from('competition')
+            .select('id,season_id,event_date,name,venue,description')
+            .order('event_date');
+        if (seasonId) query = query.eq('season_id', seasonId);
+        const { data, error } = await query;
+        if (error) { console.error('fetchCompetitions', error); return []; }
+        return data.map(c => ({
+            id: c.id,
+            seasonId: c.season_id,
+            date: c.event_date,
+            name: c.name,
+            venue: c.venue,
+            description: c.description
+        }));
+    }
+
+    // Single competition, for the competition.html header. Admin only to
+    // write - RLS enforces.
+    async function fetchCompetitionById(id) {
+        const { data, error } = await db().from('competition')
+            .select('id,season_id,event_date,name,venue,description')
+            .eq('id', id)
+            .maybeSingle();
+        if (error) { console.error('fetchCompetitionById', error); return null; }
+        if (!data) return null;
+        return {
+            id: data.id,
+            seasonId: data.season_id,
+            date: data.event_date,
+            name: data.name,
+            venue: data.venue,
+            description: data.description
+        };
+    }
+
+    async function addCompetition({ season_id, event_date, name, venue, description }) {
+        const { data, error } = await db().from('competition')
+            .insert({ season_id, event_date, name, venue: venue || null, description: description || null })
+            .select('id,season_id,event_date,name,venue,description')
+            .single();
+        if (error) { console.error('addCompetition', error); return { ok: false, error: error.message }; }
+        return { ok: true, competition: data };
+    }
+
+    async function updateCompetition(id, { event_date, name, venue, description }) {
+        const { data, error } = await db().from('competition')
+            .update({ event_date, name, venue: venue || null, description: description || null })
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('updateCompetition', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // Deletes the competition and its results (competition_entry cascades).
+    async function deleteCompetition(id) {
+        const { data, error } = await db().from('competition')
+            .delete()
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('deleteCompetition', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // A competition's results, highest score first.
+    async function fetchCompetitionEntries(competitionId) {
+        const { data, error } = await db().from('competition_entry')
+            .select('id,competition_id,shooter_id,score,notes')
+            .eq('competition_id', competitionId)
+            .order('score', { ascending: false });
+        if (error) { console.error('fetchCompetitionEntries', error); return []; }
+        return data;
+    }
+
+    // Every shooter league-wide (competitions aren't team-scoped, unlike
+    // match score entry) - for the competition results shooter picker.
+    async function fetchAllShooters() {
+        const { data, error } = await db().from('shooter')
+            .select('id,shooter_no,name,team_id')
+            .order('name');
+        if (error) { console.error('fetchAllShooters', error); return []; }
+        return data;
+    }
+
+    // Add or update one shooter's result for a competition (real upsert on
+    // the (competition_id, shooter_id) unique constraint - entries are
+    // edited one row at a time, not autosaved as a whole block like match
+    // scores). Admin only - RLS enforces.
+    async function upsertCompetitionEntry(competitionId, shooterId, { score, notes }) {
+        const { data, error } = await db().from('competition_entry')
+            .upsert(
+                { competition_id: competitionId, shooter_id: shooterId, score: Number(score) || 0, notes: notes || null },
+                { onConflict: 'competition_id,shooter_id' }
+            )
+            .select('id,competition_id,shooter_id,score,notes')
+            .maybeSingle();
+        if (error) { console.error('upsertCompetitionEntry', error); return { ok: false, error: error.message }; }
+        return { ok: true, entry: data };
+    }
+
+    async function deleteCompetitionEntry(id) {
+        const { data, error } = await db().from('competition_entry')
+            .delete()
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('deleteCompetitionEntry', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // Live updates: fire onChange whenever a competition's results change.
+    // Tear down with the existing generic unsubscribeChannel().
+    function subscribeCompetitionEntries(competitionId, onChange) {
+        if (!db || !db().channel) return null;
+        return db().channel('competition-entries-' + competitionId)
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'competition_entry', filter: 'competition_id=eq.' + competitionId },
+                onChange)
+            .subscribe();
+    }
+
+    // ---------------------------------------------------------------------
+    // Events - a season-scoped, purely informational calendar entry (venue,
+    // attire, description). No results/entries, unlike competitions.
+    // ---------------------------------------------------------------------
+
+    async function fetchEvents(seasonId) {
+        let query = db().from('event')
+            .select('id,season_id,event_date,name,venue,attire,description')
+            .order('event_date');
+        if (seasonId) query = query.eq('season_id', seasonId);
+        const { data, error } = await query;
+        if (error) { console.error('fetchEvents', error); return []; }
+        return data.map(e => ({
+            id: e.id,
+            seasonId: e.season_id,
+            date: e.event_date,
+            name: e.name,
+            venue: e.venue,
+            attire: e.attire,
+            description: e.description
+        }));
+    }
+
+    async function fetchEventById(id) {
+        const { data, error } = await db().from('event')
+            .select('id,season_id,event_date,name,venue,attire,description')
+            .eq('id', id)
+            .maybeSingle();
+        if (error) { console.error('fetchEventById', error); return null; }
+        if (!data) return null;
+        return {
+            id: data.id,
+            seasonId: data.season_id,
+            date: data.event_date,
+            name: data.name,
+            venue: data.venue,
+            attire: data.attire,
+            description: data.description
+        };
+    }
+
+    async function addEvent({ season_id, event_date, name, venue, attire, description }) {
+        const { data, error } = await db().from('event')
+            .insert({ season_id, event_date, name, venue: venue || null, attire: attire || null, description: description || null })
+            .select('id,season_id,event_date,name,venue,attire,description')
+            .single();
+        if (error) { console.error('addEvent', error); return { ok: false, error: error.message }; }
+        return { ok: true, event: data };
+    }
+
+    async function updateEvent(id, { event_date, name, venue, attire, description }) {
+        const { data, error } = await db().from('event')
+            .update({ event_date, name, venue: venue || null, attire: attire || null, description: description || null })
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('updateEvent', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    async function deleteEvent(id) {
+        const { data, error } = await db().from('event')
+            .delete()
+            .eq('id', id)
+            .select('id');
+        if (error) { console.error('deleteEvent', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // ---------------------------------------------------------------------
+    // Fixture editor - lets an admin correct an existing match's date/venue
+    // after the fact (postponements, venue corrections). Setting venue is a
+    // permanent override for this match (see fixture_list) - it stops
+    // following the home team's registered venue from then on. A changed
+    // match_date can collide with the (match_date, home_team_id,
+    // away_team_id) unique constraint; the caller must surface `error` from
+    // a failed result rather than assume success. Admin only - RLS enforces.
+    // ---------------------------------------------------------------------
+    async function updateMatchFixture(matchId, { match_date, venue }) {
+        const patch = {};
+        if (match_date !== undefined) patch.match_date = match_date;
+        if (venue !== undefined) patch.venue = venue === '' ? null : venue;
+        const { data, error } = await db().from('match')
+            .update(patch)
+            .eq('id', matchId)
+            .select('id');
+        if (error) { console.error('updateMatchFixture', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
     // Create a season. If is_current, clears that flag on all other seasons first.
     async function addSeason({ name, start_date, end_date, is_current }) {
         if (is_current) {
@@ -730,6 +973,24 @@ const NADARL = (function () {
         clearExclusions,
         insertExclusions,
         deleteExclusion,
+        updateExclusion,
+        shiftSeasonFixtures,
+        fetchCompetitions,
+        fetchCompetitionById,
+        addCompetition,
+        updateCompetition,
+        deleteCompetition,
+        fetchCompetitionEntries,
+        fetchAllShooters,
+        upsertCompetitionEntry,
+        deleteCompetitionEntry,
+        subscribeCompetitionEntries,
+        fetchEvents,
+        fetchEventById,
+        addEvent,
+        updateEvent,
+        deleteEvent,
+        updateMatchFixture,
         addSeason,
         addTeam,
         updateTeam,

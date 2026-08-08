@@ -23,7 +23,20 @@ function matchUrl(fixture) {
     return `match.html?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}&date=${encodeURIComponent(fixture.date)}&venue=${encodeURIComponent(fixture.venue)}`;
 }
 
+// Competitions/events link out to their own info page instead of match.html.
+function fixtureUrl(fixture) {
+    if (fixture.isCompetition) return `competition.html?id=${encodeURIComponent(fixture.id)}`;
+    if (fixture.isEvent) return `event.html?id=${encodeURIComponent(fixture.id)}`;
+    return matchUrl(fixture);
+}
+
 function typeBadge(fixture) {
+    if (fixture.isCompetition) {
+        return '<span class="type-badge type-competition" title="Competition">Competition</span>';
+    }
+    if (fixture.isEvent) {
+        return '<span class="type-badge type-event" title="Event">Event</span>';
+    }
     if (fixture.half === 2) {
         return '<span class="type-badge type-hc" title="Handicap">HC</span>';
     }
@@ -121,6 +134,17 @@ function createFixtureCard(fixture) {
         return `
             <div class="fixture-item fixture-blocked">
                 <div class="fixture-blocked-reason">No matches &mdash; ${escapeHtml(fixture.reason)}</div>
+            </div>
+        `;
+    }
+    if (fixture.isCompetition || fixture.isEvent) {
+        const cardClass = fixture.isCompetition ? 'fixture-competition-item' : 'fixture-event-item';
+        return `
+            <div class="fixture-item ${cardClass}" onclick="window.location.href='${fixtureUrl(fixture)}'" style="cursor:pointer;">
+                <div class="fixture-teams">
+                    <div class="team-name">${escapeHtml(fixture.name)}</div>
+                </div>
+                ${fixture.venue ? `<div class="fixture-venue">${escapeHtml(fixture.venue)}</div>` : ''}
             </div>
         `;
     }
@@ -233,11 +257,24 @@ function renderSeasonFixtures() {
         tbody.appendChild(headerRow);
 
         group.forEach((fixture, index) => {
+            const isLastInGroup = index === group.length - 1;
+            const row = document.createElement('tr');
+
+            if (fixture.isCompetition || fixture.isEvent) {
+                const typeRowClass = fixture.isCompetition ? ' fixture-competition-row' : ' fixture-event-row';
+                row.className = 'fixture-row fixture-detail-row fixture-clickable' + typeRowClass + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
+                row.addEventListener('click', () => { window.location.href = fixtureUrl(fixture); });
+                row.innerHTML = `
+                    <td class="teams-cell" colspan="2">${escapeHtml(fixture.name)}</td>
+                    <td class="venue-cell">${fixture.venue ? escapeHtml(fixture.venue) : '-'}</td>
+                `;
+                tbody.appendChild(row);
+                return;
+            }
+
             const awayTeamDisplay = fixture.isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
             const venueDisplay = fixture.isBye ? '-' : fixture.venue;
 
-            const isLastInGroup = index === group.length - 1;
-            const row = document.createElement('tr');
             row.className = 'fixture-row fixture-detail-row' + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
             // Everyone can open past/today's fixtures (to see the completed
             // match); admins can also open future ones to set up scoring.
@@ -286,7 +323,17 @@ function renderMobileSeasonFixtures() {
         html += `<div class="mobile-fixture-content">`;
 
         group.forEach(fixture => {
-            if (fixture.isBye) {
+            if (fixture.isCompetition || fixture.isEvent) {
+                const typeClass = fixture.isCompetition ? 'mobile-fixture-competition' : 'mobile-fixture-event';
+                html += `
+                    <div class="mobile-fixture-item fixture-clickable ${typeClass}" onclick="window.location.href='${fixtureUrl(fixture)}'">
+                        <div class="mobile-fixture-teams">
+                            <span class="mobile-team">${escapeHtml(fixture.name)}</span>
+                        </div>
+                        ${fixture.venue ? `<div class="mobile-fixture-venue">${escapeHtml(fixture.venue)}</div>` : ''}
+                    </div>
+                `;
+            } else if (fixture.isBye) {
                 html += `
                     <div class="mobile-fixture-item fixture-bye">
                         <div class="mobile-fixture-teams">
@@ -347,17 +394,28 @@ function setupAuthButton(profile) {
     }
 }
 
-// Fetches one season's fixtures + its exclusions merged in as blocked
-// (no-match) days, sorted by date. Shared by the "today" (fixed to the
-// actual current season) and "browsed" (season-switcher-driven) loads.
+// Fetches one season's fixtures + its exclusions/competitions/events merged
+// in as calendar entries, sorted by date. Shared by the "today" (fixed to
+// the actual current season) and "browsed" (season-switcher-driven) loads.
 async function loadSeasonFixtures(season) {
-    const seasonFixtures = await NADARL.fetchFixtures(season && season.id);
-    const exclusions = await NADARL.fetchExclusions();
+    const seasonId = season && season.id;
+    const [seasonFixtures, exclusions, competitions, events] = await Promise.all([
+        NADARL.fetchFixtures(seasonId),
+        NADARL.fetchExclusions(),
+        NADARL.fetchCompetitions(seasonId),
+        NADARL.fetchEvents(seasonId)
+    ]);
     exclusions
         .filter(e => !season || e.season_id === season.id)
         .forEach(e => {
             seasonFixtures.push({ date: e.date, isBlocked: true, reason: e.reason });
         });
+    competitions.forEach(c => {
+        seasonFixtures.push({ date: c.date, isCompetition: true, id: c.id, name: c.name, venue: c.venue });
+    });
+    events.forEach(e => {
+        seasonFixtures.push({ date: e.date, isEvent: true, id: e.id, name: e.name, venue: e.venue });
+    });
     seasonFixtures.sort((a, b) => a.date.localeCompare(b.date));
     return seasonFixtures;
 }

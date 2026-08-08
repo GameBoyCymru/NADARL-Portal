@@ -106,10 +106,8 @@
             <section id="fixturesPanel" class="fx-section">
                 <h2 class="section-title">Fixtures</h2>
                 <p class="login-intro">
-                    Manage seasons. The automatic fixture generator and the excluded-Mondays manager have
-                    been removed and are being rebuilt as a combined Events/Exclusions wizard (so
-                    competitions can become real fixtures instead of just blocking a date) - there's
-                    currently no way to bulk-add fixtures or manage exclusions from this panel.
+                    Manage seasons. Exceptions, Competitions, Events and per-fixture date/venue
+                    corrections each have their own section below.
                 </p>
 
                 <div id="fxMessage" class="login-message" role="alert" hidden></div>
@@ -131,6 +129,161 @@
                     <input type="text" id="fxNewSeasonName" class="fx-text-input" placeholder="2026-27" maxlength="20">
                     <label class="fx-current-check"><input type="checkbox" id="fxNewSeasonCurrent" checked> Current season</label>
                     <button type="button" id="fxAddSeason" class="shooter-button">Add Season</button>
+                </div>
+            </section>
+
+            <section id="exceptionsPanel" class="fx-section">
+                <h2 class="section-title">Exceptions</h2>
+                <p class="login-intro">
+                    Mark a Monday as having no league matches (bank holidays, cup nights, catch-up
+                    weeks). Exceptions show on the public Fixtures page as a blocked day. Adding or
+                    removing one shifts that season's remaining fixtures a week later/earlier to
+                    keep the schedule contiguous.
+                </p>
+
+                <div id="exMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="fx-controls">
+                    <div class="fx-field">
+                        <label for="exSeason">Season</label>
+                        <select id="exSeason"></select>
+                    </div>
+                </div>
+
+                <div class="fx-season-create">
+                    <input type="date" id="exNewDate" class="fx-text-input" style="width:150px;">
+                    <input type="text" id="exNewReason" class="fx-text-input" placeholder="Reason (e.g. Bank holiday)" style="width:220px;">
+                    <button type="button" id="exAdd" class="shooter-button">Add Exception</button>
+                </div>
+
+                <div class="table-wrap fx-preview">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Reason</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="exBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="competitionsPanel" class="fx-section">
+                <h2 class="section-title">Competitions</h2>
+                <p class="login-intro">
+                    Create a competition (open meetings, cup nights, etc). Add or edit its results -
+                    shooters and scores - from its own results page.
+                </p>
+
+                <div id="compMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="fx-controls">
+                    <div class="fx-field">
+                        <label for="compSeason">Season</label>
+                        <select id="compSeason"></select>
+                    </div>
+                </div>
+
+                <div class="fx-season-create">
+                    <input type="date" id="compNewDate" class="fx-text-input" style="width:150px;">
+                    <input type="text" id="compNewName" class="fx-text-input" placeholder="Name" style="width:180px;">
+                    <input type="text" id="compNewVenue" class="fx-text-input" placeholder="Venue (optional)" style="width:160px;">
+                    <input type="text" id="compNewDesc" class="fx-text-input" placeholder="Description (optional)" style="width:220px;">
+                    <button type="button" id="compAdd" class="shooter-button">Add Competition</button>
+                </div>
+
+                <div class="table-wrap fx-preview">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Venue</th>
+                                <th>Description</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="compBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="eventsPanel" class="fx-section">
+                <h2 class="section-title">Events</h2>
+                <p class="login-intro">
+                    Informational calendar entries (dinners, open days, presentations) - venue,
+                    attire and description only, no results.
+                </p>
+
+                <div id="evMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="fx-controls">
+                    <div class="fx-field">
+                        <label for="evSeason">Season</label>
+                        <select id="evSeason"></select>
+                    </div>
+                </div>
+
+                <div class="fx-season-create">
+                    <input type="date" id="evNewDate" class="fx-text-input" style="width:150px;">
+                    <input type="text" id="evNewName" class="fx-text-input" placeholder="Name" style="width:180px;">
+                    <input type="text" id="evNewVenue" class="fx-text-input" placeholder="Venue (optional)" style="width:160px;">
+                    <input type="text" id="evNewAttire" class="fx-text-input" placeholder="Attire (optional)" style="width:140px;">
+                    <input type="text" id="evNewDesc" class="fx-text-input" placeholder="Description (optional)" style="width:220px;">
+                    <button type="button" id="evAdd" class="shooter-button">Add Event</button>
+                </div>
+
+                <div class="table-wrap fx-preview">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Venue</th>
+                                <th>Attire</th>
+                                <th>Description</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="evBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="fixtureEditorPanel" class="fx-section">
+                <h2 class="section-title">Edit Fixtures</h2>
+                <p class="login-intro">
+                    Correct an existing fixture's date or venue (postponements, venue changes).
+                    Editing venue is a permanent override for that match - it will no longer follow
+                    the home team's registered venue if that changes later. Leave venue blank to go
+                    back to following the home team's registered venue.
+                </p>
+
+                <div id="fxeMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="fx-controls">
+                    <div class="fx-field">
+                        <label for="fxeSeason">Season</label>
+                        <select id="fxeSeason"></select>
+                    </div>
+                </div>
+
+                <div class="table-wrap fx-preview">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Home</th>
+                                <th>Away</th>
+                                <th>Date</th>
+                                <th>Venue</th>
+                                <th>Half</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="fxeBody"></tbody>
+                    </table>
                 </div>
             </section>
 
@@ -186,11 +339,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260807c"></script>
+    <script src="../JS/data.js?v=20260808c"></script>
     <script src="../JS/admin.js"></script>
     <script src="../JS/admin-teams.js"></script>
     <script src="../JS/admin-handicap.js"></script>
     <script src="../JS/admin-fixtures.js?v=20260807b"></script>
+    <script src="../JS/admin-exceptions.js?v=20260808b"></script>
+    <script src="../JS/admin-competitions.js?v=20260808b"></script>
+    <script src="../JS/admin-events.js?v=20260808b"></script>
+    <script src="../JS/admin-fixture-editor.js?v=20260808"></script>
     <script src="../JS/admin-backup.js"></script>
 </body>
 </html>

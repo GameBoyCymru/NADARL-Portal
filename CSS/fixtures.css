@@ -391,6 +391,18 @@
     color: #bfe6c4;
 }
 
+.type-competition {
+    background: rgba(155, 90, 220, 0.25);
+    border-color: rgba(155, 90, 220, 0.55);
+    color: #d9c2f5;
+}
+
+.type-event {
+    background: rgba(60, 150, 200, 0.25);
+    border-color: rgba(60, 150, 200, 0.55);
+    color: #bfe0f0;
+}
+
 .fixture-blocked-row td {
     background: rgba(196, 30, 58, 0.16) !important;
     color: #f3c2c0;
@@ -398,6 +410,36 @@
 
 .fixture-blocked-row .date-cell {
     box-shadow: inset 4px 0 0 #e0616a;
+}
+
+.fixture-competition-row td {
+    background: rgba(155, 90, 220, 0.12) !important;
+    color: #e6d9f7;
+}
+
+.fixture-competition-row .date-cell,
+.fixture-competition-row .teams-cell:first-child {
+    box-shadow: inset 4px 0 0 #9b5adc;
+}
+
+.fixture-event-row td {
+    background: rgba(60, 150, 200, 0.12) !important;
+    color: #d6ecf5;
+}
+
+.fixture-event-row .date-cell,
+.fixture-event-row .teams-cell:first-child {
+    box-shadow: inset 4px 0 0 #3c96c8;
+}
+
+.fixture-competition-item {
+    border: 1px solid rgba(155, 90, 220, 0.4);
+    background: rgba(155, 90, 220, 0.08);
+}
+
+.fixture-event-item {
+    border: 1px solid rgba(60, 150, 200, 0.4);
+    background: rgba(60, 150, 200, 0.08);
 }
 
 .mobile-fixtures {
@@ -425,6 +467,16 @@
 
 .mobile-fixture-blocked .mobile-fixture-summary::after {
     content: none;
+}
+
+.mobile-fixture-competition {
+    border: 1px solid rgba(155, 90, 220, 0.4);
+    background: rgba(155, 90, 220, 0.1);
+}
+
+.mobile-fixture-event {
+    border: 1px solid rgba(60, 150, 200, 0.4);
+    background: rgba(60, 150, 200, 0.1);
 }
 
 .mobile-fixture-group {
