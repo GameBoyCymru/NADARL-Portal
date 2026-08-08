@@ -41,3 +41,67 @@
     font-size: 1rem;
     line-height: 1.5;
 }
+
+.rotate-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(24, 24, 27, 0.95);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.rotate-overlay.visible {
+    display: flex;
+}
+
+.rotate-overlay-content {
+    text-align: center;
+    padding: 40px 30px;
+    max-width: 320px;
+}
+
+.rotate-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    animation: rotateHint 2s ease-in-out infinite;
+}
+
+@keyframes rotateHint {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(90deg); }
+    50% { transform: rotate(90deg); }
+    75% { transform: rotate(0deg); }
+}
+
+.rotate-overlay-content h2 {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    color: #c41e3a;
+}
+
+.rotate-overlay-content p {
+    font-size: 0.95rem;
+    color: #a0a0a0;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.rotate-dismiss {
+    background: rgba(196, 30, 58, 0.3);
+    color: #ffffff;
+    border: 1px solid rgba(196, 30, 58, 0.5);
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.rotate-dismiss:hover {
+    background: rgba(196, 30, 58, 0.5);
+}
