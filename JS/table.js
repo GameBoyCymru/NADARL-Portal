@@ -5,6 +5,8 @@ let seasonIndex = 0;
 const STATS_PAGE_SIZE = 30;
 let statsRows = [];
 let statsPage = 0;
+let statsSortKey = null;
+let statsSortDir = 1;
 
 const STANDINGS_TABLES = [
     { half: 1, league: 'A', tbodyId: 'standingsA1' },
@@ -15,8 +17,54 @@ const STANDINGS_TABLES = [
 
 function renderStats(stats) {
     statsRows = stats;
+    assignStatsRanks();
     statsPage = 0;
+    if (statsSortKey) {
+        sortStatsRows();
+    }
     renderStatsPage();
+}
+
+// Pos always reflects the shooter's rank by average (highest first),
+// independent of whatever column the table is currently sorted by.
+function assignStatsRanks() {
+    const byAverage = statsRows.slice().sort((a, b) => Number(b.average) - Number(a.average));
+    byAverage.forEach((shooter, index) => {
+        shooter.rank = index + 1;
+    });
+}
+
+function sortStatsRows() {
+    if (statsSortKey === 'pos') {
+        statsRows.sort((a, b) => (a.rank - b.rank) * statsSortDir);
+        return;
+    }
+
+    statsRows.sort((a, b) => {
+        const aVal = a[statsSortKey];
+        const bVal = b[statsSortKey];
+
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+
+        let result;
+        if (typeof aVal === 'string' || typeof bVal === 'string') {
+            result = String(aVal).localeCompare(String(bVal));
+        } else {
+            result = Number(aVal) - Number(bVal);
+        }
+        return result * statsSortDir;
+    });
+}
+
+function updateStatsSortIndicators() {
+    document.querySelectorAll('#leagueTableHead th[data-sort]').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === statsSortKey) {
+            th.classList.add(statsSortDir === 1 ? 'sort-asc' : 'sort-desc');
+        }
+    });
 }
 
 function setStatsPaginationVisible(visible) {
@@ -38,9 +86,9 @@ function renderStatsPage() {
     const pageRows = statsRows.slice(start, start + STATS_PAGE_SIZE);
 
     let html = '';
-    pageRows.forEach((shooter, index) => {
+    pageRows.forEach((shooter) => {
         html += `<tr data-team="${shooter.team_name}">
-            <td>${start + index + 1}</td>
+            <td>${shooter.rank}</td>
             <td class="shooter-name">${shooter.name}</td>
             <td class="team-cell">${shooter.team_name}</td>
             <td class="score-cell">${shooter.matches_played}</td>
@@ -169,6 +217,24 @@ async function initTablePage() {
         button.addEventListener('click', () => {
             if (statsPage < Math.ceil(statsRows.length / STATS_PAGE_SIZE) - 1) { statsPage++; renderStatsPage(); }
         });
+    });
+
+    document.getElementById('leagueTableHead').addEventListener('click', function (e) {
+        const th = e.target.closest('th[data-sort]');
+        if (!th) return;
+        const key = th.dataset.sort;
+        if (statsSortKey === key) {
+            statsSortDir *= -1;
+        } else {
+            statsSortKey = key;
+            // Text columns feel natural sorting A-Z first; numeric stat
+            // columns feel natural sorting highest-first.
+            statsSortDir = (key === 'name' || key === 'team_name') ? 1 : -1;
+        }
+        sortStatsRows();
+        updateStatsSortIndicators();
+        statsPage = 0;
+        renderStatsPage();
     });
 
     tbody.addEventListener('click', function (e) {
