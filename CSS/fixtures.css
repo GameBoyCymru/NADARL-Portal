@@ -422,6 +422,54 @@
     color: #d6ecf5;
 }
 
+.fixture-table .fixture-competition-row .fixture-date-header {
+    background: rgba(155, 90, 220, 0.4) !important;
+}
+
+.fixture-competition-row.fixture-row-alt .fixture-date-header {
+    background: rgba(155, 90, 220, 0.5) !important;
+}
+
+.fixture-table .fixture-event-row .fixture-date-header {
+    background: rgba(60, 150, 200, 0.4) !important;
+}
+
+.fixture-event-row.fixture-row-alt .fixture-date-header {
+    background: rgba(60, 150, 200, 0.5) !important;
+}
+
+.fixture-table .fixture-competition-row td:first-child {
+    border-left-color: rgba(155, 90, 220, 0.5);
+}
+
+.fixture-table .fixture-competition-row td:last-child {
+    border-right-color: rgba(155, 90, 220, 0.5);
+}
+
+.fixture-table .fixture-competition-row.fixture-date-row td {
+    border-top-color: rgba(155, 90, 220, 0.5);
+}
+
+.fixture-table .fixture-competition-row:last-child td {
+    border-bottom-color: rgba(155, 90, 220, 0.5);
+}
+
+.fixture-table .fixture-event-row td:first-child {
+    border-left-color: rgba(60, 150, 200, 0.5);
+}
+
+.fixture-table .fixture-event-row td:last-child {
+    border-right-color: rgba(60, 150, 200, 0.5);
+}
+
+.fixture-table .fixture-event-row.fixture-date-row td {
+    border-top-color: rgba(60, 150, 200, 0.5);
+}
+
+.fixture-table .fixture-event-row:last-child td {
+    border-bottom-color: rgba(60, 150, 200, 0.5);
+}
+
 .fixture-competition-item {
     border: 1px solid rgba(155, 90, 220, 0.4);
     background: rgba(155, 90, 220, 0.08);
@@ -467,6 +515,22 @@
 .mobile-fixture-event {
     border: 1px solid rgba(60, 150, 200, 0.4);
     background: rgba(60, 150, 200, 0.1);
+}
+
+.mobile-fixture-competition-group .mobile-fixture-summary {
+    background: rgba(155, 90, 220, 0.4);
+}
+
+.mobile-fixture-group-alt.mobile-fixture-competition-group .mobile-fixture-summary {
+    background: rgba(155, 90, 220, 0.5);
+}
+
+.mobile-fixture-event-group .mobile-fixture-summary {
+    background: rgba(60, 150, 200, 0.4);
+}
+
+.mobile-fixture-group-alt.mobile-fixture-event-group .mobile-fixture-summary {
+    background: rgba(60, 150, 200, 0.5);
 }
 
 .mobile-fixture-group {

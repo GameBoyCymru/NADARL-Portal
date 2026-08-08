@@ -243,9 +243,11 @@ function renderSeasonFixtures() {
         }
 
         const typeBadgeHtml = typeBadge(group[0]);
+        const typeRowClass = group[0].isCompetition ? ' fixture-competition-row'
+            : group[0].isEvent ? ' fixture-event-row' : '';
 
         const headerRow = document.createElement('tr');
-        headerRow.className = 'fixture-row fixture-date-row' + altClass + highlightClass;
+        headerRow.className = 'fixture-row fixture-date-row' + typeRowClass + altClass + highlightClass;
         headerRow.innerHTML = `
             <td class="date-cell fixture-date-header" colspan="3">
                 <div class="fixture-date-inner">
@@ -318,7 +320,9 @@ function renderMobileSeasonFixtures() {
             return;
         }
 
-        html += `<details class="mobile-fixture-group${altClass}${highlightClass}"${highlightClass ? ' open' : ''}>`;
+        const typeGroupClass = group[0].isCompetition ? ' mobile-fixture-competition-group'
+            : group[0].isEvent ? ' mobile-fixture-event-group' : '';
+        html += `<details class="mobile-fixture-group${typeGroupClass}${altClass}${highlightClass}"${highlightClass ? ' open' : ''}>`;
         html += `<summary class="mobile-fixture-summary">${dateStackHtml(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span> ${typeBadge(group[0])}</summary>`;
         html += `<div class="mobile-fixture-content">`;
 
