@@ -246,33 +246,17 @@ function buildRow(shooter, canEdit) {
     // Stats columns (read-only)
     tdAppendStat(tr, shooter.matches_played);        // Season Matches Shot (current season)
 
-    // Personal Best (all-time) - admins editing the roster get an editable
-    // input instead of the plain figure, for shooters with pre-site history.
-    // This is a one-off seed/correction, not a standing override: once set,
-    // a real submitted match that beats it updates it automatically from
-    // then on, and it survives a season score reset.
-    if (canEdit && isAdmin) {
-        const tdBest = document.createElement('td');
-        tdBest.className = 'score-cell';
-        const pbInput = document.createElement('input');
-        pbInput.type = 'number';
-        pbInput.min = '0';
-        pbInput.max = '70';
-        pbInput.className = 'shooter-input pb-override-input';
-        pbInput.title = 'Set this shooter\'s all-time Personal Best (admin only) - e.g. to seed history from before this site. Future matches that beat it update it automatically. Leave blank to use the site-recorded best.';
-        pbInput.placeholder = String(shooter.best);
-        pbInput.value = shooter.pb_override != null ? shooter.pb_override : '';
-        tdBest.appendChild(pbInput);
-        tr.appendChild(tdBest);
-    } else {
-        tdAppendStat(tr, shooter.best);
-    }
+    // Personal Best (all-time) is always read-only here: it's just the
+    // highest Season Best across every season (see Season Best below), not
+    // its own value to edit.
+    tdAppendStat(tr, shooter.best);
 
     // Season Best (current season) - admins editing the roster get an
     // editable input, scoped to whichever season is currently selected.
-    // Same one-off seed/correction semantics as Personal Best above, except
-    // this one is cleared if the season's scores are ever reset instead of
-    // surviving it (see resetSeasonScores).
+    // A one-off seed/correction, not a standing override: once set, a real
+    // submitted match that beats it updates it automatically from then on.
+    // Cleared if this season's scores are ever reset (see resetSeason),
+    // which also drops its contribution to this shooter's all-time best.
     if (canEdit && isAdmin) {
         const tdSeasonBest = document.createElement('td');
         tdSeasonBest.className = 'score-cell';
@@ -305,12 +289,10 @@ function buildRow(shooter, canEdit) {
         save.addEventListener('click', async () => {
             const nameInput = tr.querySelector('.shooter-input');
             const roleSelect = tr.querySelector('.shooter-select');
-            const pbInput = tr.querySelector('.pb-override-input');
             const sbInput = tr.querySelector('.season-best-override-input');
             const name = nameInput.value.trim();
             if (!name) { showEditMessage('Shooter name cannot be empty.', 'error'); return; }
             const patch = { name, role: roleSelect.value };
-            if (isAdmin && pbInput) patch.pb_override = pbInput.value === '' ? null : pbInput.value;
             save.disabled = true;
             const res = await NADARL.updateShooter(shooter.shooter_id, patch);
             if (!res.ok) {

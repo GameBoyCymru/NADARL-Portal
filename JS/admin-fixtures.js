@@ -57,7 +57,7 @@ const FixturesAdmin = (function () {
 
     function wire() {
         $('fxAddSeason').addEventListener('click', createSeason);
-        $('fxResetScores').addEventListener('click', resetScores);
+        $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
     }
 
@@ -65,22 +65,28 @@ const FixturesAdmin = (function () {
     // its matches back to unconfirmed/unsubmitted. The fixture schedule
     // (dates, teams, venues) and excluded Mondays are left exactly as they
     // are - this only wipes shooter/team stats, not the season's structure.
-    async function resetScores() {
+    // That includes any Personal Best set or manually entered within this
+    // season: Season Best is tracked per season, and a shooter's all-time
+    // Personal Best is just the highest of those across every season - so
+    // resetting one season removes its contribution to that too. Other
+    // seasons are untouched.
+    async function resetSeason() {
         const season = selectedSeason();
         if (!season) { show('No season selected.', 'error'); return; }
         if (!confirm(
-            'Clear all entered scores for season "' + season.name + '"? ' +
-            'Fixtures and excluded dates are kept - this only resets scores and stats for this season. ' +
-            'This cannot be undone.'
+            'Reset season "' + season.name + '"? ' +
+            'This clears all entered scores and stats for this season, including any Personal Best ' +
+            'set or manually entered within it. Fixtures and excluded dates are kept, and other seasons ' +
+            'are untouched. This cannot be undone.'
         )) return;
 
-        const btn = $('fxResetScores');
+        const btn = $('fxResetSeason');
         btn.disabled = true;
-        const res = await NADARL.resetSeasonScores(season.id);
+        const res = await NADARL.resetSeason(season.id);
         btn.disabled = false;
-        if (!res.ok) { show('Could not reset scores: ' + res.error, 'error'); return; }
+        if (!res.ok) { show('Could not reset season: ' + res.error, 'error'); return; }
 
-        show('Scores for "' + season.name + '" have been reset.', 'success');
+        show('Season "' + season.name + '" has been reset.', 'success');
     }
 
     async function deleteSeason() {

@@ -278,32 +278,24 @@ const NADARL = (function () {
     }
 
     // Update a shooter's name/role (captain of that team or admin). RLS enforces.
-    // pb_override (DB column: personal_best) is admin-only - a DB trigger
-    // rejects the write for anyone else, so only pass it when the caller is
-    // actually an admin. It's a one-off seed/correction, not a standing
-    // formula: real submitted matches ratchet it up automatically from then
-    // on (see 2026-08-07-shooter-personal-best-persist.sql), surviving even
-    // a season score reset.
-    async function updateShooter(shooterId, { name, role, pb_override }) {
+    async function updateShooter(shooterId, { name, role }) {
         const patch = { name: normalizeName(name), role: role || null };
-        if (pb_override !== undefined) {
-            patch.personal_best = pb_override === null || pb_override === '' ? null : Number(pb_override);
-        }
         const { data, error } = await db().from('shooter')
             .update(patch)
             .eq('id', shooterId)
-            .select('id,shooter_no,name,role,team_id,pb_override:personal_best');
+            .select('id,shooter_no,name,role,team_id');
         if (error) { console.error('updateShooter', error); return { ok: false, error: error.message }; }
         return { ok: true, shooter: data && data[0] };
     }
 
     // Admin-only seed/correction for one shooter's Season Best in a specific
-    // season - the season-scoped counterpart to updateShooter's pb_override.
-    // Persisted per (shooter, season) in shooter_season_best; ratchets up
-    // automatically as real submitted matches beat it, and - unlike the
-    // all-time personal_best - is cleared when that season's scores are
-    // reset (see resetSeasonScores). A null/empty value removes the override
-    // entirely rather than storing null, so a reset season starts clean.
+    // season. Persisted per (shooter, season) in shooter_season_best;
+    // ratchets up automatically as real submitted matches beat it, and is
+    // cleared when that season's scores are reset (see resetSeason) - a
+    // shooter's all-time "Personal Best" is just the highest of these across
+    // every season, so resetting a season also removes its contribution to
+    // that. A null/empty value removes the override entirely rather than
+    // storing null, so a reset season starts clean.
     async function updateShooterSeasonBest(shooterId, seasonId, value) {
         if (value === null || value === '') {
             const { error } = await db().from('shooter_season_best')
@@ -421,34 +413,35 @@ const NADARL = (function () {
         return { ok: true };
     }
 
-    // Clears every entered score for a season and resets each of its matches
-    // back to unconfirmed/unsubmitted - the fixture schedule itself (dates,
-    // teams, venues, half) is untouched. Also clears that season's persisted
-    // Season Best records (shooter_season_best) - unlike the all-time
-    // Personal Best, a season's best is meant to reset along with its scores.
-    // Other seasons' bests (including this shooter's all-time Personal Best)
-    // are untouched. Admin only - RLS enforces.
-    async function resetSeasonScores(seasonId) {
+    // Resets a season entirely: clears every entered score, resets each of
+    // its matches back to unconfirmed/unsubmitted, and clears that season's
+    // persisted Season Best records (shooter_season_best) - so any Personal
+    // Best that was set or manually entered within this season goes with
+    // it. The fixture schedule itself (dates, teams, venues, half) is
+    // untouched. Other seasons' bests, and therefore this shooter's overall
+    // best if it was set in one of them, are untouched. Admin only - RLS
+    // enforces.
+    async function resetSeason(seasonId) {
         const { error: sbError } = await db().from('shooter_season_best')
             .delete()
             .eq('season_id', seasonId);
-        if (sbError) { console.error('resetSeasonScores', sbError); return { ok: false, error: sbError.message }; }
+        if (sbError) { console.error('resetSeason', sbError); return { ok: false, error: sbError.message }; }
 
         const { data: matches, error: matchError } = await db().from('match')
             .select('id')
             .eq('season_id', seasonId);
-        if (matchError) { console.error('resetSeasonScores', matchError); return { ok: false, error: matchError.message }; }
+        if (matchError) { console.error('resetSeason', matchError); return { ok: false, error: matchError.message }; }
 
         const matchIds = (matches || []).map(m => m.id);
         if (!matchIds.length) return { ok: true };
 
         const { error: scoreError } = await db().from('score').delete().in('match_id', matchIds);
-        if (scoreError) { console.error('resetSeasonScores', scoreError); return { ok: false, error: scoreError.message }; }
+        if (scoreError) { console.error('resetSeason', scoreError); return { ok: false, error: scoreError.message }; }
 
         const { error: statusError } = await db().from('match')
             .update({ submitted: false, home_confirmed: false, away_confirmed: false })
             .in('id', matchIds);
-        if (statusError) { console.error('resetSeasonScores', statusError); return { ok: false, error: statusError.message }; }
+        if (statusError) { console.error('resetSeason', statusError); return { ok: false, error: statusError.message }; }
 
         return { ok: true };
     }
@@ -760,7 +753,7 @@ const NADARL = (function () {
         seasonHasMatches,
         deleteSeason,
         clearMatches,
-        resetSeasonScores,
+        resetSeason,
         insertMatches,
         fetchExclusions,
         clearExclusions,
