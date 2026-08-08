@@ -81,6 +81,33 @@
     max-width: 100px;
 }
 
+.shooters-table th[data-sort] {
+    cursor: pointer;
+    user-select: none;
+}
+
+.shooters-table th[data-sort]:hover {
+    background: rgba(196, 30, 58, 0.5);
+}
+
+.shooters-table th[data-sort]::after {
+    content: '';
+    display: inline-block;
+    width: 0.6em;
+    margin-left: 4px;
+    opacity: 0.5;
+}
+
+.shooters-table th[data-sort].sort-asc::after {
+    content: '\25B2';
+    opacity: 1;
+}
+
+.shooters-table th[data-sort].sort-desc::after {
+    content: '\25BC';
+    opacity: 1;
+}
+
 .shooters-table .max-score {
     font-size: 0.7rem;
     color: #a0a0a0;

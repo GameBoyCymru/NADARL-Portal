@@ -9,6 +9,9 @@ let statsSortKey = null;
 let statsSortDir = 1;
 let highlightedTeam = null;
 
+let standingsRowsByTable = {};
+let standingsSortState = {};
+
 const STANDINGS_TABLES = [
     { half: 1, league: 'A', tbodyId: 'standingsA1' },
     { half: 1, league: 'B', tbodyId: 'standingsB1' },
@@ -35,28 +38,30 @@ function assignStatsRanks() {
     });
 }
 
+// Generic comparator shared by both the individual stats table and the
+// team standings tables' click-to-sort headers.
+function compareValues(aVal, bVal) {
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+
+    if (typeof aVal === 'string' || typeof bVal === 'string') {
+        return String(aVal).localeCompare(String(bVal));
+    }
+    return Number(aVal) - Number(bVal);
+}
+
+function sortRowsByKey(rows, key, dir) {
+    return rows.slice().sort((a, b) => compareValues(a[key], b[key]) * dir);
+}
+
 function sortStatsRows() {
     if (statsSortKey === 'pos') {
         statsRows.sort((a, b) => (a.rank - b.rank) * statsSortDir);
         return;
     }
 
-    statsRows.sort((a, b) => {
-        const aVal = a[statsSortKey];
-        const bVal = b[statsSortKey];
-
-        if (aVal == null && bVal == null) return 0;
-        if (aVal == null) return 1;
-        if (bVal == null) return -1;
-
-        let result;
-        if (typeof aVal === 'string' || typeof bVal === 'string') {
-            result = String(aVal).localeCompare(String(bVal));
-        } else {
-            result = Number(aVal) - Number(bVal);
-        }
-        return result * statsSortDir;
-    });
+    statsRows.sort((a, b) => compareValues(a[statsSortKey], b[statsSortKey]) * statsSortDir);
 }
 
 function updateStatsSortIndicators() {
@@ -127,15 +132,28 @@ function sortStandings(rows) {
 }
 
 function renderStandingsTable(tbodyId, rows) {
+    standingsRowsByTable[tbodyId] = rows;
+    renderStandingsTableRows(tbodyId);
+}
+
+// Clicking a header sorts that column and overrides the default
+// points/average/team-name hierarchy until the user clicks again.
+function renderStandingsTableRows(tbodyId) {
     const tbody = document.getElementById(tbodyId);
+    const rows = standingsRowsByTable[tbodyId] || [];
 
     if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="7">No results for this season yet.</td></tr>';
         return;
     }
 
+    const sort = standingsSortState[tbodyId];
+    const sortedRows = sort && sort.key
+        ? sortRowsByKey(rows, sort.key, sort.dir)
+        : sortStandings(rows.slice());
+
     let html = '';
-    sortStandings(rows).forEach(team => {
+    sortedRows.forEach(team => {
         html += `<tr>
             <td class="team-cell">${team.team_name}</td>
             <td class="score-cell">${team.matches_played}</td>
@@ -148,6 +166,18 @@ function renderStandingsTable(tbodyId, rows) {
     });
 
     tbody.innerHTML = html;
+}
+
+function updateStandingsSortIndicators(tbodyId) {
+    const headRow = document.querySelector(`.standings-head[data-tbody="${tbodyId}"]`);
+    if (!headRow) return;
+    const sort = standingsSortState[tbodyId];
+    headRow.querySelectorAll('th[data-sort]').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (sort && th.dataset.sort === sort.key) {
+            th.classList.add(sort.dir === 1 ? 'sort-asc' : 'sort-desc');
+        }
+    });
 }
 
 function renderTeamStandings(rows) {
@@ -219,6 +249,25 @@ async function initTablePage() {
     document.querySelectorAll('.stats-next').forEach(button => {
         button.addEventListener('click', () => {
             if (statsPage < Math.ceil(statsRows.length / STATS_PAGE_SIZE) - 1) { statsPage++; renderStatsPage(); }
+        });
+    });
+
+    document.querySelectorAll('.standings-head').forEach(headRow => {
+        const tbodyId = headRow.dataset.tbody;
+        headRow.addEventListener('click', function (e) {
+            const th = e.target.closest('th[data-sort]');
+            if (!th) return;
+            const key = th.dataset.sort;
+            const current = standingsSortState[tbodyId] || { key: null, dir: 1 };
+            if (current.key === key) {
+                current.dir *= -1;
+            } else {
+                current.key = key;
+                current.dir = key === 'team_name' ? 1 : -1;
+            }
+            standingsSortState[tbodyId] = current;
+            updateStandingsSortIndicators(tbodyId);
+            renderStandingsTableRows(tbodyId);
         });
     });
 

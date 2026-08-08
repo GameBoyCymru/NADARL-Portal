@@ -310,9 +310,11 @@ const NADARL = (function () {
     }
 
     // One team's shooter stats for a specific season (Team page season switcher).
+    // Default order matches fetchShooterStatsForSeason (average desc, then
+    // name) - the team page's sortable headers take it from there.
     async function fetchTeamShootersStatsForSeason(teamId, seasonId) {
         const stats = await fetchShooterStatsForSeason(seasonId);
-        return sortByRoleThenName(stats.filter(s => s.team_id === teamId));
+        return stats.filter(s => s.team_id === teamId);
     }
 
     // Team-level W/D/L standings for a season, split by half (1 = no

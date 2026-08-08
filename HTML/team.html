@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/team.css?v=20260807">
+    <link rel="stylesheet" href="../CSS/team.css?v=20260808">
 </head>
 <body>
     <div class="container">
@@ -57,15 +57,15 @@
             <div class="table-responsive">
                 <table class="shooters-table">
                     <thead>
-                        <tr>
-                            <th class="col-no">No.</th>
-                            <th>Shooter</th>
-                            <th>Matches Fired</th>
-                            <th>Personal Best</th>
-                            <th>Season Best</th>
-                            <th>10's</th>
-                            <th>Average</th>
-                            <th>Handicap</th>
+                        <tr id="shootersTableHead">
+                            <th class="col-no" data-sort="shooter_no">No.</th>
+                            <th data-sort="name">Shooter</th>
+                            <th data-sort="matches_played">Matches Fired</th>
+                            <th data-sort="best">Personal Best</th>
+                            <th data-sort="season_best">Season Best</th>
+                            <th data-sort="tens">10's</th>
+                            <th data-sort="average">Average</th>
+                            <th data-sort="handicap">Handicap</th>
                             <th id="thActions" class="col-actions" hidden></th>
                         </tr>
                     </thead>
@@ -116,7 +116,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260807b"></script>
-    <script src="../JS/team.js?v=20260807b"></script>
+    <script src="../JS/data.js?v=20260808"></script>
+    <script src="../JS/team.js?v=20260808"></script>
 </body>
 </html>

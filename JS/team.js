@@ -14,6 +14,37 @@ let seasons = [];
 let seasonIndex = 0;
 let isAdmin = false;
 
+let currentStats = [];
+let sortKey = null;
+let sortDir = 1;
+
+// Same comparator convention as the league table page: strings compare
+// case-insensitively, numbers numerically, nulls sort last.
+function compareValues(aVal, bVal) {
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+
+    if (typeof aVal === 'string' || typeof bVal === 'string') {
+        return String(aVal).localeCompare(String(bVal));
+    }
+    return Number(aVal) - Number(bVal);
+}
+
+function sortedStats() {
+    if (!sortKey) return currentStats;
+    return currentStats.slice().sort((a, b) => compareValues(a[sortKey], b[sortKey]) * sortDir);
+}
+
+function updateSortIndicators() {
+    document.querySelectorAll('#shootersTableHead th[data-sort]').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === sortKey) {
+            th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+        }
+    });
+}
+
 async function loadSeasonStats() {
     const season = seasons[seasonIndex];
     const label = document.getElementById('seasonLabel');
@@ -24,9 +55,9 @@ async function loadSeasonStats() {
     prevButton.disabled = seasonIndex <= 0;
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
-    const stats = season ? await NADARL.fetchTeamShootersStatsForSeason(currentTeam.id, season.id) : [];
+    currentStats = season ? await NADARL.fetchTeamShootersStatsForSeason(currentTeam.id, season.id) : [];
     const canEdit = !document.getElementById('addShooterPanel').hidden;
-    renderShooters(stats, canEdit);
+    renderShooters(sortedStats(), canEdit);
 }
 
 async function initTeamPage() {
@@ -75,6 +106,21 @@ async function initTeamPage() {
     });
     document.getElementById('seasonNext').addEventListener('click', () => {
         if (seasonIndex < seasons.length - 1) { seasonIndex++; loadSeasonStats(); }
+    });
+
+    document.getElementById('shootersTableHead').addEventListener('click', function (e) {
+        const th = e.target.closest('th[data-sort]');
+        if (!th) return;
+        const key = th.dataset.sort;
+        if (sortKey === key) {
+            sortDir *= -1;
+        } else {
+            sortKey = key;
+            sortDir = key === 'name' ? 1 : -1;
+        }
+        updateSortIndicators();
+        const canEdit = !document.getElementById('addShooterPanel').hidden;
+        renderShooters(sortedStats(), canEdit);
     });
 
     await loadSeasonStats();
