@@ -96,7 +96,7 @@ function renderStatsPage() {
         const highlightClass = shooter.team_name === highlightedTeam ? ' team-highlight' : '';
         html += `<tr data-team="${shooter.team_name}" class="${highlightClass.trim()}">
             <td>${shooter.rank}</td>
-            <td class="shooter-name">${shooter.name}</td>
+            <td class="shooter-name"><a class="shooter-link" href="shooter.html?id=${encodeURIComponent(shooter.shooter_id)}">${shooter.name}</a></td>
             <td class="team-cell">${shooter.team_name}</td>
             <td class="score-cell">${shooter.matches_played}</td>
             <td class="score-cell">${shooter.best}</td>

@@ -87,6 +87,16 @@
     font-weight: 600;
 }
 
+.shooter-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.shooter-link:hover {
+    color: #d4a017;
+    text-decoration: underline;
+}
+
 .league-table td {
     font-size: 0.95rem;
 }

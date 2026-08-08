@@ -135,6 +135,16 @@
     letter-spacing: 0.5px;
 }
 
+.shooter-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.shooter-link:hover {
+    color: #d4a017;
+    text-decoration: underline;
+}
+
 /* ---- Shooter number column ---- */
 .shooter-no-cell {
     font-variant-numeric: tabular-nums;

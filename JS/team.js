@@ -226,7 +226,11 @@ function buildRow(shooter, canEdit) {
     } else {
         const nameDiv = document.createElement('div');
         nameDiv.className = 'shooter-name';
-        nameDiv.textContent = shooter.name;
+        const nameLink = document.createElement('a');
+        nameLink.className = 'shooter-link';
+        nameLink.href = `shooter.html?id=${encodeURIComponent(shooter.shooter_id)}`;
+        nameLink.textContent = shooter.name;
+        nameDiv.appendChild(nameLink);
         if (shooter.role) {
             const roleSpan = document.createElement('span');
             roleSpan.className = 'shooter-role';

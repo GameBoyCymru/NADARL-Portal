@@ -1,0 +1,79 @@
+.shooter-profile {
+    text-align: center;
+    padding: 40px 25px;
+}
+
+.shooter-profile-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.shooter-profile .team-logo,
+.shooter-profile .team-logo-fallback {
+    width: 160px;
+    height: 160px;
+    font-size: 2rem;
+}
+
+.shooter-info {
+    text-align: center;
+}
+
+.shooter-profile-name {
+    font-size: 1.6rem;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.shooter-profile .shooter-role {
+    display: inline-block;
+    margin-bottom: 6px;
+}
+
+.shooter-profile .team-detail-venue a {
+    color: #d4a017;
+    text-decoration: none;
+}
+
+.shooter-profile .team-detail-venue a:hover {
+    text-decoration: underline;
+}
+
+.stat-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.stat-tile {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+}
+
+.stat-tile-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-tile-label {
+    font-size: 0.75rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.shots-cell {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}

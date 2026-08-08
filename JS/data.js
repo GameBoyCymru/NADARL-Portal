@@ -317,6 +317,29 @@ const NADARL = (function () {
         return stats.filter(s => s.team_id === teamId);
     }
 
+    // A single shooter's basic info + team, for the Shooter Profile page header.
+    async function fetchShooterById(shooterId) {
+        const { data, error } = await db().from('shooter')
+            .select('id,shooter_no,name,role,team_id,team:team_id(name,slug,venue)')
+            .eq('id', shooterId)
+            .maybeSingle();
+        if (error) { console.error('fetchShooterById', error); return null; }
+        return data;
+    }
+
+    // One shooter's per-match score log for a specific season (submitted
+    // matches only), oldest first - the Shooter Profile page's results table.
+    async function fetchShooterMatchHistory(shooterId, seasonId) {
+        const { data, error } = await db().from('shooter_match_history')
+            .select('*')
+            .eq('shooter_id', shooterId)
+            .eq('season_id', seasonId)
+            .eq('submitted', true)
+            .order('date');
+        if (error) { console.error('fetchShooterMatchHistory', error); return []; }
+        return data;
+    }
+
     // Team-level W/D/L standings for a season, split by half (1 = no
     // handicap, 2 = handicap) and league ('A' = top 5, 'B' = ranked 5th-7th).
     // Returns one row per team per half/league combo (League Table's four
@@ -674,6 +697,8 @@ const NADARL = (function () {
         fetchTeamShootersStatsForSeason,
         fetchAllShooterStats,
         fetchShooterStatsForSeason,
+        fetchShooterById,
+        fetchShooterMatchHistory,
         fetchTeamStandingsForSeason,
         fetchFixtures,
         fetchMatchScorecard,
