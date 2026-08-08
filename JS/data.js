@@ -469,19 +469,22 @@ const NADARL = (function () {
     }
 
     // Keeps a season's match schedule contiguous around a calendar entry
-    // (exception/competition/event) being added or removed: shifts every
-    // match in that season on/after p_cutoff_date by p_delta_days (+7 to
-    // make room for a new entry, -7 to close the gap a deleted one leaves).
-    // A no-op if there's nothing to shift. Admin only - the RPC itself
+    // (exception/competition/event) being added, moved, or removed. Only
+    // shifts fixtures that are actually occupying a slot in the way -
+    // +7 walks forward from startDate while each week has a match and
+    // pushes that whole occupied run one week later (making room); -7
+    // walks forward from the week after startDate and, only if it's
+    // occupied, pulls that run one week earlier (closing the gap). A no-op
+    // (count 0) if nothing is in the way. Admin only - the RPC itself
     // checks is_admin(), same as confirm_match_side etc.
-    async function shiftSeasonFixtures(seasonId, cutoffDate, deltaDays) {
-        const { error } = await db().rpc('shift_season_fixtures', {
+    async function shiftSeasonFixtures(seasonId, startDate, deltaDays) {
+        const { data, error } = await db().rpc('shift_season_fixtures', {
             p_season_id: seasonId,
-            p_cutoff_date: cutoffDate,
+            p_start_date: startDate,
             p_delta_days: deltaDays
         });
         if (error) { console.error('shiftSeasonFixtures', error); return { ok: false, error: error.message }; }
-        return { ok: true };
+        return { ok: true, count: data || 0 };
     }
 
     // ---------------------------------------------------------------------

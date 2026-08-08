@@ -1,9 +1,9 @@
 // =====================================================================
 //  Admin events panel (admin only): event create/edit/delete. Purely
 //  informational entries - no results, unlike competitions.
-//  Adding or deleting an event shifts that season's remaining fixtures
-//  by a week (forward to make room / backward to close the gap) so the
-//  weekly schedule stays contiguous - see shiftSeasonFixtures.
+//  Adding, moving or deleting an event only shifts fixtures that are
+//  actually in the way of its date - a week later to make room, or a
+//  week earlier to close the gap - see shiftSeasonFixtures in data.js.
 // =====================================================================
 
 const EventsAdmin = (function () {
@@ -96,7 +96,22 @@ const EventsAdmin = (function () {
                 show('Date and name are required.', 'error');
                 return;
             }
+            const dateChanged = dateIn.value !== e.date;
             save.disabled = true;
+
+            // Moving an event is a close-the-old-gap + make-room-at-the-new-
+            // date pair, same as a delete followed by an add.
+            let shifted = 0;
+            if (dateChanged) {
+                const closeRes = await NADARL.shiftSeasonFixtures(e.seasonId, e.date, -SHIFT_DAYS);
+                if (!closeRes.ok) {
+                    save.disabled = false;
+                    show('Could not close the gap at the old date: ' + closeRes.error, 'error');
+                    return;
+                }
+                shifted += closeRes.count;
+            }
+
             const res = await NADARL.updateEvent(e.id, {
                 event_date: dateIn.value,
                 name: nameIn.value.trim(),
@@ -104,12 +119,25 @@ const EventsAdmin = (function () {
                 attire: attireIn.value.trim(),
                 description: descIn.value.trim()
             });
-            save.disabled = false;
             if (!res.ok || !res.count) {
+                save.disabled = false;
                 show('Could not save: ' + (res.error || '0 rows changed'), 'error');
                 return;
             }
-            show('Saved "' + nameIn.value.trim() + '".', 'success');
+
+            if (dateChanged) {
+                const makeRoomRes = await NADARL.shiftSeasonFixtures(e.seasonId, dateIn.value, SHIFT_DAYS);
+                if (!makeRoomRes.ok) {
+                    save.disabled = false;
+                    show('Saved, but could not make room at the new date: ' + makeRoomRes.error, 'error');
+                    await load();
+                    return;
+                }
+                shifted += makeRoomRes.count;
+            }
+
+            save.disabled = false;
+            show('Saved "' + nameIn.value.trim() + '"' + shiftSuffix(shifted, 'to match the new date') + '.', 'success');
             await load();
         });
         controls.appendChild(save);
@@ -120,8 +148,8 @@ const EventsAdmin = (function () {
         del.textContent = 'Delete';
         del.addEventListener('click', async () => {
             if (!confirm(
-                'Delete event "' + e.name + '"? Every fixture in this season after ' + e.date +
-                ' will move a week earlier to close the gap. This cannot be undone.'
+                'Delete event "' + e.name + '"? If a fixture is scheduled the week after, it (and any ' +
+                'run right behind it) will move a week earlier to close the gap. This cannot be undone.'
             )) return;
             del.disabled = true;
             const res = await NADARL.deleteEvent(e.id);
@@ -137,7 +165,7 @@ const EventsAdmin = (function () {
                 await load();
                 return;
             }
-            show('Deleted "' + e.name + '" and shifted later fixtures a week earlier.', 'success');
+            show('Deleted "' + e.name + '"' + shiftSuffix(shiftRes.count, 'a week earlier') + '.', 'success');
             await load();
         });
         controls.appendChild(del);
@@ -192,9 +220,15 @@ const EventsAdmin = (function () {
             $('evNewVenue').value = '';
             $('evNewAttire').value = '';
             $('evNewDesc').value = '';
-            show('Added "' + name + '" and shifted later fixtures a week later.', 'success');
+            show('Added "' + name + '"' + shiftSuffix(shiftRes.count, 'forward a week') + '.', 'success');
             await load();
         });
+    }
+
+    // '' if nothing moved, else ' and shifted N fixture(s) <direction>'.
+    function shiftSuffix(count, direction) {
+        if (!count) return '';
+        return ' and shifted ' + count + ' fixture' + (count === 1 ? '' : 's') + ' ' + direction;
     }
 
     function show(text, type) {

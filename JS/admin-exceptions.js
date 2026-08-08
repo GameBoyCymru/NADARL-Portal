@@ -98,17 +98,45 @@ const ExceptionsAdmin = (function () {
         save.textContent = 'Save';
         save.addEventListener('click', async () => {
             if (!dateIn.value) { show('Pick a date.', 'error'); return; }
+            const dateChanged = dateIn.value !== e.date;
             save.disabled = true;
+
+            // Moving an exception is a close-the-old-gap + make-room-at-the-new-
+            // date pair, same as a delete followed by an add.
+            let shifted = 0;
+            if (dateChanged) {
+                const closeRes = await NADARL.shiftSeasonFixtures(e.season_id, e.date, -SHIFT_DAYS);
+                if (!closeRes.ok) {
+                    save.disabled = false;
+                    show('Could not close the gap at the old date: ' + closeRes.error, 'error');
+                    return;
+                }
+                shifted += closeRes.count;
+            }
+
             const res = await NADARL.updateExclusion(e.id, {
                 match_date: dateIn.value,
                 reason: reasonIn.value.trim() || 'Bank holiday'
             });
-            save.disabled = false;
             if (!res.ok || !res.count) {
+                save.disabled = false;
                 show('Could not save: ' + (res.error || '0 rows changed'), 'error');
                 return;
             }
-            show('Saved.', 'success');
+
+            if (dateChanged) {
+                const makeRoomRes = await NADARL.shiftSeasonFixtures(e.season_id, dateIn.value, SHIFT_DAYS);
+                if (!makeRoomRes.ok) {
+                    save.disabled = false;
+                    show('Saved, but could not make room at the new date: ' + makeRoomRes.error, 'error');
+                    await load();
+                    return;
+                }
+                shifted += makeRoomRes.count;
+            }
+
+            save.disabled = false;
+            show('Saved' + shiftSuffix(shifted, 'to match the new date') + '.', 'success');
             await load();
         });
         controls.appendChild(save);
@@ -119,8 +147,8 @@ const ExceptionsAdmin = (function () {
         del.textContent = 'Delete';
         del.addEventListener('click', async () => {
             if (!confirm(
-                'Remove this exception? Every fixture in this season after ' + formatDate(e.date) +
-                ' will move a week earlier to close the gap.'
+                'Remove this exception? If a fixture is scheduled the week after, it (and any run of ' +
+                'fixtures right behind it) will move a week earlier to close the gap.'
             )) return;
             del.disabled = true;
             const res = await NADARL.deleteExclusion(e.season_id, e.date);
@@ -136,7 +164,7 @@ const ExceptionsAdmin = (function () {
                 await load();
                 return;
             }
-            show('Exception removed and later fixtures shifted a week earlier.', 'success');
+            show('Exception removed' + shiftSuffix(shiftRes.count, 'a week earlier') + '.', 'success');
             await load();
         });
         controls.appendChild(del);
@@ -177,14 +205,15 @@ const ExceptionsAdmin = (function () {
 
             $('exNewDate').value = '';
             $('exNewReason').value = '';
-            show('Exception added and later fixtures shifted a week later.', 'success');
+            show('Exception added' + shiftSuffix(shiftRes.count, 'forward a week') + '.', 'success');
             await load();
         });
     }
 
-    function formatDate(dateStr) {
-        return new Date(dateStr + 'T00:00:00')
-            .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    // '' if nothing moved, else ' and shifted N fixture(s) <direction>'.
+    function shiftSuffix(count, direction) {
+        if (!count) return '';
+        return ' and shifted ' + count + ' fixture' + (count === 1 ? '' : 's') + ' ' + direction;
     }
 
     function show(text, type) {

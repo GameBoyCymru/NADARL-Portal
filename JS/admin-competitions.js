@@ -2,9 +2,9 @@
 //  Admin competitions panel (admin only): competition create/edit/delete.
 //  Results entry (shooters + scores) happens on competition.html itself,
 //  not here - this panel only owns the competition's own metadata.
-//  Adding or deleting a competition shifts that season's remaining
-//  fixtures by a week (forward to make room / backward to close the gap)
-//  so the weekly schedule stays contiguous - see shiftSeasonFixtures.
+//  Adding, moving or deleting a competition only shifts fixtures that are
+//  actually in the way of its date - a week later to make room, or a
+//  week earlier to close the gap - see shiftSeasonFixtures in data.js.
 // =====================================================================
 
 const CompetitionsAdmin = (function () {
@@ -102,19 +102,47 @@ const CompetitionsAdmin = (function () {
                 show('Date and name are required.', 'error');
                 return;
             }
+            const dateChanged = dateIn.value !== c.date;
             save.disabled = true;
+
+            // Moving a competition is a close-the-old-gap + make-room-at-the-
+            // new-date pair, same as a delete followed by an add.
+            let shifted = 0;
+            if (dateChanged) {
+                const closeRes = await NADARL.shiftSeasonFixtures(c.seasonId, c.date, -SHIFT_DAYS);
+                if (!closeRes.ok) {
+                    save.disabled = false;
+                    show('Could not close the gap at the old date: ' + closeRes.error, 'error');
+                    return;
+                }
+                shifted += closeRes.count;
+            }
+
             const res = await NADARL.updateCompetition(c.id, {
                 event_date: dateIn.value,
                 name: nameIn.value.trim(),
                 venue: venueIn.value.trim(),
                 description: descIn.value.trim()
             });
-            save.disabled = false;
             if (!res.ok || !res.count) {
+                save.disabled = false;
                 show('Could not save: ' + (res.error || '0 rows changed'), 'error');
                 return;
             }
-            show('Saved "' + nameIn.value.trim() + '".', 'success');
+
+            if (dateChanged) {
+                const makeRoomRes = await NADARL.shiftSeasonFixtures(c.seasonId, dateIn.value, SHIFT_DAYS);
+                if (!makeRoomRes.ok) {
+                    save.disabled = false;
+                    show('Saved, but could not make room at the new date: ' + makeRoomRes.error, 'error');
+                    await load();
+                    return;
+                }
+                shifted += makeRoomRes.count;
+            }
+
+            save.disabled = false;
+            show('Saved "' + nameIn.value.trim() + '"' + shiftSuffix(shifted, 'to match the new date') + '.', 'success');
             await load();
         });
         controls.appendChild(save);
@@ -125,8 +153,9 @@ const CompetitionsAdmin = (function () {
         del.textContent = 'Delete';
         del.addEventListener('click', async () => {
             if (!confirm(
-                'Delete competition "' + c.name + '" and all its results? Every fixture in this ' +
-                'season after ' + c.date + ' will move a week earlier to close the gap. This cannot be undone.'
+                'Delete competition "' + c.name + '" and all its results? If a fixture is scheduled ' +
+                'the week after, it (and any run right behind it) will move a week earlier to close ' +
+                'the gap. This cannot be undone.'
             )) return;
             del.disabled = true;
             const res = await NADARL.deleteCompetition(c.id);
@@ -142,7 +171,7 @@ const CompetitionsAdmin = (function () {
                 await load();
                 return;
             }
-            show('Deleted "' + c.name + '" and shifted later fixtures a week earlier.', 'success');
+            show('Deleted "' + c.name + '"' + shiftSuffix(shiftRes.count, 'a week earlier') + '.', 'success');
             await load();
         });
         controls.appendChild(del);
@@ -195,9 +224,15 @@ const CompetitionsAdmin = (function () {
             $('compNewName').value = '';
             $('compNewVenue').value = '';
             $('compNewDesc').value = '';
-            show('Added "' + name + '" and shifted later fixtures a week later.', 'success');
+            show('Added "' + name + '"' + shiftSuffix(shiftRes.count, 'forward a week') + '.', 'success');
             await load();
         });
+    }
+
+    // '' if nothing moved, else ' and shifted N fixture(s) <direction>'.
+    function shiftSuffix(count, direction) {
+        if (!count) return '';
+        return ' and shifted ' + count + ' fixture' + (count === 1 ? '' : 's') + ' ' + direction;
     }
 
     function show(text, type) {
