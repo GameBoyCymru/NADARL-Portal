@@ -54,15 +54,26 @@ const FixtureEditorAdmin = (function () {
         });
     }
 
-    function teamSelect(includeBye) {
+    const BYE_VALUE = '__bye__';
+
+    // includeBye adds a BYE option (away team only) - kept distinct from the
+    // blank placeholder so an unmade choice can't be mistaken for one.
+    function teamSelect(placeholder, includeBye) {
         const sel = document.createElement('select');
         sel.className = 'fx-text-input';
+
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = placeholder;
+        sel.appendChild(blank);
+
         if (includeBye) {
             const bye = document.createElement('option');
-            bye.value = '';
+            bye.value = BYE_VALUE;
             bye.textContent = 'BYE (no match)';
             sel.appendChild(bye);
         }
+
         teams.forEach(t => {
             const opt = document.createElement('option');
             opt.value = t.id;
@@ -83,11 +94,11 @@ const FixtureEditorAdmin = (function () {
         const wrap = document.createElement('div');
         wrap.className = 'fx-pairing-row';
 
-        const home = teamSelect(false);
+        const home = teamSelect('Select home team…', false);
         const vs = document.createElement('span');
         vs.className = 'fx-hint';
         vs.textContent = 'vs';
-        const away = teamSelect(true);
+        const away = teamSelect('Select opponent…', true);
 
         const half = document.createElement('select');
         half.className = 'fx-text-input';
@@ -296,10 +307,12 @@ const FixtureEditorAdmin = (function () {
             const homeId = p.home.value;
             const awayId = p.away.value;
             if (!homeId) { show('Every match needs a home team.', 'error'); return; }
+            if (!awayId) { show('Every match needs an opponent (or BYE).', 'error'); return; }
             if (homeId === awayId) { show('Home and away can\'t be the same team.', 'error'); return; }
 
+            const isBye = awayId === BYE_VALUE;
             const homeTeam = teams.find(t => t.id === homeId);
-            const awayTeam = awayId ? teams.find(t => t.id === awayId) : null;
+            const awayTeam = isBye ? null : teams.find(t => t.id === awayId);
             const venue = p.venue.value.trim();
             const effectiveVenue = venue || homeTeam.venue;
 
@@ -316,14 +329,14 @@ const FixtureEditorAdmin = (function () {
 
             candidates.push({
                 home_team_id: homeId,
-                away_team_id: awayId || null,
+                away_team_id: isBye ? null : awayId,
                 venue,
                 half: Number(p.half.value),
                 label: homeTeam.name + ' vs ' + (awayTeam ? awayTeam.name : 'BYE'),
                 asFixture: {
                     homeTeam: homeTeam.name,
                     awayTeam: awayTeam ? awayTeam.name : null,
-                    isBye: !awayTeam,
+                    isBye,
                     venue: effectiveVenue
                 }
             });
