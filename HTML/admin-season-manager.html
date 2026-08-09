@@ -75,10 +75,13 @@
                 <section id="fixtureEditorPanel" class="fx-section">
                     <h2 class="section-title">Matches</h2>
                     <p class="login-intro">
-                        Correct an existing fixture's date or venue (postponements, venue changes).
-                        Editing venue is a permanent override for that match - it will no longer follow
-                        the home team's registered venue if that changes later. Leave venue blank to go
-                        back to following the home team's registered venue.
+                        Manually schedule matches for the selected season, then correct an existing
+                        fixture's date or venue below (postponements, venue changes). Adding a match
+                        checks the day for you: a team already scheduled that day is blocked outright,
+                        and a venue already in use that day (teams sharing a ground) asks for
+                        confirmation before going ahead. Editing venue on an existing match is a
+                        permanent override - it will no longer follow the home team's registered venue
+                        if that changes later. Leave venue blank to follow the home team's venue.
                     </p>
 
                     <div id="fxeMessage" class="login-message" role="alert" hidden></div>
@@ -91,6 +94,19 @@
                                 <button type="button" id="fxeDeleteAll" class="shooter-button fx-button-danger">Delete All Fixtures</button>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="fx-season-create fx-add-match">
+                        <input type="date" id="fxeNewDate" class="fx-text-input" style="width:150px;">
+                        <select id="fxeNewHome" class="fx-text-input"></select>
+                        <span class="fx-hint">vs</span>
+                        <select id="fxeNewAway" class="fx-text-input"></select>
+                        <select id="fxeNewHalf" class="fx-text-input">
+                            <option value="1">League</option>
+                            <option value="2">Handicap</option>
+                        </select>
+                        <input type="text" id="fxeNewVenue" class="fx-text-input" placeholder="Venue (optional - defaults to home team's)" style="width:240px;">
+                        <button type="button" id="fxeAdd" class="shooter-button">Add Match</button>
                     </div>
 
                     <div class="table-wrap fx-preview">
@@ -267,12 +283,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260809a"></script>
+    <script src="../JS/data.js?v=20260809c"></script>
     <script src="../JS/admin-common.js?v=20260809a"></script>
     <script src="../JS/admin-fixtures.js?v=20260809a"></script>
     <script src="../JS/admin-exceptions.js?v=20260809a"></script>
     <script src="../JS/admin-competitions.js?v=20260809a"></script>
     <script src="../JS/admin-events.js?v=20260809a"></script>
-    <script src="../JS/admin-fixture-editor.js?v=20260809a"></script>
+    <script src="../JS/admin-fixture-editor.js?v=20260809c"></script>
 </body>
 </html>

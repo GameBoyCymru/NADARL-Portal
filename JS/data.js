@@ -726,6 +726,27 @@ const NADARL = (function () {
         return { ok: true, count: data ? data.length : 0 };
     }
 
+    // Manually create one match (admin-authored schedule - see admin-fixture-editor.js).
+    // away_team_id may be null for a BYE week. The (match_date, home_team_id,
+    // away_team_id) unique constraint rejects an exact duplicate; the caller
+    // must surface `error` from a failed result rather than assume success.
+    // Admin only - RLS enforces.
+    async function addMatch({ season_id, match_date, home_team_id, away_team_id, venue, half }) {
+        const { data, error } = await db().from('match')
+            .insert({
+                season_id,
+                match_date,
+                home_team_id,
+                away_team_id: away_team_id || null,
+                venue: venue || null,
+                half: half || 1
+            })
+            .select('id')
+            .single();
+        if (error) { console.error('addMatch', error); return { ok: false, error: error.message }; }
+        return { ok: true, match: data };
+    }
+
     // Create a season. If is_current, clears that flag on all other seasons first.
     async function addSeason({ name, start_date, end_date, is_current }) {
         if (is_current) {
@@ -1155,6 +1176,7 @@ const NADARL = (function () {
         deleteEvent,
         clearEvents,
         updateMatchFixture,
+        addMatch,
         addSeason,
         addTeam,
         updateTeam,

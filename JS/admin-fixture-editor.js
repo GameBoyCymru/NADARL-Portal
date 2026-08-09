@@ -1,12 +1,14 @@
 // =====================================================================
-//  Admin fixture editor (admin only): correct an existing match's date
-//  or venue (postponements, venue corrections). Editing venue sets a
-//  permanent per-match override (see fixture_list) - it stops following
-//  the home team's registered venue for that fixture from then on.
+//  Admin fixture editor (admin only): manually create matches, and
+//  correct an existing match's date or venue (postponements, venue
+//  corrections). Editing venue sets a permanent per-match override (see
+//  fixture_list) - it stops following the home team's registered venue
+//  for that fixture from then on.
 // =====================================================================
 
 const FixtureEditorAdmin = (function () {
     let seasons = [];
+    let teams = [];
     let fixturesList = [];
 
     function $(id) { return document.getElementById(id); }
@@ -17,7 +19,9 @@ const FixtureEditorAdmin = (function () {
         if (!$('fixtureEditorPanel')) return;
 
         seasons = await NADARL.fetchSeasons();
+        teams = await NADARL.fetchTeams();
         populateSeasons();
+        populateTeamSelects();
         await load();
         wire();
     }
@@ -46,6 +50,30 @@ const FixtureEditorAdmin = (function () {
             o.textContent = s.name + (s.is_current ? '  (current)' : '');
             if (current && s.id === current.id) o.selected = true;
             sel.appendChild(o);
+        });
+    }
+
+    function populateTeamSelects() {
+        const home = $('fxeNewHome');
+        const away = $('fxeNewAway');
+        home.innerHTML = '';
+        away.innerHTML = '';
+
+        const byeOpt = document.createElement('option');
+        byeOpt.value = '';
+        byeOpt.textContent = 'BYE (no match)';
+        away.appendChild(byeOpt);
+
+        teams.forEach(t => {
+            const homeOpt = document.createElement('option');
+            homeOpt.value = t.id;
+            homeOpt.textContent = t.name;
+            home.appendChild(homeOpt);
+
+            const awayOpt = document.createElement('option');
+            awayOpt.value = t.id;
+            awayOpt.textContent = t.name;
+            away.appendChild(awayOpt);
         });
     }
 
@@ -130,6 +158,87 @@ const FixtureEditorAdmin = (function () {
     function wire() {
         $('fxeSeason').addEventListener('change', load);
         $('fxeDeleteAll').addEventListener('click', deleteAllFixtures);
+        $('fxeAdd').addEventListener('click', addMatch);
+    }
+
+    // Manually add one match. Since teams can share a physical venue (so
+    // whichever of them is "home" that day is the only one that can use it)
+    // and a team obviously can't play twice in one day, both are checked
+    // against the season's already-loaded fixture list before inserting -
+    // a team clash is a hard stop, a venue clash is a confirm()-gated
+    // warning since a shared venue might genuinely have two time slots.
+    async function addMatch() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+
+        const date = $('fxeNewDate').value;
+        const homeId = $('fxeNewHome').value;
+        const awayId = $('fxeNewAway').value;
+        const half = Number($('fxeNewHalf').value);
+        const venue = $('fxeNewVenue').value.trim();
+
+        if (!date) { show('Pick a date.', 'error'); return; }
+        if (!homeId) { show('Pick a home team.', 'error'); return; }
+        if (homeId === awayId) { show('Home and away can\'t be the same team.', 'error'); return; }
+
+        const homeTeam = teams.find(t => t.id === homeId);
+        const awayTeam = awayId ? teams.find(t => t.id === awayId) : null;
+        const effectiveVenue = venue || (homeTeam ? homeTeam.venue : '');
+
+        const sameDay = fixturesList.filter(f => f.date === date);
+
+        // Whichever of the two new teams (if either) already has a fixture
+        // that day, and who they're playing.
+        let teamClash = null;
+        for (const f of sameDay) {
+            const opponent = f.isBye ? 'BYE' : f.awayTeam;
+            if (f.homeTeam === homeTeam.name || f.awayTeam === homeTeam.name) {
+                teamClash = { team: homeTeam.name, opponent: f.homeTeam === homeTeam.name ? opponent : f.homeTeam };
+                break;
+            }
+            if (awayTeam && (f.homeTeam === awayTeam.name || f.awayTeam === awayTeam.name)) {
+                teamClash = { team: awayTeam.name, opponent: f.homeTeam === awayTeam.name ? opponent : f.homeTeam };
+                break;
+            }
+        }
+        if (teamClash) {
+            show(
+                teamClash.team + ' is already scheduled to play on ' + date + ' (vs ' + teamClash.opponent +
+                '). A team can\'t play twice on the same day.',
+                'error'
+            );
+            return;
+        }
+
+        const venueClash = sameDay.find(f => !f.isBye && f.venue && effectiveVenue && f.venue === effectiveVenue);
+        if (venueClash) {
+            const proceed = confirm(
+                '"' + effectiveVenue + '" is already in use on ' + date + ' for ' + venueClash.homeTeam + ' vs ' +
+                venueClash.awayTeam + '. Add this match anyway?'
+            );
+            if (!proceed) return;
+        }
+
+        const btn = $('fxeAdd');
+        btn.disabled = true;
+        const res = await NADARL.addMatch({
+            season_id: season.id,
+            match_date: date,
+            home_team_id: homeId,
+            away_team_id: awayId || null,
+            venue,
+            half
+        });
+        btn.disabled = false;
+        if (!res.ok) {
+            show('Could not add match: ' + (res.error || 'unknown') + '.', 'error');
+            return;
+        }
+
+        $('fxeNewDate').value = '';
+        $('fxeNewVenue').value = '';
+        show('Added ' + homeTeam.name + ' vs ' + (awayTeam ? awayTeam.name : 'BYE') + '.', 'success');
+        await load();
     }
 
     async function deleteAllFixtures() {
