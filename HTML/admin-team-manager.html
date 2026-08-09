@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Manager - Admin - Newport & District Air Rifle League</title>
+    <link rel="stylesheet" href="../styles.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/login.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/admin.css?v=20260809b">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="admin.html" class="back-link">&larr; Back to Admin</a>
+            <button type="button" id="authButton" class="auth-button" hidden>Sign Out</button>
+            <h1>Newport & District Air Rifle League</h1>
+        </header>
+
+        <section id="adminSection" class="section admin-section">
+            <div id="accessPanel" class="access-panel">
+                <p class="login-intro">This area is restricted to league administrators.</p>
+                <p class="login-status">
+                    <a href="login.html">Sign in</a> with an administrator account to continue.
+                </p>
+            </div>
+
+            <div id="adminPanel" class="admin-panel" hidden>
+                <h2 class="section-title">Accounts & Captains</h2>
+                <p class="login-intro">
+                    Set the role and team for each account. Captains manage their own
+                    team's shooters; team accounts (generic) and captains can both edit
+                    scores for their team's home match on the day it is played.
+                </p>
+
+                <div id="adminMessage" class="login-message" role="alert" hidden></div>
+
+                <div class="table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Team</th>
+                                <th>Role</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="profilesBody"></tbody>
+                    </table>
+                </div>
+
+                <section id="teamsPanel" class="fx-section">
+                    <h2 class="section-title">Teams</h2>
+                    <p class="login-intro">
+                        Create and edit the teams in the league. The slug must be unique and
+                        matches the team badge image filename (e.g. "belle-vue-rifles").
+                    </p>
+
+                    <div id="teamsMessage" class="login-message" role="alert" hidden></div>
+
+                    <div class="fx-season-create">
+                        <span class="fx-hint">Add a team:</span>
+                        <input type="text" id="teamNewName" class="fx-text-input" placeholder="Team name" maxlength="100" style="width:180px;">
+                        <input type="text" id="teamNewVenue" class="fx-text-input" placeholder="Venue" maxlength="100" style="width:140px;">
+                        <input type="text" id="teamNewSlug" class="fx-text-input" placeholder="slug" maxlength="100">
+                        <button type="button" id="teamsAdd" class="shooter-button">Add Team</button>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Venue</th>
+                                    <th>Slug</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamsBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="../index.html">Home</a>
+                    <a href="fixtures.html">Fixtures</a>
+                    <a href="teams.html">Teams</a>
+                    <a href="table.html">League Table</a>
+                    <a href="summer-league.html">Summer League</a>
+                    <a href="gallery.html">Gallery</a>
+                    <a href="history.html">History</a>
+                    <a href="committee.html">Committee</a>
+                    <a href="trophies.html">Trophies</a>
+                    <a href="sales.html">For Sale</a>
+                    <a href="join.html">Join Us</a>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; <script>document.write(new Date().getFullYear())</script> Newport & District Air Rifle League</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS/supabase-keys.js"></script>
+    <script src="../JS/supabase-config.js"></script>
+    <script src="../JS/data.js?v=20260809a"></script>
+    <script src="../JS/admin.js"></script>
+    <script src="../JS/admin-teams.js"></script>
+</body>
+</html>

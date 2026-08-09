@@ -6,7 +6,8 @@
     <title>Admin - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/login.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/admin.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/admin.css?v=20260809b">
+    <link rel="stylesheet" href="../CSS/index.css?v=20260806">
 </head>
 <body>
     <div class="container">
@@ -25,318 +26,71 @@
             </div>
 
             <div id="adminPanel" class="admin-panel" hidden>
-                <h2 class="section-title">Accounts & Captains</h2>
-                <p class="login-intro">
-                    Set the role and team for each account. Captains manage their own
-                    team's shooters; team accounts (generic) and captains can both edit
-                    scores for their team's home match on the day it is played.
-                </p>
+                <h2 class="section-title">Admin Suite</h2>
+                <p class="login-intro">Pick a section to manage.</p>
 
-                <div id="adminMessage" class="login-message" role="alert" hidden></div>
+                <div class="nav-grid admin-nav-grid">
+                    <a href="admin-team-manager.html" class="nav-card">
+                        <div class="nav-icon">👥</div>
+                        <h3 class="nav-title">Team Manager</h3>
+                        <p class="nav-description">Accounts, captains and team roster management</p>
+                    </a>
 
-                <div class="table-wrap">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Email</th>
-                                <th>Team</th>
-                                <th>Role</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="profilesBody"></tbody>
-                    </table>
+                    <a href="admin-season-manager.html" class="nav-card">
+                        <div class="nav-icon">📅</div>
+                        <h3 class="nav-title">Season Manager</h3>
+                        <p class="nav-description">Seasons, matches, competitions, events and exceptions</p>
+                    </a>
                 </div>
 
-            <section id="teamsPanel" class="fx-section">
-                <h2 class="section-title">Teams</h2>
-                <p class="login-intro">
-                    Create and edit the teams in the league. The slug must be unique and
-                    matches the team badge image filename (e.g. "belle-vue-rifles").
-                </p>
-
-                <div id="teamsMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-season-create">
-                    <span class="fx-hint">Add a team:</span>
-                    <input type="text" id="teamNewName" class="fx-text-input" placeholder="Team name" maxlength="100" style="width:180px;">
-                    <input type="text" id="teamNewVenue" class="fx-text-input" placeholder="Venue" maxlength="100" style="width:140px;">
-                    <input type="text" id="teamNewSlug" class="fx-text-input" placeholder="slug" maxlength="100">
-                    <button type="button" id="teamsAdd" class="shooter-button">Add Team</button>
-                </div>
-
-                <div class="table-wrap">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Venue</th>
-                                <th>Slug</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="teamsBody"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="handicapPanel" class="fx-section">
-                <h2 class="section-title">Handicap Formula</h2>
-                <p class="login-intro">
-                    Handicaps apply to second-half (HC) fixtures and are based on each shooter's
-                    average over their last 3 matches. The formula is
-                    <code>max(0, round(((target &minus; avg) &divide; divisor &minus; offset) &times; factor))</code>.
-                </p>
-
-                <div id="handicapMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-season-create">
-                    <span class="fx-hint">Target score:</span>
-                    <input type="number" id="handicapTarget" class="fx-text-input" min="0" step="1" style="width:90px;">
-                    <span class="fx-hint">Divisor:</span>
-                    <input type="number" id="handicapDivisor" class="fx-text-input" min="0.01" step="0.1" style="width:90px;">
-                    <span class="fx-hint">Offset:</span>
-                    <input type="number" id="handicapOffset" class="fx-text-input" step="0.01" style="width:90px;">
-                    <span class="fx-hint">Factor:</span>
-                    <input type="number" id="handicapFactor" class="fx-text-input" min="0" step="0.1" style="width:90px;">
-                    <button type="button" id="handicapSave" class="shooter-button">Save</button>
-                </div>
-            </section>
-
-            <section id="fixturesPanel" class="fx-section">
-                <h2 class="section-title">Fixtures</h2>
-                <p class="login-intro">
-                    Manage seasons. Exceptions, Competitions, Events and per-fixture date/venue
-                    corrections each have their own section below.
-                </p>
-
-                <div id="fxMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-controls">
-                    <div class="fx-field">
-                        <label for="fxSeason">Season</label>
-                        <div class="fx-season-row">
-                            <select id="fxSeason"></select>
-                            <button type="button" id="fxResetSeason" class="shooter-button fx-button-danger">Reset Season</button>
-                            <button type="button" id="fxDeleteSeason" class="shooter-button fx-button-danger">Delete Season</button>
-                        </div>
-                        <span class="fx-hint">Reset Season clears all scores and stats for the selected season, including any Personal Best set or manually entered within it - a shooter's all-time Personal Best is just the highest Season Best across every season. Other seasons are untouched.</span>
-                    </div>
-                </div>
-
-                <div class="fx-season-create">
-                    <span class="fx-hint">No season yet? Add one (e.g. "2026-27"):</span>
-                    <input type="text" id="fxNewSeasonName" class="fx-text-input" placeholder="2026-27" maxlength="20">
-                    <label class="fx-current-check"><input type="checkbox" id="fxNewSeasonCurrent" checked> Current season</label>
-                    <button type="button" id="fxAddSeason" class="shooter-button">Add Season</button>
-                </div>
-
-                <div class="fx-matchday-box">
-                    <div class="fx-matchday-header">
-                        <h3 class="fx-matchday-title">Match Days Required</h3>
-                        <button type="button" id="fxMatchDayRefresh" class="row-button row-button-secondary">Refresh</button>
-                    </div>
-                    <p class="fx-hint">
-                        How many match days it takes for every team to play every other team both home
-                        and away, in the League half and again in the Handicap half.
+                <section id="handicapPanel" class="fx-section">
+                    <h2 class="section-title">Handicap Formula</h2>
+                    <p class="login-intro">
+                        Handicaps apply to second-half (HC) fixtures and are based on each shooter's
+                        average over their last 3 matches. The formula is
+                        <code>max(0, round(((target &minus; avg) &divide; divisor &minus; offset) &times; factor))</code>.
                     </p>
-                    <div id="fxMatchDayInfo" class="fx-stat-grid"></div>
-                </div>
-            </section>
 
-            <section id="exceptionsPanel" class="fx-section">
-                <h2 class="section-title">Exceptions</h2>
-                <p class="login-intro">
-                    Mark a Monday as having no league matches (bank holidays, cup nights, catch-up
-                    weeks). Exceptions show on the public Fixtures page as a blocked day. Adding,
-                    moving or removing one only shifts fixtures that are actually in the way -
-                    a week later to make room, or a week earlier to close the gap - stopping as
-                    soon as it reaches a free week.
-                </p>
+                    <div id="handicapMessage" class="login-message" role="alert" hidden></div>
 
-                <div id="exMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-controls">
-                    <div class="fx-field">
-                        <label for="exSeason">Season</label>
-                        <div class="fx-season-row">
-                            <select id="exSeason"></select>
-                            <button type="button" id="exDeleteAll" class="shooter-button fx-button-danger">Delete All Exceptions</button>
-                        </div>
+                    <div class="fx-season-create">
+                        <span class="fx-hint">Target score:</span>
+                        <input type="number" id="handicapTarget" class="fx-text-input" min="0" step="1" style="width:90px;">
+                        <span class="fx-hint">Divisor:</span>
+                        <input type="number" id="handicapDivisor" class="fx-text-input" min="0.01" step="0.1" style="width:90px;">
+                        <span class="fx-hint">Offset:</span>
+                        <input type="number" id="handicapOffset" class="fx-text-input" step="0.01" style="width:90px;">
+                        <span class="fx-hint">Factor:</span>
+                        <input type="number" id="handicapFactor" class="fx-text-input" min="0" step="0.1" style="width:90px;">
+                        <button type="button" id="handicapSave" class="shooter-button">Save</button>
                     </div>
-                </div>
+                </section>
 
-                <div class="fx-season-create">
-                    <input type="date" id="exNewDate" class="fx-text-input" style="width:150px;">
-                    <input type="text" id="exNewReason" class="fx-text-input" placeholder="Reason (e.g. Bank holiday)" style="width:220px;">
-                    <button type="button" id="exAdd" class="shooter-button">Add Exception</button>
-                </div>
+                <section id="backupPanel" class="fx-section">
+                    <h2 class="section-title">Data Backup &amp; Restore</h2>
+                    <p class="login-intro">
+                        Download every season, team, shooter, fixture and score as one file and keep it
+                        somewhere safe. To recover after data loss: create a fresh Supabase project, run
+                        <code>supabase/schema.sql</code> then everything in <code>supabase/migrations/</code>
+                        to rebuild the empty database, point the site at the new project, then restore from
+                        a backup file here. This only covers table data — login accounts aren't included
+                        (re-invite admins/captains and reassign their role/team afterwards on the Team
+                        Manager page). For a complete Postgres-level backup (schema, functions, RLS policies
+                        and all), see <code>supabase/BACKUP_RESTORE.md</code> in the repo.
+                    </p>
 
-                <div class="table-wrap fx-preview">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Reason</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="exBody"></tbody>
-                    </table>
-                </div>
-            </section>
+                    <div id="backupMessage" class="login-message" role="alert" hidden></div>
 
-            <section id="competitionsPanel" class="fx-section">
-                <h2 class="section-title">Competitions</h2>
-                <p class="login-intro">
-                    Create a competition (open meetings, cup nights, etc). Add or edit its results -
-                    shooters and scores - from its own results page.
-                </p>
-
-                <div id="compMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-controls">
-                    <div class="fx-field">
-                        <label for="compSeason">Season</label>
-                        <div class="fx-season-row">
-                            <select id="compSeason"></select>
-                            <button type="button" id="compDeleteAll" class="shooter-button fx-button-danger">Delete All Competitions</button>
-                        </div>
+                    <div class="fx-actions">
+                        <button type="button" id="backupExport" class="shooter-button">Download Full Export</button>
                     </div>
-                </div>
 
-                <div class="fx-season-create">
-                    <input type="date" id="compNewDate" class="fx-text-input" style="width:150px;">
-                    <input type="text" id="compNewName" class="fx-text-input" placeholder="Name" style="width:180px;">
-                    <input type="text" id="compNewVenue" class="fx-text-input" placeholder="Venue (optional)" style="width:160px;">
-                    <input type="text" id="compNewDesc" class="fx-text-input" placeholder="Description (optional)" style="width:220px;">
-                    <button type="button" id="compAdd" class="shooter-button">Add Competition</button>
-                </div>
-
-                <div class="table-wrap fx-preview">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Name</th>
-                                <th>Venue</th>
-                                <th>Description</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="compBody"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="eventsPanel" class="fx-section">
-                <h2 class="section-title">Events</h2>
-                <p class="login-intro">
-                    Informational calendar entries (dinners, open days, presentations) - venue,
-                    attire and description only, no results.
-                </p>
-
-                <div id="evMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-controls">
-                    <div class="fx-field">
-                        <label for="evSeason">Season</label>
-                        <div class="fx-season-row">
-                            <select id="evSeason"></select>
-                            <button type="button" id="evDeleteAll" class="shooter-button fx-button-danger">Delete All Events</button>
-                        </div>
+                    <div class="fx-season-create">
+                        <span class="fx-hint">Restore from a previous export (empty database only):</span>
+                        <input type="file" id="backupImportFile" class="fx-file-input" accept="application/json">
+                        <button type="button" id="backupImport" class="shooter-button fx-button-danger" disabled>Import Data</button>
                     </div>
-                </div>
-
-                <div class="fx-season-create">
-                    <input type="date" id="evNewDate" class="fx-text-input" style="width:150px;">
-                    <input type="text" id="evNewName" class="fx-text-input" placeholder="Name" style="width:180px;">
-                    <input type="text" id="evNewVenue" class="fx-text-input" placeholder="Venue (optional)" style="width:160px;">
-                    <input type="text" id="evNewAttire" class="fx-text-input" placeholder="Attire (optional)" style="width:140px;">
-                    <input type="text" id="evNewDesc" class="fx-text-input" placeholder="Description (optional)" style="width:220px;">
-                    <button type="button" id="evAdd" class="shooter-button">Add Event</button>
-                </div>
-
-                <div class="table-wrap fx-preview">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Name</th>
-                                <th>Venue</th>
-                                <th>Attire</th>
-                                <th>Description</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="evBody"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="fixtureEditorPanel" class="fx-section">
-                <h2 class="section-title">Edit Fixtures</h2>
-                <p class="login-intro">
-                    Correct an existing fixture's date or venue (postponements, venue changes).
-                    Editing venue is a permanent override for that match - it will no longer follow
-                    the home team's registered venue if that changes later. Leave venue blank to go
-                    back to following the home team's registered venue.
-                </p>
-
-                <div id="fxeMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-controls">
-                    <div class="fx-field">
-                        <label for="fxeSeason">Season</label>
-                        <div class="fx-season-row">
-                            <select id="fxeSeason"></select>
-                            <button type="button" id="fxeDeleteAll" class="shooter-button fx-button-danger">Delete All Fixtures</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-wrap fx-preview">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Home</th>
-                                <th>Away</th>
-                                <th>Date</th>
-                                <th>Venue</th>
-                                <th>Half</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="fxeBody"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="backupPanel" class="fx-section">
-                <h2 class="section-title">Data Backup &amp; Restore</h2>
-                <p class="login-intro">
-                    Download every season, team, shooter, fixture and score as one file and keep it
-                    somewhere safe. To recover after data loss: create a fresh Supabase project, run
-                    <code>supabase/schema.sql</code> then everything in <code>supabase/migrations/</code>
-                    to rebuild the empty database, point the site at the new project, then restore from
-                    a backup file here. This only covers table data — login accounts aren't included
-                    (re-invite admins/captains and reassign their role/team afterwards). For a complete
-                    Postgres-level backup (schema, functions, RLS policies and all), see
-                    <code>supabase/BACKUP_RESTORE.md</code> in the repo.
-                </p>
-
-                <div id="backupMessage" class="login-message" role="alert" hidden></div>
-
-                <div class="fx-actions">
-                    <button type="button" id="backupExport" class="shooter-button">Download Full Export</button>
-                </div>
-
-                <div class="fx-season-create">
-                    <span class="fx-hint">Restore from a previous export (empty database only):</span>
-                    <input type="file" id="backupImportFile" class="fx-file-input" accept="application/json">
-                    <button type="button" id="backupImport" class="shooter-button fx-button-danger" disabled>Import Data</button>
-                </div>
-            </section>
+                </section>
             </div>
         </section>
 
@@ -366,14 +120,8 @@
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
     <script src="../JS/data.js?v=20260809a"></script>
-    <script src="../JS/admin.js"></script>
-    <script src="../JS/admin-teams.js"></script>
+    <script src="../JS/admin-common.js?v=20260809a"></script>
     <script src="../JS/admin-handicap.js"></script>
-    <script src="../JS/admin-fixtures.js?v=20260809a"></script>
-    <script src="../JS/admin-exceptions.js?v=20260809a"></script>
-    <script src="../JS/admin-competitions.js?v=20260809a"></script>
-    <script src="../JS/admin-events.js?v=20260809a"></script>
-    <script src="../JS/admin-fixture-editor.js?v=20260809a"></script>
     <script src="../JS/admin-backup.js"></script>
 </body>
 </html>

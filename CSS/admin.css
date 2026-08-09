@@ -103,6 +103,10 @@
     letter-spacing: 0.04em;
 }
 
+.admin-nav-grid {
+    margin: 20px 0 8px;
+}
+
 .role-admin { background: rgba(196, 30, 58, 0.25); color: #ffb3c0; }
 .role-captain { background: rgba(40, 167, 69, 0.2); color: #b5e8bd; }
 .role-generic { background: rgba(60, 120, 200, 0.2); color: #bcd6f5; }

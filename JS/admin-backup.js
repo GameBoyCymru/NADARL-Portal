@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         importBtn.disabled = true;
         showMessage(
             'Import complete. User accounts were not restored — re-invite admins/captains ' +
-            'and reassign their role/team on the Accounts panel above.',
+            'and reassign their role/team on the Team Manager page.',
             'success'
         );
     });
