@@ -60,7 +60,6 @@ const FixturesAdmin = (function () {
         $('fxAddSeason').addEventListener('click', createSeason);
         $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
-        $('fxMatchDayRefresh').addEventListener('click', loadMatchDayInfo);
     }
 
     // Every team needs to play every other team both home and away, once in
