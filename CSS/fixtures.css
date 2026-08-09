@@ -280,11 +280,11 @@
     cursor: default;
 }
 
-.fixture-table .fixture-excluded-row:hover td {
+.fixture-table .fixture-excluded-row:not(.fixture-current-row):hover td {
     background: rgba(80, 85, 100, 0.6) !important;
 }
 
-.fixture-table .fixture-excluded-row.fixture-row-alt:hover td {
+.fixture-table .fixture-excluded-row.fixture-row-alt:not(.fixture-current-row):hover td {
     background: rgba(80, 85, 100, 0.8) !important;
 }
 
@@ -304,11 +304,11 @@
     margin-left: auto;
 }
 
-.fixture-table .fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):hover td {
+.fixture-table .fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):not(.fixture-current-row):hover td {
     background: rgba(196, 30, 58, 0.35) !important;
 }
 
-.fixture-table .fixture-row-alt.fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):hover td {
+.fixture-table .fixture-row-alt.fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):not(.fixture-current-row):hover td {
     background: rgba(196, 30, 58, 0.42) !important;
 }
 
@@ -340,10 +340,6 @@
 
 .fixture-table .fixture-current-row.fixture-detail-row:hover td {
     background: rgba(212, 160, 23, 0.24);
-}
-
-.fixture-table .fixture-current-row.fixture-date-row:not(.fixture-excluded-row):hover td {
-    background: rgba(212, 160, 23, 0.55) !important;
 }
 
 /* When the current/next date is also a competition, event or exception,
@@ -523,11 +519,11 @@
     cursor: default;
 }
 
-.fixture-table .fixture-competition-row.fixture-date-row:hover td {
+.fixture-table .fixture-competition-row.fixture-date-row:not(.fixture-current-row):hover td {
     background: rgba(155, 90, 220, 0.4) !important;
 }
 
-.fixture-competition-row.fixture-row-alt.fixture-date-row:hover td {
+.fixture-competition-row.fixture-row-alt.fixture-date-row:not(.fixture-current-row):hover td {
     background: rgba(155, 90, 220, 0.5) !important;
 }
 
@@ -535,11 +531,11 @@
     cursor: default;
 }
 
-.fixture-table .fixture-event-row.fixture-date-row:hover td {
+.fixture-table .fixture-event-row.fixture-date-row:not(.fixture-current-row):hover td {
     background: rgba(60, 150, 200, 0.4) !important;
 }
 
-.fixture-event-row.fixture-row-alt.fixture-date-row:hover td {
+.fixture-event-row.fixture-row-alt.fixture-date-row:not(.fixture-current-row):hover td {
     background: rgba(60, 150, 200, 0.5) !important;
 }
 
