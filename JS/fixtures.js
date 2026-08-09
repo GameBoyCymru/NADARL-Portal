@@ -314,6 +314,7 @@ function renderSeasonFixtures() {
 
             const awayTeamDisplay = fixture.isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
             const venueDisplay = fixture.isBye ? '-' : fixture.venue;
+            const vsLabel = fixture.isBye ? '' : '<span class="vs-label">vs</span>';
 
             row.className = 'fixture-row fixture-detail-row' + mixedClass + (isLastInGroup ? ' fixture-group-end' : '')
                 + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
@@ -323,9 +324,21 @@ function renderSeasonFixtures() {
                 row.classList.add('fixture-clickable');
                 row.addEventListener('click', () => { window.location.href = matchUrl(fixture); });
             }
+            // Home/away/vs live in one flex cell (colspan 2, like the
+            // competition/event rows above) rather than two separate <td>s -
+            // with the table at width:100% and no fixed column widths, the
+            // browser's auto layout stretched the first column far past its
+            // content, so "vs" (anchored to the second column) sat much
+            // closer to the away team than the home team. A shared flex
+            // container sidesteps table column sizing entirely.
             row.innerHTML = `
-                <td class="teams-cell">${fixture.homeTeam}</td>
-                <td class="teams-cell">${awayTeamDisplay}</td>
+                <td class="teams-cell" colspan="2">
+                    <span class="match-teams">
+                        <span class="home-team">${fixture.homeTeam}</span>
+                        ${vsLabel}
+                        <span class="away-team">${awayTeamDisplay}</span>
+                    </span>
+                </td>
                 <td class="venue-cell">${venueDisplay}</td>
             `;
             tbody.appendChild(row);

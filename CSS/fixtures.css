@@ -387,6 +387,26 @@
     font-weight: 500;
 }
 
+/* Desktop equivalent of .mobile-vs. Home/away/vs share one flex wrapper
+   inside a single colspan-2 <td> instead of sitting in separate <td>s -
+   with the table at width:100% and no fixed column widths, table
+   auto-layout stretches columns to fill the row, so anchoring "vs" to the
+   start of a second column put it much closer to the away team than the
+   home team. Flex gap sidesteps table column sizing and keeps both sides
+   equal. This is a span, not the <td> itself - display:flex directly on a
+   table cell drops it out of table-cell layout and breaks the whole table. */
+.match-teams {
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.vs-label {
+    color: #c41e3a;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
 .venue-cell {
     color: #d4a017;
     font-size: 0.9rem;
