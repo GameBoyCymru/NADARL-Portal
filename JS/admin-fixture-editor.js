@@ -264,6 +264,16 @@ const FixtureEditorAdmin = (function () {
         $('fxeAdd').addEventListener('click', createMatches);
     }
 
+    // Which other entry types already occupy the chosen date, for the
+    // conflict warning below - same-type occupancy (several matches on one
+    // day is normal) isn't a conflict, so excludeType is left out.
+    function conflictLabels(occupants, excludeType) {
+        const labels = { match: 'a Match', exception: 'an Exception', competition: 'a Competition', event: 'an Event' };
+        return Object.keys(labels)
+            .filter(k => k !== excludeType && occupants[k])
+            .map(k => labels[k]);
+    }
+
     // Checks one candidate match against a list of already-scheduled
     // fixtures for the same day (either the loaded season fixtures, or the
     // other rows already accepted earlier in this same batch) and returns
@@ -298,6 +308,12 @@ const FixtureEditorAdmin = (function () {
 
         const date = $('fxeNewDate').value;
         if (!date) { show('Pick a date.', 'error'); return; }
+
+        const occupants = await NADARL.fetchDateOccupants(season.id, date);
+        const conflicts = conflictLabels(occupants, 'match');
+        if (conflicts.length && !confirm(
+            date + ' already has ' + conflicts.join(' and ') + ' scheduled. Add these matches anyway?'
+        )) return;
 
         const sameDay = fixturesList.filter(f => f.date === date);
         const candidates = [];

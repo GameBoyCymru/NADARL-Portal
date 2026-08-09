@@ -192,6 +192,12 @@ const ExceptionsAdmin = (function () {
             const reason = $('exNewReason').value.trim();
             if (!date) { show('Pick a date.', 'error'); return; }
 
+            const occupants = await NADARL.fetchDateOccupants(season.id, date);
+            const conflicts = conflictLabels(occupants, 'exception');
+            if (conflicts.length && !confirm(
+                date + ' already has ' + conflicts.join(' and ') + ' scheduled. Add this exception anyway?'
+            )) return;
+
             const btn = $('exAdd');
             btn.disabled = true;
 
@@ -221,6 +227,16 @@ const ExceptionsAdmin = (function () {
     function shiftSuffix(count, direction) {
         if (!count) return '';
         return ' and shifted ' + count + ' fixture' + (count === 1 ? '' : 's') + ' ' + direction;
+    }
+
+    // Which other entry types already occupy the chosen date, for the
+    // conflict warning below - same-type occupancy isn't a conflict, so
+    // excludeType is left out of the result.
+    function conflictLabels(occupants, excludeType) {
+        const labels = { match: 'a Match', exception: 'an Exception', competition: 'a Competition', event: 'an Event' };
+        return Object.keys(labels)
+            .filter(k => k !== excludeType && occupants[k])
+            .map(k => labels[k]);
     }
 
     async function deleteAllExceptions() {

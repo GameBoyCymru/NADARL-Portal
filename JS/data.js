@@ -359,6 +359,27 @@ const NADARL = (function () {
         return (count || 0) > 0;
     }
 
+    // Which entry types already occupy one season+date - for the cross-type
+    // conflict warning shown when adding a match, competition, event or
+    // exception (see admin-fixture-editor.js, admin-competitions.js,
+    // admin-events.js, admin-exceptions.js). Same-type occupancy (e.g.
+    // several matches on one day) is normal, so callers ignore their own
+    // type in the result.
+    async function fetchDateOccupants(seasonId, date) {
+        const [matches, exclusions, competitions, events] = await Promise.all([
+            db().from('match').select('id', { count: 'exact', head: true }).eq('season_id', seasonId).eq('match_date', date),
+            db().from('exclusion').select('id', { count: 'exact', head: true }).eq('season_id', seasonId).eq('match_date', date),
+            db().from('competition').select('id', { count: 'exact', head: true }).eq('season_id', seasonId).eq('event_date', date),
+            db().from('event').select('id', { count: 'exact', head: true }).eq('season_id', seasonId).eq('event_date', date)
+        ]);
+        return {
+            match: (matches.count || 0) > 0,
+            exception: (exclusions.count || 0) > 0,
+            competition: (competitions.count || 0) > 0,
+            event: (events.count || 0) > 0
+        };
+    }
+
     // Delete a season entirely: its matches (scores cascade-delete), its
     // exclusions (cascade via FK), then the season row itself. Admin only.
     async function deleteSeason(seasonId) {
@@ -1158,6 +1179,7 @@ const NADARL = (function () {
         fetchSeasons,
         pickCurrentSeason,
         seasonHasMatches,
+        fetchDateOccupants,
         deleteSeason,
         clearMatches,
         resetSeason,

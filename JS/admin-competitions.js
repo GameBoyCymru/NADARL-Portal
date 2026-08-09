@@ -207,6 +207,12 @@ const CompetitionsAdmin = (function () {
             const name = $('compNewName').value.trim();
             if (!date || !name) { show('Date and name are required.', 'error'); return; }
 
+            const occupants = await NADARL.fetchDateOccupants(season.id, date);
+            const conflicts = conflictLabels(occupants, 'competition');
+            if (conflicts.length && !confirm(
+                date + ' already has ' + conflicts.join(' and ') + ' scheduled. Add this competition anyway?'
+            )) return;
+
             const btn = $('compAdd');
             btn.disabled = true;
 
@@ -240,6 +246,16 @@ const CompetitionsAdmin = (function () {
     function shiftSuffix(count, direction) {
         if (!count) return '';
         return ' and shifted ' + count + ' fixture' + (count === 1 ? '' : 's') + ' ' + direction;
+    }
+
+    // Which other entry types already occupy the chosen date, for the
+    // conflict warning below - same-type occupancy (another competition
+    // that day) isn't a conflict, so excludeType is left out of the result.
+    function conflictLabels(occupants, excludeType) {
+        const labels = { match: 'a Match', exception: 'an Exception', competition: 'a Competition', event: 'an Event' };
+        return Object.keys(labels)
+            .filter(k => k !== excludeType && occupants[k])
+            .map(k => labels[k]);
     }
 
     async function deleteAllCompetitions() {
