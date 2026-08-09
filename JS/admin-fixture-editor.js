@@ -10,6 +10,7 @@ const FixtureEditorAdmin = (function () {
     let seasons = [];
     let teams = [];
     let fixturesList = [];
+    let pairingRows = [];
 
     function $(id) { return document.getElementById(id); }
 
@@ -21,7 +22,7 @@ const FixtureEditorAdmin = (function () {
         seasons = await NADARL.fetchSeasons();
         teams = await NADARL.fetchTeams();
         populateSeasons();
-        populateTeamSelects();
+        addPairingRow();
         await load();
         wire();
     }
@@ -53,28 +54,87 @@ const FixtureEditorAdmin = (function () {
         });
     }
 
-    function populateTeamSelects() {
-        const home = $('fxeNewHome');
-        const away = $('fxeNewAway');
-        home.innerHTML = '';
-        away.innerHTML = '';
-
-        const byeOpt = document.createElement('option');
-        byeOpt.value = '';
-        byeOpt.textContent = 'BYE (no match)';
-        away.appendChild(byeOpt);
-
+    function teamSelect(includeBye) {
+        const sel = document.createElement('select');
+        sel.className = 'fx-text-input';
+        if (includeBye) {
+            const bye = document.createElement('option');
+            bye.value = '';
+            bye.textContent = 'BYE (no match)';
+            sel.appendChild(bye);
+        }
         teams.forEach(t => {
-            const homeOpt = document.createElement('option');
-            homeOpt.value = t.id;
-            homeOpt.textContent = t.name;
-            home.appendChild(homeOpt);
-
-            const awayOpt = document.createElement('option');
-            awayOpt.value = t.id;
-            awayOpt.textContent = t.name;
-            away.appendChild(awayOpt);
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.name;
+            sel.appendChild(opt);
         });
+        return sel;
+    }
+
+    // One "<home> vs <away>" row in the match-day builder. Several of these
+    // share the single date field above them so an admin can lay out a
+    // whole match day's fixtures in one go instead of re-picking the date
+    // for each match.
+    function addPairingRow() {
+        const container = $('fxePairings');
+        const isFirst = pairingRows.length === 0;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'fx-pairing-row';
+
+        const home = teamSelect(false);
+        const vs = document.createElement('span');
+        vs.className = 'fx-hint';
+        vs.textContent = 'vs';
+        const away = teamSelect(true);
+
+        const half = document.createElement('select');
+        half.className = 'fx-text-input';
+        const league = document.createElement('option');
+        league.value = '1';
+        league.textContent = 'League';
+        const handicap = document.createElement('option');
+        handicap.value = '2';
+        handicap.textContent = 'Handicap';
+        half.appendChild(league);
+        half.appendChild(handicap);
+
+        const venue = document.createElement('input');
+        venue.type = 'text';
+        venue.className = 'fx-text-input';
+        venue.placeholder = "Venue (optional - defaults to home team's)";
+
+        const add = document.createElement('button');
+        add.type = 'button';
+        add.className = 'row-button row-button-secondary fx-pairing-add';
+        add.textContent = '+';
+        add.title = 'Add another match';
+        add.addEventListener('click', () => addPairingRow());
+
+        wrap.appendChild(home);
+        wrap.appendChild(vs);
+        wrap.appendChild(away);
+        wrap.appendChild(half);
+        wrap.appendChild(venue);
+        wrap.appendChild(add);
+
+        if (!isFirst) {
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'row-button row-button-secondary fx-pairing-remove';
+            remove.textContent = '✕';
+            remove.title = 'Remove this match';
+            remove.addEventListener('click', () => {
+                wrap.remove();
+                pairingRows = pairingRows.filter(p => p.wrap !== wrap);
+            });
+            wrap.appendChild(remove);
+        }
+
+        container.appendChild(wrap);
+
+        pairingRows.push({ wrap, home, away, half, venue });
     }
 
     async function load() {
@@ -190,86 +250,125 @@ const FixtureEditorAdmin = (function () {
     function wire() {
         $('fxeSeason').addEventListener('change', load);
         $('fxeDeleteAll').addEventListener('click', deleteAllFixtures);
-        $('fxeAdd').addEventListener('click', addMatch);
+        $('fxeAdd').addEventListener('click', createMatches);
     }
 
-    // Manually add one match. Since teams can share a physical venue (so
-    // whichever of them is "home" that day is the only one that can use it)
-    // and a team obviously can't play twice in one day, both are checked
-    // against the season's already-loaded fixture list before inserting -
-    // a team clash is a hard stop, a venue clash is a confirm()-gated
-    // warning since a shared venue might genuinely have two time slots.
-    async function addMatch() {
+    // Checks one candidate match against a list of already-scheduled
+    // fixtures for the same day (either the loaded season fixtures, or the
+    // other rows already accepted earlier in this same batch) and returns
+    // a clash description, or null if there's none. Shared here since both
+    // the existing-fixture check and the within-batch check need it.
+    function findClash(homeName, awayName, effectiveVenue, sameDay) {
+        for (const f of sameDay) {
+            const opponent = f.isBye ? 'BYE' : f.awayTeam;
+            if (f.homeTeam === homeName || f.awayTeam === homeName) {
+                return { type: 'team', team: homeName, opponent: f.homeTeam === homeName ? opponent : f.homeTeam };
+            }
+            if (awayName && (f.homeTeam === awayName || f.awayTeam === awayName)) {
+                return { type: 'team', team: awayName, opponent: f.homeTeam === awayName ? opponent : f.homeTeam };
+            }
+        }
+        const venueClash = sameDay.find(f => !f.isBye && f.venue && effectiveVenue && f.venue === effectiveVenue);
+        if (venueClash) return { type: 'venue', venue: effectiveVenue, home: venueClash.homeTeam, away: venueClash.awayTeam };
+        return null;
+    }
+
+    // Creates every match laid out in the builder for the one chosen date.
+    // Since teams can share a physical venue (so whichever of them is
+    // "home" that day is the only one that can use it) and a team
+    // obviously can't play twice in one day, each row is checked against
+    // both the season's already-loaded fixtures and the rows already
+    // accepted earlier in this same batch - a team clash is a hard stop, a
+    // venue clash is a single confirm()-gated warning covering the whole
+    // batch, since a shared venue might genuinely have separate time slots.
+    async function createMatches() {
         const season = selectedSeason();
         if (!season) { show('No season selected.', 'error'); return; }
 
         const date = $('fxeNewDate').value;
-        const homeId = $('fxeNewHome').value;
-        const awayId = $('fxeNewAway').value;
-        const half = Number($('fxeNewHalf').value);
-        const venue = $('fxeNewVenue').value.trim();
-
         if (!date) { show('Pick a date.', 'error'); return; }
-        if (!homeId) { show('Pick a home team.', 'error'); return; }
-        if (homeId === awayId) { show('Home and away can\'t be the same team.', 'error'); return; }
-
-        const homeTeam = teams.find(t => t.id === homeId);
-        const awayTeam = awayId ? teams.find(t => t.id === awayId) : null;
-        const effectiveVenue = venue || (homeTeam ? homeTeam.venue : '');
 
         const sameDay = fixturesList.filter(f => f.date === date);
+        const candidates = [];
+        let venueWarning = false;
 
-        // Whichever of the two new teams (if either) already has a fixture
-        // that day, and who they're playing.
-        let teamClash = null;
-        for (const f of sameDay) {
-            const opponent = f.isBye ? 'BYE' : f.awayTeam;
-            if (f.homeTeam === homeTeam.name || f.awayTeam === homeTeam.name) {
-                teamClash = { team: homeTeam.name, opponent: f.homeTeam === homeTeam.name ? opponent : f.homeTeam };
-                break;
+        for (const p of pairingRows) {
+            const homeId = p.home.value;
+            const awayId = p.away.value;
+            if (!homeId) { show('Every match needs a home team.', 'error'); return; }
+            if (homeId === awayId) { show('Home and away can\'t be the same team.', 'error'); return; }
+
+            const homeTeam = teams.find(t => t.id === homeId);
+            const awayTeam = awayId ? teams.find(t => t.id === awayId) : null;
+            const venue = p.venue.value.trim();
+            const effectiveVenue = venue || homeTeam.venue;
+
+            const clash = findClash(homeTeam.name, awayTeam ? awayTeam.name : null, effectiveVenue, sameDay.concat(candidates.map(c => c.asFixture)));
+            if (clash && clash.type === 'team') {
+                show(
+                    clash.team + ' is already scheduled to play on ' + date + ' (vs ' + clash.opponent +
+                    '). A team can\'t play twice on the same day.',
+                    'error'
+                );
+                return;
             }
-            if (awayTeam && (f.homeTeam === awayTeam.name || f.awayTeam === awayTeam.name)) {
-                teamClash = { team: awayTeam.name, opponent: f.homeTeam === awayTeam.name ? opponent : f.homeTeam };
-                break;
-            }
-        }
-        if (teamClash) {
-            show(
-                teamClash.team + ' is already scheduled to play on ' + date + ' (vs ' + teamClash.opponent +
-                '). A team can\'t play twice on the same day.',
-                'error'
-            );
-            return;
+            if (clash && clash.type === 'venue') venueWarning = true;
+
+            candidates.push({
+                home_team_id: homeId,
+                away_team_id: awayId || null,
+                venue,
+                half: Number(p.half.value),
+                label: homeTeam.name + ' vs ' + (awayTeam ? awayTeam.name : 'BYE'),
+                asFixture: {
+                    homeTeam: homeTeam.name,
+                    awayTeam: awayTeam ? awayTeam.name : null,
+                    isBye: !awayTeam,
+                    venue: effectiveVenue
+                }
+            });
         }
 
-        const venueClash = sameDay.find(f => !f.isBye && f.venue && effectiveVenue && f.venue === effectiveVenue);
-        if (venueClash) {
+        if (!candidates.length) { show('Add at least one match.', 'error'); return; }
+
+        if (venueWarning) {
             const proceed = confirm(
-                '"' + effectiveVenue + '" is already in use on ' + date + ' for ' + venueClash.homeTeam + ' vs ' +
-                venueClash.awayTeam + '. Add this match anyway?'
+                'One or more of these matches shares a venue already in use on ' + date +
+                ' (either an existing fixture or another match in this batch). Create them anyway?'
             );
             if (!proceed) return;
         }
 
         const btn = $('fxeAdd');
         btn.disabled = true;
-        const res = await NADARL.addMatch({
-            season_id: season.id,
-            match_date: date,
-            home_team_id: homeId,
-            away_team_id: awayId || null,
-            venue,
-            half
-        });
-        btn.disabled = false;
-        if (!res.ok) {
-            show('Could not add match: ' + (res.error || 'unknown') + '.', 'error');
-            return;
+        let created = 0;
+        const failures = [];
+        for (const c of candidates) {
+            const res = await NADARL.addMatch({
+                season_id: season.id,
+                match_date: date,
+                home_team_id: c.home_team_id,
+                away_team_id: c.away_team_id,
+                venue: c.venue,
+                half: c.half
+            });
+            if (res.ok) created++;
+            else failures.push(c.label + ': ' + (res.error || 'unknown'));
         }
+        btn.disabled = false;
 
-        $('fxeNewDate').value = '';
-        $('fxeNewVenue').value = '';
-        show('Added ' + homeTeam.name + ' vs ' + (awayTeam ? awayTeam.name : 'BYE') + '.', 'success');
+        if (failures.length) {
+            show(
+                'Created ' + created + ' of ' + candidates.length + ' match(es). Failed: ' + failures.join('; '),
+                'error'
+            );
+        } else {
+            $('fxeNewDate').value = '';
+            $('fxePairings').innerHTML = '';
+            pairingRows = [];
+            addPairingRow();
+            show('Created ' + created + ' match(es) on ' + date + '.', 'success');
+        }
         await load();
     }
 

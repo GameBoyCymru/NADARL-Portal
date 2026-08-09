@@ -6,7 +6,7 @@
     <title>Season Manager - Admin - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/login.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/admin.css?v=20260809e">
+    <link rel="stylesheet" href="../CSS/admin.css?v=20260809g">
 </head>
 <body>
     <div class="container">
@@ -97,16 +97,15 @@
                     </div>
 
                     <div class="fx-season-create fx-add-match">
+                        <label for="fxeNewDate" class="fx-hint">Match day:</label>
                         <input type="date" id="fxeNewDate" class="fx-text-input" style="width:150px;">
-                        <select id="fxeNewHome" class="fx-text-input"></select>
-                        <span class="fx-hint">vs</span>
-                        <select id="fxeNewAway" class="fx-text-input"></select>
-                        <select id="fxeNewHalf" class="fx-text-input">
-                            <option value="1">League</option>
-                            <option value="2">Handicap</option>
-                        </select>
-                        <input type="text" id="fxeNewVenue" class="fx-text-input" placeholder="Venue (optional - defaults to home team's)" style="width:240px;">
-                        <button type="button" id="fxeAdd" class="shooter-button">Add Match</button>
+                        <span class="fx-hint">Pick the date once, then add every match being played that day below.</span>
+                    </div>
+
+                    <div id="fxePairings" class="fx-pairings"></div>
+
+                    <div class="fx-actions">
+                        <button type="button" id="fxeAdd" class="shooter-button">Create Matches</button>
                     </div>
 
                     <div class="table-wrap fx-preview">
@@ -289,6 +288,6 @@
     <script src="../JS/admin-exceptions.js?v=20260809e"></script>
     <script src="../JS/admin-competitions.js?v=20260809e"></script>
     <script src="../JS/admin-events.js?v=20260809e"></script>
-    <script src="../JS/admin-fixture-editor.js?v=20260809e"></script>
+    <script src="../JS/admin-fixture-editor.js?v=20260809h"></script>
 </body>
 </html>
