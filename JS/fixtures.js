@@ -43,6 +43,21 @@ function typeBadge(fixture) {
     return '<span class="type-badge type-wohc" title="Without handicap">League</span>';
 }
 
+// 'blocked' (exclusion), 'competition', 'event' or 'match' (league/HC/bye) -
+// a date is "Mixed" when it has more than one of these (admins can now add
+// a match/competition/event onto a date that already has something else,
+// past a confirm() warning rather than a hard block).
+function fixtureType(fixture) {
+    if (fixture.isBlocked) return 'blocked';
+    if (fixture.isCompetition) return 'competition';
+    if (fixture.isEvent) return 'event';
+    return 'match';
+}
+
+function isMixedGroup(group) {
+    return new Set(group.map(fixtureType)).size > 1;
+}
+
 function getTodayDate() {
     const today = new Date();
     const year = today.getFullYear();
@@ -226,8 +241,11 @@ function renderSeasonFixtures() {
         const group = groupedFixtures[date];
         const altClass = dateIndex % 2 === 1 ? ' fixture-row-alt' : '';
         const highlightClass = highlightSeason && date === highlightDate ? ' fixture-current-row' : '';
+        const mixed = isMixedGroup(group);
 
-        if (group[0] && group[0].isBlocked) {
+        // A date with nothing but an exclusion (no match/competition/event
+        // sharing it) stays the simple single-row "no matches" rendering.
+        if (!mixed && group[0] && group[0].isBlocked) {
             const headerRow = document.createElement('tr');
             headerRow.className = 'fixture-row fixture-date-row fixture-excluded-row' + altClass + highlightClass + (highlightClass ? ' fixture-current-row-end' : '');
             headerRow.innerHTML = `
@@ -242,8 +260,11 @@ function renderSeasonFixtures() {
             return;
         }
 
-        const typeBadgeHtml = typeBadge(group[0]);
-        const typeRowClass = group[0].isCompetition ? ' fixture-competition-row'
+        const typeBadgeHtml = mixed
+            ? '<span class="type-badge type-mixed" title="Mixed">Mixed</span>'
+            : typeBadge(group[0]);
+        const typeRowClass = mixed ? ' fixture-mixed-row'
+            : group[0].isCompetition ? ' fixture-competition-row'
             : group[0].isEvent ? ' fixture-event-row' : '';
 
         const headerRow = document.createElement('tr');
@@ -260,11 +281,26 @@ function renderSeasonFixtures() {
 
         group.forEach((fixture, index) => {
             const isLastInGroup = index === group.length - 1;
+            const mixedClass = mixed ? ' fixture-mixed-row' : '';
             const row = document.createElement('tr');
+
+            if (fixture.isBlocked) {
+                // A mixed date's exclusion shows as its own info row rather
+                // than owning the whole date the way a pure blocked day does.
+                row.className = 'fixture-row fixture-detail-row fixture-excluded-row' + mixedClass
+                    + (isLastInGroup ? ' fixture-group-end' : '') + altClass + highlightClass
+                    + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
+                row.innerHTML = `
+                    <td class="teams-cell" colspan="2">No matches</td>
+                    <td class="venue-cell"><span class="fixture-blocked-reason">${escapeHtml(fixture.reason)}</span></td>
+                `;
+                tbody.appendChild(row);
+                return;
+            }
 
             if (fixture.isCompetition || fixture.isEvent) {
                 const typeRowClass = fixture.isCompetition ? ' fixture-competition-row' : ' fixture-event-row';
-                row.className = 'fixture-row fixture-detail-row fixture-clickable' + typeRowClass
+                row.className = 'fixture-row fixture-detail-row fixture-clickable' + typeRowClass + mixedClass
                     + (isLastInGroup ? ' fixture-group-end' : '') + altClass + highlightClass
                     + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
                 row.addEventListener('click', () => { window.location.href = fixtureUrl(fixture); });
@@ -279,7 +315,8 @@ function renderSeasonFixtures() {
             const awayTeamDisplay = fixture.isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
             const venueDisplay = fixture.isBye ? '-' : fixture.venue;
 
-            row.className = 'fixture-row fixture-detail-row' + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
+            row.className = 'fixture-row fixture-detail-row' + mixedClass + (isLastInGroup ? ' fixture-group-end' : '')
+                + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
             // Everyone can open past/today's fixtures (to see the completed
             // match); admins can also open future ones to set up scoring.
             if (!fixture.isBye && (isAdmin || fixture.date <= today)) {
@@ -314,22 +351,39 @@ function renderMobileSeasonFixtures() {
         const highlightClass = highlightSeason && date === highlightDate ? ' mobile-fixture-current' : '';
         const group = groupedFixtures[date];
 
-        // blocked (no-match) day: show the reason only, not interactive
-        if (group[0] && group[0].isBlocked) {
+        const mixed = isMixedGroup(group);
+
+        // blocked (no-match) day: show the reason only, not interactive -
+        // unless it shares the date with a match/competition/event, in
+        // which case it's rendered as its own item below instead.
+        if (!mixed && group[0] && group[0].isBlocked) {
             html += `<div class="mobile-fixture-group mobile-fixture-blocked${altClass}${highlightClass}">`;
             html += `<div class="mobile-fixture-summary">${dateStackHtml(date)} <span class="mobile-fixture-count">${escapeHtml(group[0].reason)}</span></div>`;
             html += `</div>`;
             return;
         }
 
-        const typeGroupClass = group[0].isCompetition ? ' mobile-fixture-competition-group'
+        const typeGroupClass = mixed ? ' mobile-fixture-mixed-group'
+            : group[0].isCompetition ? ' mobile-fixture-competition-group'
             : group[0].isEvent ? ' mobile-fixture-event-group' : '';
+        const typeBadgeHtml = mixed
+            ? '<span class="type-badge type-mixed" title="Mixed">Mixed</span>'
+            : typeBadge(group[0]);
         html += `<details class="mobile-fixture-group${typeGroupClass}${altClass}${highlightClass}"${highlightClass ? ' open' : ''}>`;
-        html += `<summary class="mobile-fixture-summary">${dateStackHtml(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span> ${typeBadge(group[0])}</summary>`;
+        html += `<summary class="mobile-fixture-summary">${dateStackHtml(date)} <span class="mobile-fixture-count">(${group.length} fixture${group.length > 1 ? 's' : ''})</span> ${typeBadgeHtml}</summary>`;
         html += `<div class="mobile-fixture-content">`;
 
         group.forEach(fixture => {
-            if (fixture.isCompetition || fixture.isEvent) {
+            if (fixture.isBlocked) {
+                html += `
+                    <div class="mobile-fixture-item">
+                        <div class="mobile-fixture-teams">
+                            <span class="mobile-team">No matches</span>
+                        </div>
+                        <div class="mobile-fixture-venue"><span class="fixture-blocked-reason">${escapeHtml(fixture.reason)}</span></div>
+                    </div>
+                `;
+            } else if (fixture.isCompetition || fixture.isEvent) {
                 const typeClass = fixture.isCompetition ? 'mobile-fixture-competition' : 'mobile-fixture-event';
                 html += `
                     <div class="mobile-fixture-item fixture-clickable ${typeClass}" onclick="window.location.href='${fixtureUrl(fixture)}'">

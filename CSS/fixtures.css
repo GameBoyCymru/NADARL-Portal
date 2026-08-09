@@ -304,11 +304,11 @@
     margin-left: auto;
 }
 
-.fixture-table .fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):not(.fixture-current-row):hover td {
+.fixture-table .fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):not(.fixture-mixed-row):not(.fixture-current-row):hover td {
     background: rgba(196, 30, 58, 0.35) !important;
 }
 
-.fixture-table .fixture-row-alt.fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):not(.fixture-current-row):hover td {
+.fixture-table .fixture-row-alt.fixture-date-row:not(.fixture-excluded-row):not(.fixture-competition-row):not(.fixture-event-row):not(.fixture-mixed-row):not(.fixture-current-row):hover td {
     background: rgba(196, 30, 58, 0.42) !important;
 }
 
@@ -353,7 +353,8 @@
    regardless of where anything else sits in the file. */
 .fixture-table .fixture-current-row.fixture-competition-row .fixture-date-header,
 .fixture-table .fixture-current-row.fixture-event-row .fixture-date-header,
-.fixture-table .fixture-current-row.fixture-excluded-row .fixture-date-header {
+.fixture-table .fixture-current-row.fixture-excluded-row .fixture-date-header,
+.fixture-table .fixture-current-row.fixture-mixed-row .fixture-date-header {
     background: rgba(212, 160, 23, 0.45) !important;
     border-left-color: #d4a017;
     border-right-color: #d4a017;
@@ -361,12 +362,14 @@
 }
 
 .fixture-table .fixture-current-row.fixture-competition-row td:first-child,
-.fixture-table .fixture-current-row.fixture-event-row td:first-child {
+.fixture-table .fixture-current-row.fixture-event-row td:first-child,
+.fixture-table .fixture-current-row.fixture-mixed-row td:first-child {
     border-left: 3px solid #d4a017;
 }
 
 .fixture-table .fixture-current-row.fixture-competition-row td:last-child,
-.fixture-table .fixture-current-row.fixture-event-row td:last-child {
+.fixture-table .fixture-current-row.fixture-event-row td:last-child,
+.fixture-table .fixture-current-row.fixture-mixed-row td:last-child {
     border-right: 3px solid #d4a017;
 }
 
@@ -435,6 +438,14 @@
     background: rgba(60, 150, 200, 0.25);
     border-color: rgba(60, 150, 200, 0.55);
     color: #bfe0f0;
+}
+
+/* A date holding more than one entry type (e.g. a match and a competition
+   sharing a day - allowed past the admin's conflict-warning confirm()). */
+.type-mixed {
+    background: rgba(70, 180, 110, 0.25);
+    border-color: rgba(70, 180, 110, 0.55);
+    color: #b8f0cc;
 }
 
 .fixture-blocked-row td {
@@ -539,6 +550,54 @@
     background: rgba(60, 150, 200, 0.5) !important;
 }
 
+/* A "Mixed" date (more than one entry type sharing a day) frames the whole
+   group in green, overriding each row's own type colour - same idea as
+   .fixture-current-row's gold framing, just for "this date isn't one
+   thing" instead of "this date is today/next". These rules are declared
+   after the competition/event equivalents above, at the same specificity,
+   so a detail row wearing both its own type class and .fixture-mixed-row
+   (e.g. a competition sharing its date with a match) resolves to green by
+   source order - and gold still wins over green for a current+mixed date
+   since that combo selector further up has higher specificity. */
+.fixture-table .fixture-mixed-row .fixture-date-header {
+    background: rgba(70, 180, 110, 0.4) !important;
+    border-left-color: rgba(70, 180, 110, 0.5);
+    border-right-color: rgba(70, 180, 110, 0.5);
+    border-top-color: rgba(70, 180, 110, 0.5);
+}
+
+.fixture-mixed-row.fixture-row-alt .fixture-date-header {
+    background: rgba(70, 180, 110, 0.5) !important;
+}
+
+.fixture-table .fixture-mixed-row td:first-child {
+    border-left-color: rgba(70, 180, 110, 0.5);
+}
+
+.fixture-table .fixture-mixed-row td:last-child {
+    border-right-color: rgba(70, 180, 110, 0.5);
+}
+
+.fixture-table .fixture-mixed-row.fixture-group-end td {
+    border-bottom: 3px solid rgba(70, 180, 110, 0.5);
+}
+
+.fixture-table .fixture-mixed-row.fixture-date-row {
+    cursor: default;
+}
+
+.fixture-table .fixture-mixed-row.fixture-date-row:not(.fixture-current-row):hover td {
+    background: rgba(70, 180, 110, 0.4) !important;
+}
+
+.fixture-mixed-row.fixture-row-alt.fixture-date-row:not(.fixture-current-row):hover td {
+    background: rgba(70, 180, 110, 0.5) !important;
+}
+
+.fixture-table tr.fixture-mixed-row.fixture-clickable:hover td {
+    background: rgba(70, 180, 110, 0.15);
+}
+
 .mobile-fixtures {
     display: none;
 }
@@ -580,6 +639,14 @@
 
 .mobile-fixture-group-alt.mobile-fixture-event-group .mobile-fixture-summary {
     background: rgba(60, 150, 200, 0.5);
+}
+
+.mobile-fixture-mixed-group .mobile-fixture-summary {
+    background: rgba(70, 180, 110, 0.4);
+}
+
+.mobile-fixture-group-alt.mobile-fixture-mixed-group .mobile-fixture-summary {
+    background: rgba(70, 180, 110, 0.5);
 }
 
 .mobile-fixture-group {
