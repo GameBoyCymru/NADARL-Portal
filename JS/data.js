@@ -936,6 +936,143 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // All trophy items, each with its list of images (filenames, in display
+    // order). Manually ordered items (sort_order set) come first in that
+    // order; the rest fall back to newest-first. Mirrors fetchGalleryItems.
+    async function fetchTrophyItems() {
+        const { data, error } = await db().from('trophy_item')
+            .select('id,name,description,created_at,sort_order,trophy_item_image(filename,sort_order)')
+            .order('sort_order', { ascending: true, nullsFirst: false })
+            .order('created_at', { ascending: false })
+            .order('sort_order', { ascending: true, foreignTable: 'trophy_item_image' });
+        if (error) { console.error('fetchTrophyItems', error); return []; }
+        return data.map(item => ({
+            ...item,
+            images: (item.trophy_item_image || []).map(img => img.filename)
+        }));
+    }
+
+    // Add a trophy item with one or more images. Each filename must match
+    // an image already uploaded to Images/trophies/ on the server. Admin
+    // only - RLS enforces.
+    async function addTrophyItem({ name, filenames, description }) {
+        const { data, error } = await db().rpc('save_trophy_item', {
+            p_id: null,
+            p_name: name || '',
+            p_description: description || '',
+            p_filenames: filenames
+        });
+        if (error) { console.error('addTrophyItem', error); return { ok: false, error: error.message }; }
+        const images = filenames.map(f => String(f).trim()).filter(Boolean);
+        return { ok: true, item: { ...data[0], images } };
+    }
+
+    // Update a trophy item's name, description, and image list (the image
+    // list is replaced wholesale, atomically). Admin only - RLS enforces.
+    async function updateTrophyItem(id, { name, filenames, description }) {
+        const { data, error } = await db().rpc('save_trophy_item', {
+            p_id: id,
+            p_name: name || '',
+            p_description: description || '',
+            p_filenames: filenames
+        });
+        if (error) { console.error('updateTrophyItem', error); return { ok: false, error: error.message }; }
+        const images = filenames.map(f => String(f).trim()).filter(Boolean);
+        return { ok: true, item: { ...data[0], images } };
+    }
+
+    // Delete a trophy item (its images are removed too, via cascade).
+    // Admin only - RLS enforces.
+    async function deleteTrophyItem(id) {
+        const { error } = await db().from('trophy_item')
+            .delete()
+            .eq('id', id);
+        if (error) { console.error('deleteTrophyItem', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // Persist a new display order for trophies. orderedIds is the full list
+    // of item ids in the desired order. Admin only - RLS enforces.
+    async function reorderTrophyItems(orderedIds) {
+        const results = await Promise.all(orderedIds.map((id, index) =>
+            db().from('trophy_item').update({ sort_order: index }).eq('id', id)
+        ));
+        const failed = results.find(r => r.error);
+        if (failed) { console.error('reorderTrophyItems', failed.error); return { ok: false, error: failed.error.message }; }
+        return { ok: true };
+    }
+
+    // All for-sale items, each with its list of images (filenames, in
+    // display order). Manually ordered items (sort_order set) come first in
+    // that order; the rest fall back to newest-first. Mirrors
+    // fetchTrophyItems.
+    async function fetchSaleItems() {
+        const { data, error } = await db().from('sale_item')
+            .select('id,name,price,description,created_at,sort_order,sale_item_image(filename,sort_order)')
+            .order('sort_order', { ascending: true, nullsFirst: false })
+            .order('created_at', { ascending: false })
+            .order('sort_order', { ascending: true, foreignTable: 'sale_item_image' });
+        if (error) { console.error('fetchSaleItems', error); return []; }
+        return data.map(item => ({
+            ...item,
+            images: (item.sale_item_image || []).map(img => img.filename)
+        }));
+    }
+
+    // Add a for-sale item with one or more images. Each filename must match
+    // an image already uploaded to Images/sales/ on the server. Admin only
+    // - RLS enforces.
+    async function addSaleItem({ name, price, filenames, description }) {
+        const { data, error } = await db().rpc('save_sale_item', {
+            p_id: null,
+            p_name: name || '',
+            p_price: price || '',
+            p_description: description || '',
+            p_filenames: filenames
+        });
+        if (error) { console.error('addSaleItem', error); return { ok: false, error: error.message }; }
+        const images = filenames.map(f => String(f).trim()).filter(Boolean);
+        return { ok: true, item: { ...data[0], images } };
+    }
+
+    // Update a for-sale item's name, price, description, and image list
+    // (the image list is replaced wholesale, atomically). Admin only - RLS
+    // enforces.
+    async function updateSaleItem(id, { name, price, filenames, description }) {
+        const { data, error } = await db().rpc('save_sale_item', {
+            p_id: id,
+            p_name: name || '',
+            p_price: price || '',
+            p_description: description || '',
+            p_filenames: filenames
+        });
+        if (error) { console.error('updateSaleItem', error); return { ok: false, error: error.message }; }
+        const images = filenames.map(f => String(f).trim()).filter(Boolean);
+        return { ok: true, item: { ...data[0], images } };
+    }
+
+    // Delete a for-sale item (its images are removed too, via cascade).
+    // Admin only - RLS enforces.
+    async function deleteSaleItem(id) {
+        const { error } = await db().from('sale_item')
+            .delete()
+            .eq('id', id);
+        if (error) { console.error('deleteSaleItem', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // Persist a new display order for for-sale items. orderedIds is the
+    // full list of item ids in the desired order. Admin only - RLS
+    // enforces.
+    async function reorderSaleItems(orderedIds) {
+        const results = await Promise.all(orderedIds.map((id, index) =>
+            db().from('sale_item').update({ sort_order: index }).eq('id', id)
+        ));
+        const failed = results.find(r => r.error);
+        if (failed) { console.error('reorderSaleItems', failed.error); return { ok: false, error: failed.error.message }; }
+        return { ok: true };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -1007,6 +1144,16 @@ const NADARL = (function () {
         addGalleryItem,
         updateGalleryItem,
         deleteGalleryItem,
-        reorderGalleryItems
+        reorderGalleryItems,
+        fetchTrophyItems,
+        addTrophyItem,
+        updateTrophyItem,
+        deleteTrophyItem,
+        reorderTrophyItems,
+        fetchSaleItems,
+        addSaleItem,
+        updateSaleItem,
+        deleteSaleItem,
+        reorderSaleItems
     };
 })();

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/sales.css?v=20260809">
 </head>
 <body>
     <div class="container">
@@ -14,9 +15,79 @@
         </header>
 
         <section class="section">
-            <h2 class="section-title">Sales</h2>
-            <p class="intro-text">This page is coming soon.</p>
+            <div class="sale-header">
+                <h2 class="section-title">For Sale</h2>
+                <div class="sale-header-actions">
+                    <button type="button" id="reorderSaleButton" class="sale-button-secondary" hidden>Reorder Items</button>
+                    <button type="button" id="addSaleButton" class="sale-button" hidden>Add Item</button>
+                </div>
+            </div>
+            <p class="sale-intro">
+                Equipment and league merchandise available for purchase from members.
+            </p>
+
+            <div id="saleMessage" class="sale-message" role="alert" hidden></div>
+
+            <div id="reorderToolbar" class="reorder-toolbar" hidden>
+                <p class="reorder-hint">Use the arrows to move items, then save your new order.</p>
+                <div class="reorder-toolbar-actions">
+                    <button type="button" id="reorderCancel" class="sale-button-secondary">Cancel</button>
+                    <button type="button" id="reorderSave" class="sale-button">Save Order</button>
+                </div>
+            </div>
+
+            <div id="saleWizard" class="sale-wizard" hidden>
+                <div class="wizard-step" id="wizardStep1">
+                    <h3 class="wizard-step-title">Step 1 of 2: Details</h3>
+                    <div class="sale-form-row">
+                        <div>
+                            <label for="saleNameInput">Item name</label>
+                            <input type="text" id="saleNameInput" class="sale-input" maxlength="120" placeholder="e.g. Feinwerkbau 800 Air Rifle">
+                        </div>
+                        <div>
+                            <label for="salePriceInput">Price</label>
+                            <input type="text" id="salePriceInput" class="sale-input" maxlength="40" placeholder="e.g. &pound;450 ono">
+                        </div>
+                    </div>
+                    <label for="saleDescriptionInput" style="margin-top: 12px;">Description</label>
+                    <textarea id="saleDescriptionInput" class="sale-textarea" maxlength="500" rows="3" placeholder="e.g. Good condition, includes case and diabolo pellets."></textarea>
+                    <div class="wizard-actions">
+                        <button type="button" id="wizardCancel1" class="sale-button-secondary">Cancel</button>
+                        <button type="button" id="wizardNext" class="sale-button">Next</button>
+                    </div>
+                </div>
+
+                <div class="wizard-step" id="wizardStep2" hidden>
+                    <h3 class="wizard-step-title">Step 2 of 2: Image Files</h3>
+                    <label>Image filenames</label>
+                    <div class="sale-filename-list" id="wizardFilenameList"></div>
+                    <button type="button" id="wizardAddFilename" class="sale-button-secondary sale-add-filename-button">+ Add Another Image</button>
+                    <p class="wizard-hint">Each image file must already be uploaded to the <code>Images/sales</code> folder on the server with the exact filename entered.</p>
+                    <div class="wizard-actions">
+                        <button type="button" id="wizardBack" class="sale-button-secondary">Back</button>
+                        <button type="button" id="wizardSave" class="sale-button">Save Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sale-grid" id="saleGrid"></div>
         </section>
+
+        <div class="sale-lightbox" id="saleLightbox" hidden>
+            <div class="sale-lightbox-backdrop" id="saleLightboxBackdrop"></div>
+            <div class="sale-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Item view">
+                <button type="button" class="sale-lightbox-close" id="saleLightboxClose" aria-label="Close">&times;</button>
+                <button type="button" class="sale-lightbox-nav sale-lightbox-prev" id="saleLightboxPrev" aria-label="Previous image" hidden>&#8249;</button>
+                <img class="sale-lightbox-image" id="saleLightboxImage" src="" alt="">
+                <button type="button" class="sale-lightbox-nav sale-lightbox-next" id="saleLightboxNext" aria-label="Next image" hidden>&#8250;</button>
+                <div class="sale-lightbox-caption">
+                    <span class="sale-lightbox-name" id="saleLightboxName"></span>
+                    <span class="sale-lightbox-price" id="saleLightboxPrice"></span>
+                    <p class="sale-lightbox-description" id="saleLightboxDescription"></p>
+                    <span class="sale-lightbox-counter" id="saleLightboxCounter" hidden></span>
+                </div>
+            </div>
+        </div>
 
         <footer class="footer">
             <div class="footer-content">
@@ -30,6 +101,7 @@
                     <a href="gallery.html">Gallery</a>
                     <a href="history.html">History</a>
                     <a href="committee.html">Committee</a>
+                    <a href="trophies.html">Trophies</a>
                     <a href="sales.html">For Sale</a>
                     <a href="join.html">Join Us</a>
                 </div>
@@ -47,5 +119,11 @@
             </div>
         </footer>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS/supabase-keys.js"></script>
+    <script src="../JS/supabase-config.js"></script>
+    <script src="../JS/data.js?v=20260809"></script>
+    <script src="../JS/sales.js?v=20260809"></script>
 </body>
 </html>

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gallery - Newport & District Air Rifle League</title>
+    <title>Trophies - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/gallery.css?v=20260807b">
+    <link rel="stylesheet" href="../CSS/trophies.css?v=20260809">
 </head>
 <body>
     <div class="container">
@@ -15,64 +15,67 @@
         </header>
 
         <section class="section">
-            <div class="gallery-header">
-                <h2 class="section-title">Photo Gallery</h2>
-                <div class="gallery-header-actions">
-                    <button type="button" id="reorderGalleryButton" class="gallery-button-secondary" hidden>Reorder Photos</button>
-                    <button type="button" id="addGalleryButton" class="gallery-button" hidden>Add Item</button>
+            <div class="trophy-header">
+                <h2 class="section-title">Trophies</h2>
+                <div class="trophy-header-actions">
+                    <button type="button" id="reorderTrophyButton" class="trophy-button-secondary" hidden>Reorder Trophies</button>
+                    <button type="button" id="addTrophyButton" class="trophy-button" hidden>Add Trophy</button>
                 </div>
             </div>
-            <p class="gallery-intro">
-                Photos from matches, events, and league activities throughout the seasons.
+            <p class="trophy-intro">
+                The trophies and awards contested across our league, past and present.
             </p>
 
-            <div id="galleryMessage" class="gallery-message" role="alert" hidden></div>
+            <div id="trophyMessage" class="trophy-message" role="alert" hidden></div>
 
             <div id="reorderToolbar" class="reorder-toolbar" hidden>
-                <p class="reorder-hint">Use the arrows to move photos, then save your new order.</p>
+                <p class="reorder-hint">Use the arrows to move trophies, then save your new order.</p>
                 <div class="reorder-toolbar-actions">
-                    <button type="button" id="reorderCancel" class="gallery-button-secondary">Cancel</button>
-                    <button type="button" id="reorderSave" class="gallery-button">Save Order</button>
+                    <button type="button" id="reorderCancel" class="trophy-button-secondary">Cancel</button>
+                    <button type="button" id="reorderSave" class="trophy-button">Save Order</button>
                 </div>
             </div>
 
-            <div id="galleryWizard" class="gallery-wizard" hidden>
+            <div id="trophyWizard" class="trophy-wizard" hidden>
                 <div class="wizard-step" id="wizardStep1">
-                    <h3 class="wizard-step-title">Step 1 of 2: Description</h3>
-                    <label for="galleryDescriptionInput">Describe this photo</label>
-                    <textarea id="galleryDescriptionInput" class="gallery-textarea" maxlength="300" rows="3" placeholder="e.g. 2023 League Champions celebrating their victory at the annual awards ceremony."></textarea>
+                    <h3 class="wizard-step-title">Step 1 of 2: Details</h3>
+                    <label for="trophyNameInput">Trophy name</label>
+                    <input type="text" id="trophyNameInput" class="trophy-input" maxlength="120" placeholder="e.g. League Championship Cup">
+                    <label for="trophyDescriptionInput" style="margin-top: 12px;">Description</label>
+                    <textarea id="trophyDescriptionInput" class="trophy-textarea" maxlength="500" rows="3" placeholder="e.g. Awarded each season to the team finishing top of Division 1."></textarea>
                     <div class="wizard-actions">
-                        <button type="button" id="wizardCancel1" class="gallery-button-secondary">Cancel</button>
-                        <button type="button" id="wizardNext" class="gallery-button">Next</button>
+                        <button type="button" id="wizardCancel1" class="trophy-button-secondary">Cancel</button>
+                        <button type="button" id="wizardNext" class="trophy-button">Next</button>
                     </div>
                 </div>
 
                 <div class="wizard-step" id="wizardStep2" hidden>
                     <h3 class="wizard-step-title">Step 2 of 2: Image Files</h3>
                     <label>Image filenames</label>
-                    <div class="gallery-filename-list" id="wizardFilenameList"></div>
-                    <button type="button" id="wizardAddFilename" class="gallery-button-secondary gallery-add-filename-button">+ Add Another Image</button>
-                    <p class="wizard-hint">Each image file must already be uploaded to the <code>Images/gallery</code> folder on the server with the exact filename entered.</p>
+                    <div class="trophy-filename-list" id="wizardFilenameList"></div>
+                    <button type="button" id="wizardAddFilename" class="trophy-button-secondary trophy-add-filename-button">+ Add Another Image</button>
+                    <p class="wizard-hint">Each image file must already be uploaded to the <code>Images/trophies</code> folder on the server with the exact filename entered.</p>
                     <div class="wizard-actions">
-                        <button type="button" id="wizardBack" class="gallery-button-secondary">Back</button>
-                        <button type="button" id="wizardSave" class="gallery-button">Save Item</button>
+                        <button type="button" id="wizardBack" class="trophy-button-secondary">Back</button>
+                        <button type="button" id="wizardSave" class="trophy-button">Save Trophy</button>
                     </div>
                 </div>
             </div>
 
-            <div class="gallery-grid" id="galleryGrid"></div>
+            <div class="trophy-grid" id="trophyGrid"></div>
         </section>
 
-        <div class="gallery-lightbox" id="galleryLightbox" hidden>
-            <div class="gallery-lightbox-backdrop" id="galleryLightboxBackdrop"></div>
-            <div class="gallery-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Photo view">
-                <button type="button" class="gallery-lightbox-close" id="galleryLightboxClose" aria-label="Close">&times;</button>
-                <button type="button" class="gallery-lightbox-nav gallery-lightbox-prev" id="galleryLightboxPrev" aria-label="Previous image" hidden>&#8249;</button>
-                <img class="gallery-lightbox-image" id="galleryLightboxImage" src="" alt="">
-                <button type="button" class="gallery-lightbox-nav gallery-lightbox-next" id="galleryLightboxNext" aria-label="Next image" hidden>&#8250;</button>
-                <div class="gallery-lightbox-caption">
-                    <p class="gallery-lightbox-description" id="galleryLightboxDescription"></p>
-                    <span class="gallery-lightbox-counter" id="galleryLightboxCounter" hidden></span>
+        <div class="trophy-lightbox" id="trophyLightbox" hidden>
+            <div class="trophy-lightbox-backdrop" id="trophyLightboxBackdrop"></div>
+            <div class="trophy-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Trophy view">
+                <button type="button" class="trophy-lightbox-close" id="trophyLightboxClose" aria-label="Close">&times;</button>
+                <button type="button" class="trophy-lightbox-nav trophy-lightbox-prev" id="trophyLightboxPrev" aria-label="Previous image" hidden>&#8249;</button>
+                <img class="trophy-lightbox-image" id="trophyLightboxImage" src="" alt="">
+                <button type="button" class="trophy-lightbox-nav trophy-lightbox-next" id="trophyLightboxNext" aria-label="Next image" hidden>&#8250;</button>
+                <div class="trophy-lightbox-caption">
+                    <span class="trophy-lightbox-name" id="trophyLightboxName"></span>
+                    <p class="trophy-lightbox-description" id="trophyLightboxDescription"></p>
+                    <span class="trophy-lightbox-counter" id="trophyLightboxCounter" hidden></span>
                 </div>
             </div>
         </div>
@@ -110,7 +113,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260807"></script>
-    <script src="../JS/gallery.js?v=20260807b"></script>
+    <script src="../JS/data.js?v=20260809"></script>
+    <script src="../JS/trophies.js?v=20260809"></script>
 </body>
 </html>
