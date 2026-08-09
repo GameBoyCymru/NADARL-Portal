@@ -747,6 +747,16 @@ const NADARL = (function () {
         return { ok: true, match: data };
     }
 
+    // Delete a single match (scores cascade-delete). Admin only - RLS enforces.
+    async function deleteMatch(matchId) {
+        const { data, error } = await db().from('match')
+            .delete()
+            .eq('id', matchId)
+            .select('id');
+        if (error) { console.error('deleteMatch', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
     // Create a season. If is_current, clears that flag on all other seasons first.
     async function addSeason({ name, start_date, end_date, is_current }) {
         if (is_current) {
@@ -1177,6 +1187,7 @@ const NADARL = (function () {
         clearEvents,
         updateMatchFixture,
         addMatch,
+        deleteMatch,
         addSeason,
         addTeam,
         updateTeam,

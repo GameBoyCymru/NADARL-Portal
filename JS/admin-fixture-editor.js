@@ -136,6 +136,9 @@ const FixtureEditorAdmin = (function () {
         tr.appendChild(tdHalf);
 
         const tdAction = document.createElement('td');
+        const controls = document.createElement('div');
+        controls.className = 'row-controls';
+
         const save = document.createElement('button');
         save.type = 'button';
         save.className = 'row-button';
@@ -155,7 +158,30 @@ const FixtureEditorAdmin = (function () {
             show(`Saved ${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam}.`, 'success');
             await load();
         });
-        tdAction.appendChild(save);
+        controls.appendChild(save);
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'row-button row-button-secondary';
+        del.textContent = 'Delete';
+        del.addEventListener('click', async () => {
+            if (!confirm(
+                `Delete the fixture ${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam} on ${f.date}? ` +
+                'This also deletes any scores entered for it. This cannot be undone.'
+            )) return;
+            del.disabled = true;
+            const res = await NADARL.deleteMatch(f.id);
+            del.disabled = false;
+            if (!res.ok || !res.count) {
+                show('Could not delete: ' + (res.error || '0 rows changed'), 'error');
+                return;
+            }
+            show(`Deleted ${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam}.`, 'success');
+            await load();
+        });
+        controls.appendChild(del);
+
+        tdAction.appendChild(controls);
         tr.appendChild(tdAction);
 
         return tr;
