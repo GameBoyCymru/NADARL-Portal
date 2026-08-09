@@ -346,6 +346,44 @@
     background: rgba(212, 160, 23, 0.55) !important;
 }
 
+/* When the current/next date is also a competition, event or exception,
+   gold must win over that type's own colour. Its header background rule
+   and its detail-row td:first-child/td:last-child border rules tie in
+   specificity with the equivalents above (same selector shape, just a
+   different type class), so the cascade falls back to source order - and
+   since those type-specific rules are defined further down the file, they
+   were winning the tie instead of gold. Combining both classes here gives
+   these a strictly higher specificity, so they win unconditionally
+   regardless of where anything else sits in the file. */
+.fixture-table .fixture-current-row.fixture-competition-row .fixture-date-header,
+.fixture-table .fixture-current-row.fixture-event-row .fixture-date-header,
+.fixture-table .fixture-current-row.fixture-excluded-row .fixture-date-header {
+    background: rgba(212, 160, 23, 0.45) !important;
+    border-left-color: #d4a017;
+    border-right-color: #d4a017;
+    border-top-color: #d4a017;
+}
+
+.fixture-table .fixture-current-row.fixture-competition-row td:first-child,
+.fixture-table .fixture-current-row.fixture-event-row td:first-child {
+    border-left: 3px solid #d4a017;
+}
+
+.fixture-table .fixture-current-row.fixture-competition-row td:last-child,
+.fixture-table .fixture-current-row.fixture-event-row td:last-child {
+    border-right: 3px solid #d4a017;
+}
+
+/* The type badge (League/HC/Competition/Event) sitting on a highlighted
+   current/next row shifts to gold too, so it doesn't clash against the
+   gold background/border treatment above. */
+.fixture-current-row .type-badge,
+.mobile-fixture-current .type-badge {
+    background: rgba(212, 160, 23, 0.3);
+    border-color: rgba(212, 160, 23, 0.6);
+    color: #ffe6a8;
+}
+
 .teams-cell {
     font-weight: 500;
 }
