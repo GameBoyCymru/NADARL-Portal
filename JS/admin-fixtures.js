@@ -22,6 +22,7 @@ const FixturesAdmin = (function () {
         populateSeasons();
         wire();
         await loadMatchDayInfo();
+        await loadAllocatedMatchDayInfo();
     }
 
     function selectedSeason() {
@@ -54,12 +55,14 @@ const FixturesAdmin = (function () {
     async function refreshSeasons() {
         seasons = await NADARL.fetchSeasons();
         populateSeasons();
+        await loadAllocatedMatchDayInfo();
     }
 
     function wire() {
         $('fxAddSeason').addEventListener('click', createSeason);
         $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
+        $('fxSeason').addEventListener('change', loadAllocatedMatchDayInfo);
     }
 
     // Every team needs to play every other team both home and away, once in
@@ -73,20 +76,35 @@ const FixturesAdmin = (function () {
         return teamCount % 2 === 0 ? 2 * (teamCount - 1) : 2 * teamCount;
     }
 
+    // Every team plays every other team both home and away once per half,
+    // i.e. every ordered (home, away) pair - N*(N-1) matches, regardless of
+    // whether N is odd or even. Byes don't add matches, only affect how
+    // many match days it takes to fit them all in (matchDaysPerHalf above).
+    function matchesPerHalf(teamCount) {
+        if (teamCount < 2) return 0;
+        return teamCount * (teamCount - 1);
+    }
+
     async function loadMatchDayInfo() {
         const box = $('fxMatchDayInfo');
         box.innerHTML = '<span class="fx-hint">Loading…</span>';
 
         const teams = await NADARL.fetchTeams();
         const teamCount = teams.length;
-        const perHalf = matchDaysPerHalf(teamCount);
-        const total = perHalf * 2;
+        const daysPerHalf = matchDaysPerHalf(teamCount);
+        const matchesHalf = matchesPerHalf(teamCount);
 
         box.innerHTML = '';
-        box.appendChild(matchDayStat('Teams', teamCount));
-        box.appendChild(matchDayStat('League match days', perHalf));
-        box.appendChild(matchDayStat('Handicap match days', perHalf));
-        box.appendChild(matchDayStat('Total match days', total));
+        box.appendChild(statGroup('Match Days', [
+            ['League', daysPerHalf],
+            ['Handicap', daysPerHalf],
+            ['Total', daysPerHalf * 2]
+        ]));
+        box.appendChild(statGroup('Matches', [
+            ['League', matchesHalf],
+            ['Handicap', matchesHalf],
+            ['Total', matchesHalf * 2]
+        ]));
 
         if (teamCount % 2 !== 0 && teamCount > 0) {
             const note = document.createElement('p');
@@ -95,6 +113,57 @@ const FixturesAdmin = (function () {
             note.textContent = 'Odd number of teams - one team has a bye each match day.';
             box.appendChild(note);
         }
+    }
+
+    // Distinct dates and actual matches (BYE weeks excluded - a bye isn't a
+    // match) already scheduled in the selected season, so this can be
+    // compared against "Match Days Required" above to see how much of the
+    // season is actually done.
+    async function loadAllocatedMatchDayInfo() {
+        const box = $('fxAllocatedMatchDayInfo');
+        box.innerHTML = '<span class="fx-hint">Loading…</span>';
+
+        const season = selectedSeason();
+        const fixturesList = season ? await NADARL.fetchFixtures(season.id) : [];
+        const played = fixturesList.filter(f => !f.isBye);
+
+        const leagueDays = new Set(fixturesList.filter(f => f.half !== 2).map(f => f.date)).size;
+        const hcDays = new Set(fixturesList.filter(f => f.half === 2).map(f => f.date)).size;
+        const totalDays = new Set(fixturesList.map(f => f.date)).size;
+
+        const leagueMatches = played.filter(f => f.half !== 2).length;
+        const hcMatches = played.filter(f => f.half === 2).length;
+
+        box.innerHTML = '';
+        box.appendChild(statGroup('Match Days', [
+            ['League', leagueDays],
+            ['Handicap', hcDays],
+            ['Total', totalDays]
+        ]));
+        box.appendChild(statGroup('Matches', [
+            ['League', leagueMatches],
+            ['Handicap', hcMatches],
+            ['Total', played.length]
+        ]));
+    }
+
+    // A labelled cluster of stat tiles (e.g. "Match Days": League/Handicap/
+    // Total) - title is optional so a single standalone stat (Teams) can
+    // reuse the same tile styling without a redundant heading.
+    function statGroup(title, entries) {
+        const wrap = document.createElement('div');
+        wrap.className = 'fx-stat-group';
+        if (title) {
+            const h = document.createElement('h4');
+            h.className = 'fx-stat-group-title';
+            h.textContent = title;
+            wrap.appendChild(h);
+        }
+        const grid = document.createElement('div');
+        grid.className = 'fx-stat-grid';
+        entries.forEach(([label, value]) => grid.appendChild(matchDayStat(label, value)));
+        wrap.appendChild(grid);
+        return wrap;
     }
 
     function matchDayStat(label, value) {

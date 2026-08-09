@@ -6,7 +6,7 @@
     <title>Season Manager - Admin - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/login.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/admin.css?v=20260809g">
+    <link rel="stylesheet" href="../CSS/admin.css?v=20260809h">
 </head>
 <body>
     <div class="container">
@@ -67,7 +67,18 @@
                             How many match days it takes for every team to play every other team both home
                             and away, in the League half and again in the Handicap half.
                         </p>
-                        <div id="fxMatchDayInfo" class="fx-stat-grid"></div>
+                        <div id="fxMatchDayInfo" class="fx-stat-groups"></div>
+                    </div>
+
+                    <div class="fx-matchday-box">
+                        <div class="fx-matchday-header">
+                            <h3 class="fx-matchday-title">Match Days Allocated</h3>
+                        </div>
+                        <p class="fx-hint">
+                            How many distinct match days already have fixtures scheduled in the season
+                            selected above, in the League half and the Handicap half.
+                        </p>
+                        <div id="fxAllocatedMatchDayInfo" class="fx-stat-groups"></div>
                     </div>
                 </section>
 
@@ -283,7 +294,7 @@
     <script src="../JS/supabase-config.js"></script>
     <script src="../JS/data.js?v=20260809e"></script>
     <script src="../JS/admin-common.js?v=20260809a"></script>
-    <script src="../JS/admin-fixtures.js?v=20260809b"></script>
+    <script src="../JS/admin-fixtures.js?v=20260809f"></script>
     <script src="../JS/admin-exceptions.js?v=20260809f"></script>
     <script src="../JS/admin-competitions.js?v=20260809f"></script>
     <script src="../JS/admin-events.js?v=20260809f"></script>

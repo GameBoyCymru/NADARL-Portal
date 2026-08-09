@@ -433,6 +433,26 @@
     margin-top: 12px;
 }
 
+.fx-stat-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.fx-stat-group .fx-stat-grid {
+    margin-top: 8px;
+}
+
+.fx-stat-group-title {
+    margin: 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #d4a017;
+    font-weight: 700;
+}
+
 .fx-stat {
     flex: 1 1 140px;
     padding: 10px 14px;
