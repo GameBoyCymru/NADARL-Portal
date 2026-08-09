@@ -380,15 +380,15 @@
 }
 
 .type-wohc {
-    background: rgba(200, 200, 200, 0.2);
-    border-color: rgba(200, 200, 200, 0.5);
-    color: #e0e0e0;
+    background: rgba(196, 30, 58, 0.25);
+    border-color: rgba(196, 30, 58, 0.55);
+    color: #f3c2c0;
 }
 
 .type-hc {
-    background: rgba(80, 170, 90, 0.3);
-    border-color: rgba(80, 170, 90, 0.6);
-    color: #bfe6c4;
+    background: rgba(196, 30, 58, 0.25);
+    border-color: rgba(196, 30, 58, 0.55);
+    color: #f3c2c0;
 }
 
 .type-competition {
