@@ -65,11 +65,17 @@ const EventsAdmin = (function () {
             body.innerHTML = '<tr><td colspan="6" class="fx-hint">No events for this season.</td></tr>';
             return;
         }
-        events.forEach(e => body.appendChild(row(e)));
+        let lastDate = null;
+        let band = false;
+        events.forEach(e => {
+            if (e.date !== lastDate) { band = !band; lastDate = e.date; }
+            body.appendChild(row(e, band));
+        });
     }
 
-    function row(e) {
+    function row(e, band) {
         const tr = document.createElement('tr');
+        tr.className = band ? 'fx-date-band-b' : 'fx-date-band-a';
 
         const dateIn = textInput(e.date, 'date');
         const nameIn = textInput(e.name);

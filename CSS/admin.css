@@ -33,6 +33,16 @@
     background: rgba(212, 160, 23, 0.08);
 }
 
+/* Alternating band per distinct date, so it's obvious at a glance which
+   rows across a table share a date (e.g. multiple matches on one Monday). */
+.admin-table tr.fx-date-band-a td {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-table tr.fx-date-band-b td {
+    background: rgba(255, 255, 255, 0.1);
+}
+
 .table-wrap {
     overflow-x: auto;
     border-radius: 8px;

@@ -91,11 +91,17 @@ const FixtureEditorAdmin = (function () {
             body.innerHTML = '<tr><td colspan="6" class="fx-hint">No fixtures for this season.</td></tr>';
             return;
         }
-        fixturesList.forEach(f => body.appendChild(row(f)));
+        let lastDate = null;
+        let band = false;
+        fixturesList.forEach(f => {
+            if (f.date !== lastDate) { band = !band; lastDate = f.date; }
+            body.appendChild(row(f, band));
+        });
     }
 
-    function row(f) {
+    function row(f, band) {
         const tr = document.createElement('tr');
+        tr.className = band ? 'fx-date-band-b' : 'fx-date-band-a';
 
         const tdHome = document.createElement('td');
         tdHome.textContent = f.homeTeam;

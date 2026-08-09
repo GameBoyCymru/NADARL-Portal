@@ -66,11 +66,17 @@ const ExceptionsAdmin = (function () {
             body.innerHTML = '<tr><td colspan="3" class="fx-hint">No exceptions for this season.</td></tr>';
             return;
         }
-        exclusions.forEach(e => body.appendChild(row(e)));
+        let lastDate = null;
+        let band = false;
+        exclusions.forEach(e => {
+            if (e.date !== lastDate) { band = !band; lastDate = e.date; }
+            body.appendChild(row(e, band));
+        });
     }
 
-    function row(e) {
+    function row(e, band) {
         const tr = document.createElement('tr');
+        tr.className = band ? 'fx-date-band-b' : 'fx-date-band-a';
 
         const dateIn = document.createElement('input');
         dateIn.type = 'date';
