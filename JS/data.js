@@ -371,11 +371,12 @@ const NADARL = (function () {
 
     // Delete every match for one season (scores cascade-delete). Admin only - RLS enforces.
     async function clearMatches(seasonId) {
-        const { error } = await db().from('match')
+        const { data, error } = await db().from('match')
             .delete()
-            .eq('season_id', seasonId);
+            .eq('season_id', seasonId)
+            .select('id');
         if (error) { console.error('clearMatches', error); return { ok: false, error: error.message }; }
-        return { ok: true };
+        return { ok: true, count: data ? data.length : 0 };
     }
 
     // Bulk insert matches. rows: [{ season_id, match_date, home_team_id, away_team_id, venue }].
@@ -434,11 +435,12 @@ const NADARL = (function () {
 
     // Delete every exclusion for one season. Admin only - RLS enforces.
     async function clearExclusions(seasonId) {
-        const { error } = await db().from('exclusion')
+        const { data, error } = await db().from('exclusion')
             .delete()
-            .eq('season_id', seasonId);
+            .eq('season_id', seasonId)
+            .select('id');
         if (error) { console.error('clearExclusions', error); return { ok: false, error: error.message }; }
-        return { ok: true };
+        return { ok: true, count: data ? data.length : 0 };
     }
 
     // Delete a single exclusion. Admin only - RLS enforces.
@@ -556,6 +558,16 @@ const NADARL = (function () {
             .eq('id', id)
             .select('id');
         if (error) { console.error('deleteCompetition', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // Delete every competition (and its results) for one season. Admin only - RLS enforces.
+    async function clearCompetitions(seasonId) {
+        const { data, error } = await db().from('competition')
+            .delete()
+            .eq('season_id', seasonId)
+            .select('id');
+        if (error) { console.error('clearCompetitions', error); return { ok: false, error: error.message }; }
         return { ok: true, count: data ? data.length : 0 };
     }
 
@@ -680,6 +692,16 @@ const NADARL = (function () {
             .eq('id', id)
             .select('id');
         if (error) { console.error('deleteEvent', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data ? data.length : 0 };
+    }
+
+    // Delete every event for one season. Admin only - RLS enforces.
+    async function clearEvents(seasonId) {
+        const { data, error } = await db().from('event')
+            .delete()
+            .eq('season_id', seasonId)
+            .select('id');
+        if (error) { console.error('clearEvents', error); return { ok: false, error: error.message }; }
         return { ok: true, count: data ? data.length : 0 };
     }
 
@@ -1120,6 +1142,7 @@ const NADARL = (function () {
         addCompetition,
         updateCompetition,
         deleteCompetition,
+        clearCompetitions,
         fetchCompetitionEntries,
         fetchAllShooters,
         upsertCompetitionEntry,
@@ -1130,6 +1153,7 @@ const NADARL = (function () {
         addEvent,
         updateEvent,
         deleteEvent,
+        clearEvents,
         updateMatchFixture,
         addSeason,
         addTeam,

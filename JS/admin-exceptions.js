@@ -177,6 +177,7 @@ const ExceptionsAdmin = (function () {
 
     function wire() {
         $('exSeason').addEventListener('change', load);
+        $('exDeleteAll').addEventListener('click', deleteAllExceptions);
 
         $('exAdd').addEventListener('click', async () => {
             const season = selectedSeason();
@@ -214,6 +215,24 @@ const ExceptionsAdmin = (function () {
     function shiftSuffix(count, direction) {
         if (!count) return '';
         return ' and shifted ' + count + ' fixture' + (count === 1 ? '' : 's') + ' ' + direction;
+    }
+
+    async function deleteAllExceptions() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+        if (!confirm(
+            'Permanently delete every exception for season "' + season.name + '"? Fixtures are not ' +
+            'shifted back automatically - check the schedule afterwards. This cannot be undone.'
+        )) return;
+
+        const btn = $('exDeleteAll');
+        btn.disabled = true;
+        const res = await NADARL.clearExclusions(season.id);
+        btn.disabled = false;
+        if (!res.ok) { show('Could not delete exceptions: ' + res.error, 'error'); return; }
+
+        show('Deleted ' + (res.count || 0) + ' exception(s) from "' + season.name + '".', 'success');
+        await load();
     }
 
     function show(text, type) {

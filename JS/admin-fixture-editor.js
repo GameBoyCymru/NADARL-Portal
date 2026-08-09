@@ -129,6 +129,25 @@ const FixtureEditorAdmin = (function () {
 
     function wire() {
         $('fxeSeason').addEventListener('change', load);
+        $('fxeDeleteAll').addEventListener('click', deleteAllFixtures);
+    }
+
+    async function deleteAllFixtures() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+        if (!confirm(
+            'Permanently delete every fixture (and any scores) for season "' + season.name + '"? ' +
+            'This cannot be undone.'
+        )) return;
+
+        const btn = $('fxeDeleteAll');
+        btn.disabled = true;
+        const res = await NADARL.clearMatches(season.id);
+        btn.disabled = false;
+        if (!res.ok) { show('Could not delete fixtures: ' + res.error, 'error'); return; }
+
+        show('Deleted ' + (res.count || 0) + ' fixture(s) from "' + season.name + '".', 'success');
+        await load();
     }
 
     function show(text, type) {

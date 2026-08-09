@@ -192,6 +192,7 @@ const CompetitionsAdmin = (function () {
 
     function wire() {
         $('compSeason').addEventListener('change', load);
+        $('compDeleteAll').addEventListener('click', deleteAllCompetitions);
 
         $('compAdd').addEventListener('click', async () => {
             const season = selectedSeason();
@@ -233,6 +234,24 @@ const CompetitionsAdmin = (function () {
     function shiftSuffix(count, direction) {
         if (!count) return '';
         return ' and shifted ' + count + ' fixture' + (count === 1 ? '' : 's') + ' ' + direction;
+    }
+
+    async function deleteAllCompetitions() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+        if (!confirm(
+            'Permanently delete every competition (and all their results) for season "' + season.name +
+            '"? Fixtures are not shifted back automatically - check the schedule afterwards. This cannot be undone.'
+        )) return;
+
+        const btn = $('compDeleteAll');
+        btn.disabled = true;
+        const res = await NADARL.clearCompetitions(season.id);
+        btn.disabled = false;
+        if (!res.ok) { show('Could not delete competitions: ' + res.error, 'error'); return; }
+
+        show('Deleted ' + (res.count || 0) + ' competition(s) from "' + season.name + '".', 'success');
+        await load();
     }
 
     function show(text, type) {

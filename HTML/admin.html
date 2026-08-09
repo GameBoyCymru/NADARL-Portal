@@ -147,7 +147,10 @@
                 <div class="fx-controls">
                     <div class="fx-field">
                         <label for="exSeason">Season</label>
-                        <select id="exSeason"></select>
+                        <div class="fx-season-row">
+                            <select id="exSeason"></select>
+                            <button type="button" id="exDeleteAll" class="shooter-button fx-button-danger">Delete All Exceptions</button>
+                        </div>
                     </div>
                 </div>
 
@@ -183,7 +186,10 @@
                 <div class="fx-controls">
                     <div class="fx-field">
                         <label for="compSeason">Season</label>
-                        <select id="compSeason"></select>
+                        <div class="fx-season-row">
+                            <select id="compSeason"></select>
+                            <button type="button" id="compDeleteAll" class="shooter-button fx-button-danger">Delete All Competitions</button>
+                        </div>
                     </div>
                 </div>
 
@@ -223,7 +229,10 @@
                 <div class="fx-controls">
                     <div class="fx-field">
                         <label for="evSeason">Season</label>
-                        <select id="evSeason"></select>
+                        <div class="fx-season-row">
+                            <select id="evSeason"></select>
+                            <button type="button" id="evDeleteAll" class="shooter-button fx-button-danger">Delete All Events</button>
+                        </div>
                     </div>
                 </div>
 
@@ -267,7 +276,10 @@
                 <div class="fx-controls">
                     <div class="fx-field">
                         <label for="fxeSeason">Season</label>
-                        <select id="fxeSeason"></select>
+                        <div class="fx-season-row">
+                            <select id="fxeSeason"></select>
+                            <button type="button" id="fxeDeleteAll" class="shooter-button fx-button-danger">Delete All Fixtures</button>
+                        </div>
                     </div>
                 </div>
 
@@ -341,15 +353,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260808d"></script>
+    <script src="../JS/data.js?v=20260809a"></script>
     <script src="../JS/admin.js"></script>
     <script src="../JS/admin-teams.js"></script>
     <script src="../JS/admin-handicap.js"></script>
     <script src="../JS/admin-fixtures.js?v=20260807b"></script>
-    <script src="../JS/admin-exceptions.js?v=20260808d"></script>
-    <script src="../JS/admin-competitions.js?v=20260808d"></script>
-    <script src="../JS/admin-events.js?v=20260808d"></script>
-    <script src="../JS/admin-fixture-editor.js?v=20260808"></script>
+    <script src="../JS/admin-exceptions.js?v=20260809a"></script>
+    <script src="../JS/admin-competitions.js?v=20260809a"></script>
+    <script src="../JS/admin-events.js?v=20260809a"></script>
+    <script src="../JS/admin-fixture-editor.js?v=20260809a"></script>
     <script src="../JS/admin-backup.js"></script>
 </body>
 </html>
