@@ -155,6 +155,22 @@ const FixtureEditorAdmin = (function () {
         render();
     }
 
+    // The "Match Days Allocated" stats above live in the Seasons section,
+    // owned by admin-fixtures.js - poke it whenever a match is added,
+    // moved or deleted so those numbers don't go stale. Passes this panel's
+    // own selected season explicitly (rather than letting FixturesAdmin
+    // read its own, independent fxSeason dropdown) so the refresh always
+    // reflects the season actually just changed, even if the two season
+    // pickers on this page aren't set to the same season.
+    function refreshAllocatedStats() {
+        // FixturesAdmin is declared with `const` at the top level of
+        // admin-fixtures.js, so it's a lexical global shared between
+        // classic <script> tags on this page - not a window property.
+        if (typeof FixturesAdmin !== 'undefined' && FixturesAdmin.refreshAllocatedMatchDays) {
+            FixturesAdmin.refreshAllocatedMatchDays(selectedSeason());
+        }
+    }
+
     function render() {
         const body = $('fxeBody');
         body.innerHTML = '';
@@ -228,6 +244,7 @@ const FixtureEditorAdmin = (function () {
             }
             show(`Saved ${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam}.`, 'success');
             await load();
+            refreshAllocatedStats();
         });
         controls.appendChild(save);
 
@@ -249,6 +266,7 @@ const FixtureEditorAdmin = (function () {
             }
             show(`Deleted ${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam}.`, 'success');
             await load();
+            refreshAllocatedStats();
         });
         controls.appendChild(del);
 
@@ -399,6 +417,7 @@ const FixtureEditorAdmin = (function () {
             show('Created ' + created + ' match(es) on ' + date + '.', 'success');
         }
         await load();
+        refreshAllocatedStats();
     }
 
     async function deleteAllFixtures() {
@@ -417,6 +436,7 @@ const FixtureEditorAdmin = (function () {
 
         show('Deleted ' + (res.count || 0) + ' fixture(s) from "' + season.name + '".', 'success');
         await load();
+        refreshAllocatedStats();
     }
 
     function show(text, type) {

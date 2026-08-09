@@ -62,7 +62,7 @@ const FixturesAdmin = (function () {
         $('fxAddSeason').addEventListener('click', createSeason);
         $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
-        $('fxSeason').addEventListener('change', loadAllocatedMatchDayInfo);
+        $('fxSeason').addEventListener('change', () => loadAllocatedMatchDayInfo());
     }
 
     // Every team needs to play every other team both home and away, once in
@@ -118,12 +118,15 @@ const FixturesAdmin = (function () {
     // Distinct dates and actual matches (BYE weeks excluded - a bye isn't a
     // match) already scheduled in the selected season, so this can be
     // compared against "Match Days Required" above to see how much of the
-    // season is actually done.
-    async function loadAllocatedMatchDayInfo() {
+    // season is actually done. seasonOverride lets admin-fixture-editor.js
+    // (which has its own, independent season dropdown) refresh this for
+    // whichever season it just changed matches in, rather than whatever
+    // this panel's own dropdown happens to be showing.
+    async function loadAllocatedMatchDayInfo(seasonOverride) {
         const box = $('fxAllocatedMatchDayInfo');
         box.innerHTML = '<span class="fx-hint">Loading…</span>';
 
-        const season = selectedSeason();
+        const season = seasonOverride || selectedSeason();
         const fixturesList = season ? await NADARL.fetchFixtures(season.id) : [];
         const played = fixturesList.filter(f => !f.isBye);
 
@@ -250,7 +253,10 @@ const FixturesAdmin = (function () {
         el.hidden = false;
     }
 
-    return { init };
+    // Exposed so admin-fixture-editor.js can refresh "Match Days Allocated"
+    // after adding/deleting matches, without the two modules needing to
+    // share any other state.
+    return { init, refreshAllocatedMatchDays: loadAllocatedMatchDayInfo };
 })();
 
 document.addEventListener('DOMContentLoaded', FixturesAdmin.init);
