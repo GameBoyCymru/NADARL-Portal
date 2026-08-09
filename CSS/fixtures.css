@@ -501,8 +501,8 @@
     border-right-color: rgba(155, 90, 220, 0.5);
 }
 
-.fixture-table .fixture-competition-row:last-child td {
-    border-bottom-color: rgba(155, 90, 220, 0.5);
+.fixture-table .fixture-competition-row.fixture-group-end td {
+    border-bottom: 3px solid rgba(155, 90, 220, 0.5);
 }
 
 .fixture-table .fixture-event-row td:first-child {
@@ -513,8 +513,8 @@
     border-right-color: rgba(60, 150, 200, 0.5);
 }
 
-.fixture-table .fixture-event-row:last-child td {
-    border-bottom-color: rgba(60, 150, 200, 0.5);
+.fixture-table .fixture-event-row.fixture-group-end td {
+    border-bottom: 3px solid rgba(60, 150, 200, 0.5);
 }
 
 /* The date-header row itself isn't a link (only the detail row below it

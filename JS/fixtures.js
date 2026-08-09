@@ -264,7 +264,9 @@ function renderSeasonFixtures() {
 
             if (fixture.isCompetition || fixture.isEvent) {
                 const typeRowClass = fixture.isCompetition ? ' fixture-competition-row' : ' fixture-event-row';
-                row.className = 'fixture-row fixture-detail-row fixture-clickable' + typeRowClass + altClass + highlightClass + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
+                row.className = 'fixture-row fixture-detail-row fixture-clickable' + typeRowClass
+                    + (isLastInGroup ? ' fixture-group-end' : '') + altClass + highlightClass
+                    + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
                 row.addEventListener('click', () => { window.location.href = fixtureUrl(fixture); });
                 row.innerHTML = `
                     <td class="teams-cell" colspan="2">${escapeHtml(fixture.name)}</td>
