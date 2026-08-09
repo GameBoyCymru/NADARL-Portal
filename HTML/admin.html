@@ -130,6 +130,18 @@
                     <label class="fx-current-check"><input type="checkbox" id="fxNewSeasonCurrent" checked> Current season</label>
                     <button type="button" id="fxAddSeason" class="shooter-button">Add Season</button>
                 </div>
+
+                <div class="fx-matchday-box">
+                    <div class="fx-matchday-header">
+                        <h3 class="fx-matchday-title">Match Days Required</h3>
+                        <button type="button" id="fxMatchDayRefresh" class="row-button row-button-secondary">Refresh</button>
+                    </div>
+                    <p class="fx-hint">
+                        How many match days it takes for every team to play every other team both home
+                        and away, in the League half and again in the Handicap half.
+                    </p>
+                    <div id="fxMatchDayInfo" class="fx-stat-grid"></div>
+                </div>
             </section>
 
             <section id="exceptionsPanel" class="fx-section">
@@ -357,7 +369,7 @@
     <script src="../JS/admin.js"></script>
     <script src="../JS/admin-teams.js"></script>
     <script src="../JS/admin-handicap.js"></script>
-    <script src="../JS/admin-fixtures.js?v=20260807b"></script>
+    <script src="../JS/admin-fixtures.js?v=20260809a"></script>
     <script src="../JS/admin-exceptions.js?v=20260809a"></script>
     <script src="../JS/admin-competitions.js?v=20260809a"></script>
     <script src="../JS/admin-events.js?v=20260809a"></script>

@@ -21,6 +21,7 @@ const FixturesAdmin = (function () {
         seasons = await NADARL.fetchSeasons();
         populateSeasons();
         wire();
+        await loadMatchDayInfo();
     }
 
     function selectedSeason() {
@@ -59,6 +60,56 @@ const FixturesAdmin = (function () {
         $('fxAddSeason').addEventListener('click', createSeason);
         $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
+        $('fxMatchDayRefresh').addEventListener('click', loadMatchDayInfo);
+    }
+
+    // Every team needs to play every other team both home and away, once in
+    // the League half (half=1) and again, mirrored, in the Handicap half
+    // (half=2) - see the 'half' column comment in schema.sql. That's a
+    // double round-robin per half: with an even number of teams everyone
+    // plays every round (2*(N-1) match days); with an odd number one team
+    // sits out each round, so it takes 2*N match days instead.
+    function matchDaysPerHalf(teamCount) {
+        if (teamCount < 2) return 0;
+        return teamCount % 2 === 0 ? 2 * (teamCount - 1) : 2 * teamCount;
+    }
+
+    async function loadMatchDayInfo() {
+        const box = $('fxMatchDayInfo');
+        box.innerHTML = '<span class="fx-hint">Loading…</span>';
+
+        const teams = await NADARL.fetchTeams();
+        const teamCount = teams.length;
+        const perHalf = matchDaysPerHalf(teamCount);
+        const total = perHalf * 2;
+
+        box.innerHTML = '';
+        box.appendChild(matchDayStat('Teams', teamCount));
+        box.appendChild(matchDayStat('League match days', perHalf));
+        box.appendChild(matchDayStat('Handicap match days', perHalf));
+        box.appendChild(matchDayStat('Total match days', total));
+
+        if (teamCount % 2 !== 0 && teamCount > 0) {
+            const note = document.createElement('p');
+            note.className = 'fx-hint';
+            note.style.marginTop = '10px';
+            note.textContent = 'Odd number of teams - one team has a bye each match day.';
+            box.appendChild(note);
+        }
+    }
+
+    function matchDayStat(label, value) {
+        const stat = document.createElement('div');
+        stat.className = 'fx-stat';
+        const l = document.createElement('span');
+        l.className = 'fx-stat-label';
+        l.textContent = label;
+        const v = document.createElement('span');
+        v.className = 'fx-stat-value';
+        v.textContent = value;
+        stat.appendChild(l);
+        stat.appendChild(v);
+        return stat;
     }
 
     // Clears every entered score for the selected season and resets each of

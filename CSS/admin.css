@@ -349,6 +349,59 @@
     letter-spacing: 0.04em;
 }
 
+.fx-matchday-box {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fx-matchday-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.fx-matchday-title {
+    margin: 0;
+    font-size: 1rem;
+    color: #e0d6c8;
+}
+
+.fx-stat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.fx-stat {
+    flex: 1 1 140px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fx-stat-label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #a0a0a0;
+    margin-bottom: 4px;
+}
+
+.fx-stat-value {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
 .fx-half-badge {
     display: inline-block;
     padding: 2px 8px;
