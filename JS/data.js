@@ -884,23 +884,45 @@ const NADARL = (function () {
     // Summer League newsletters for one season: each is a titled PDF
     // already uploaded to Documents/summer-league/ on the server (this
     // table stores the filename + title only, not the PDF itself - same
-    // convention as gallery images). Newest first, since new newsletters
-    // push older ones down the page.
+    // convention as gallery images). Ordered by sort_order (see
+    // reorderSummerLeagueDocuments) - new newsletters default to the top
+    // (newest first), but can be manually reordered from there.
     async function fetchSummerLeagueDocuments(seasonId) {
         if (!seasonId) return [];
         const { data, error } = await db().from('summer_league_document')
-            .select('id,title,filename,created_at')
+            .select('id,title,filename,sort_order,created_at')
             .eq('season_id', seasonId)
-            .order('created_at', { ascending: false });
+            .order('sort_order', { ascending: true });
         if (error) { console.error('fetchSummerLeagueDocuments', error); return []; }
         return data;
     }
 
-    // Add a Summer League newsletter. Admin only - RLS enforces.
+    // Persist a new display order for one season's newsletters. orderedIds
+    // is the full list of that season's document ids in the desired order.
+    // Admin only - RLS enforces.
+    async function reorderSummerLeagueDocuments(orderedIds) {
+        const results = await Promise.all(orderedIds.map((id, index) =>
+            db().from('summer_league_document').update({ sort_order: index }).eq('id', id)
+        ));
+        const failed = results.find(r => r.error);
+        if (failed) { console.error('reorderSummerLeagueDocuments', failed.error); return { ok: false, error: failed.error.message }; }
+        return { ok: true };
+    }
+
+    // Add a Summer League newsletter, defaulting to the top of the list
+    // (newest first). Admin only - RLS enforces.
     async function addSummerLeagueDocument(seasonId, { title, filename }) {
+        const { data: minRow } = await db().from('summer_league_document')
+            .select('sort_order')
+            .eq('season_id', seasonId)
+            .order('sort_order', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+        const sortOrder = minRow ? minRow.sort_order - 1 : 0;
+
         const { data, error } = await db().from('summer_league_document')
-            .insert({ season_id: seasonId, title: (title || '').trim(), filename: String(filename).trim() })
-            .select('id,title,filename,created_at')
+            .insert({ season_id: seasonId, title: (title || '').trim(), filename: String(filename).trim(), sort_order: sortOrder })
+            .select('id,title,filename,sort_order,created_at')
             .maybeSingle();
         if (error) { console.error('addSummerLeagueDocument', error); return { ok: false, error: error.message }; }
         return { ok: true, document: data };
@@ -911,7 +933,7 @@ const NADARL = (function () {
         const { data, error } = await db().from('summer_league_document')
             .update({ title: (title || '').trim(), filename: String(filename).trim() })
             .eq('id', id)
-            .select('id,title,filename,created_at')
+            .select('id,title,filename,sort_order,created_at')
             .maybeSingle();
         if (error) { console.error('updateSummerLeagueDocument', error); return { ok: false, error: error.message }; }
         return { ok: true, document: data };
@@ -1329,6 +1351,7 @@ const NADARL = (function () {
         fetchSummerLeagueDocuments,
         addSummerLeagueDocument,
         updateSummerLeagueDocument,
-        deleteSummerLeagueDocument
+        deleteSummerLeagueDocument,
+        reorderSummerLeagueDocuments
     };
 })();

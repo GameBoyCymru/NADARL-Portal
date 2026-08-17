@@ -68,13 +68,17 @@ function renderSummerLeagueList(items) {
     }
 
     empty.hidden = true;
-    list.innerHTML = items.map(item => `
+    list.innerHTML = items.map((item, index) => `
         <div class="summer-league-list-item" data-id="${item.id}">
             <div class="summer-league-list-info">
                 <span class="summer-league-list-title">${escapeHtml(item.title || item.filename)}</span>
                 <span class="summer-league-list-date">${formatDocDate(item.created_at)}</span>
             </div>
             <div class="summer-league-list-actions">
+                ${isAdmin ? `
+                    <button type="button" class="gallery-move-button summer-league-move-up" data-id="${item.id}" aria-label="Move up" ${index === 0 ? 'disabled' : ''}>&#8593;</button>
+                    <button type="button" class="gallery-move-button summer-league-move-down" data-id="${item.id}" aria-label="Move down" ${index === items.length - 1 ? 'disabled' : ''}>&#8595;</button>
+                ` : ''}
                 <button type="button" class="gallery-button-secondary summer-league-view" data-id="${item.id}">View</button>
                 ${isAdmin ? `<button type="button" class="gallery-edit-button summer-league-edit" data-id="${item.id}">Edit</button>` : ''}
             </div>
@@ -134,8 +138,32 @@ function wireSummerLeagueListClicks() {
         if (editBtn) {
             const item = documents.find(d => d.id === editBtn.dataset.id);
             if (item) openSummerLeagueForm(item);
+            return;
         }
+
+        const upBtn = e.target.closest('.summer-league-move-up');
+        if (upBtn) { moveDocument(upBtn.dataset.id, -1); return; }
+
+        const downBtn = e.target.closest('.summer-league-move-down');
+        if (downBtn) { moveDocument(downBtn.dataset.id, 1); }
     });
+}
+
+// Swaps a newsletter with its neighbour and persists the new order for
+// every newsletter in this season (see reorderSummerLeagueDocuments) - lets
+// an admin fix one added out of sequence.
+async function moveDocument(id, direction) {
+    const idx = documents.findIndex(d => d.id === id);
+    const swapIdx = idx + direction;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= documents.length) return;
+
+    const reordered = documents.slice();
+    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+
+    const res = await NADARL.reorderSummerLeagueDocuments(reordered.map(d => d.id));
+    if (!res.ok) { showSummerLeagueMessage('Could not reorder newsletters: ' + res.error, 'error'); return; }
+
+    await loadDocuments();
 }
 
 function openSummerLeagueForm(item) {
