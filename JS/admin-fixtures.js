@@ -30,7 +30,7 @@ const FixturesAdmin = (function () {
         return seasons.find(s => s.id === id) || seasons[0] || null;
     }
 
-    function populateSeasons() {
+    function populateSeasons(preferredId) {
         const sel = $('fxSeason');
         sel.innerHTML = '';
         if (!seasons.length) {
@@ -39,10 +39,12 @@ const FixturesAdmin = (function () {
             o.textContent = 'Create a season below first…';
             sel.appendChild(o);
             sel.disabled = true;
+            updateSeasonMoveButtons();
             return;
         }
         sel.disabled = false;
-        const current = seasons.find(s => s.is_current) || seasons[0];
+        const preferred = preferredId && seasons.find(s => s.id === preferredId);
+        const current = preferred || seasons.find(s => s.is_current) || seasons[0];
         seasons.forEach(s => {
             const o = document.createElement('option');
             o.value = s.id;
@@ -50,6 +52,37 @@ const FixturesAdmin = (function () {
             if (current && s.id === current.id) o.selected = true;
             sel.appendChild(o);
         });
+        updateSeasonMoveButtons();
+    }
+
+    function updateSeasonMoveButtons() {
+        const season = selectedSeason();
+        const idx = season ? seasons.findIndex(s => s.id === season.id) : -1;
+        $('fxSeasonMoveUp').disabled = idx <= 0;
+        $('fxSeasonMoveDown').disabled = idx === -1 || idx >= seasons.length - 1;
+    }
+
+    // Swaps the selected season with its neighbour and persists the new
+    // order for every season (see reorderSeasons) - repeated moves let an
+    // admin slot a newly-added historical season in before others, or fix
+    // one that was entered in the wrong order.
+    async function moveSeason(direction) {
+        const season = selectedSeason();
+        if (!season) return;
+        const idx = seasons.findIndex(s => s.id === season.id);
+        const swapIdx = idx + direction;
+        if (idx === -1 || swapIdx < 0 || swapIdx >= seasons.length) return;
+
+        const reordered = seasons.slice();
+        [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+
+        $('fxSeasonMoveUp').disabled = true;
+        $('fxSeasonMoveDown').disabled = true;
+        const res = await NADARL.reorderSeasons(reordered.map(s => s.id));
+        if (!res.ok) { show('Could not reorder seasons: ' + res.error, 'error'); updateSeasonMoveButtons(); return; }
+
+        seasons = await NADARL.fetchSeasons();
+        populateSeasons(season.id);
     }
 
     async function refreshSeasons() {
@@ -62,7 +95,12 @@ const FixturesAdmin = (function () {
         $('fxAddSeason').addEventListener('click', createSeason);
         $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
-        $('fxSeason').addEventListener('change', () => loadAllocatedMatchDayInfo());
+        $('fxSeasonMoveUp').addEventListener('click', () => moveSeason(-1));
+        $('fxSeasonMoveDown').addEventListener('click', () => moveSeason(1));
+        $('fxSeason').addEventListener('change', () => {
+            updateSeasonMoveButtons();
+            loadAllocatedMatchDayInfo();
+        });
     }
 
     // Every team needs to play every other team both home and away, once in

@@ -336,6 +336,13 @@
     white-space: nowrap;
 }
 
+.fx-button-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0d6c8;
+    white-space: nowrap;
+}
+
 .fx-season-row {
     display: flex;
     gap: 10px;

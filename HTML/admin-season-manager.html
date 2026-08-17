@@ -6,7 +6,7 @@
     <title>Season Manager - Admin - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/login.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/admin.css?v=20260809h">
+    <link rel="stylesheet" href="../CSS/admin.css?v=20260817a">
 </head>
 <body>
     <div class="container">
@@ -45,15 +45,17 @@
                             <label for="fxSeason">Season</label>
                             <div class="fx-season-row">
                                 <select id="fxSeason"></select>
+                                <button type="button" id="fxSeasonMoveUp" class="shooter-button fx-button-secondary" title="Move earlier in the list">&#8593; Move Up</button>
+                                <button type="button" id="fxSeasonMoveDown" class="shooter-button fx-button-secondary" title="Move later in the list">&#8595; Move Down</button>
                                 <button type="button" id="fxResetSeason" class="shooter-button fx-button-danger">Reset Season</button>
                                 <button type="button" id="fxDeleteSeason" class="shooter-button fx-button-danger">Delete Season</button>
                             </div>
-                            <span class="fx-hint">Reset Season clears all scores and stats for the selected season, including any Personal Best set or manually entered within it - a shooter's all-time Personal Best is just the highest Season Best across every season. Other seasons are untouched.</span>
+                            <span class="fx-hint">Move Up/Down reorders the season list - use it to slot a newly-added historical season in before others, or fix one entered out of order. Reset Season clears all scores and stats for the selected season, including any Personal Best set or manually entered within it - a shooter's all-time Personal Best is just the highest Season Best across every season. Other seasons are untouched.</span>
                         </div>
                     </div>
 
                     <div class="fx-season-create">
-                        <span class="fx-hint">No season yet? Add one (e.g. "2026-27"):</span>
+                        <span class="fx-hint">No season yet? Add one (e.g. "2026-27"). New seasons are added to the end of the list - use Move Up/Down above to reposition, e.g. to backfill an older season before the current one:</span>
                         <input type="text" id="fxNewSeasonName" class="fx-text-input" placeholder="2026-27" maxlength="20">
                         <label class="fx-current-check"><input type="checkbox" id="fxNewSeasonCurrent" checked> Current season</label>
                         <button type="button" id="fxAddSeason" class="shooter-button">Add Season</button>
@@ -292,9 +294,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260809e"></script>
+    <script src="../JS/data.js?v=20260817a"></script>
     <script src="../JS/admin-common.js?v=20260809a"></script>
-    <script src="../JS/admin-fixtures.js?v=20260809h"></script>
+    <script src="../JS/admin-fixtures.js?v=20260817a"></script>
     <script src="../JS/admin-exceptions.js?v=20260809f"></script>
     <script src="../JS/admin-competitions.js?v=20260809f"></script>
     <script src="../JS/admin-events.js?v=20260809f"></script>

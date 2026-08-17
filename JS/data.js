@@ -341,13 +341,28 @@ const NADARL = (function () {
         return data;
     }
 
-    // All seasons, ordered by name.
+    // All seasons, in their manually-set display order (see reorderSeasons) -
+    // this is what lets historical seasons be backfilled "before" the
+    // current one, or a misordered season be fixed, instead of being stuck
+    // sorting alphabetically by name.
     async function fetchSeasons() {
         const { data, error } = await db().from('season')
-            .select('id,name,start_date,end_date,is_current')
+            .select('id,name,start_date,end_date,is_current,sort_order')
+            .order('sort_order', { ascending: true, nullsFirst: false })
             .order('name');
         if (error) { console.error('fetchSeasons', error); return []; }
         return data;
+    }
+
+    // Persist a new display order for seasons. orderedIds is the full list
+    // of season ids in the desired order. Admin only - RLS enforces.
+    async function reorderSeasons(orderedIds) {
+        const results = await Promise.all(orderedIds.map((id, index) =>
+            db().from('season').update({ sort_order: index }).eq('id', id)
+        ));
+        const failed = results.find(r => r.error);
+        if (failed) { console.error('reorderSeasons', failed.error); return { ok: false, error: failed.error.message }; }
+        return { ok: true };
     }
 
     // Whether a season already has any fixtures saved.
@@ -784,12 +799,25 @@ const NADARL = (function () {
             await db().from('season').update({ is_current: false })
                 .neq('id', '00000000-0000-0000-0000-000000000000');
         }
+
+        // New seasons always append to the end of the manual display order -
+        // to backfill an older season "before" others, add it here then use
+        // reorderSeasons (see the season manager's move up/down controls) to
+        // move it into place.
+        const { data: maxRow } = await db().from('season')
+            .select('sort_order')
+            .order('sort_order', { ascending: false, nullsFirst: false })
+            .limit(1)
+            .maybeSingle();
+        const nextSortOrder = maxRow && maxRow.sort_order != null ? maxRow.sort_order + 1 : 0;
+
         const { data, error } = await db().from('season')
             .insert({
                 name: String(name).trim(),
                 start_date: start_date || null,
                 end_date: end_date || null,
-                is_current: !!is_current
+                is_current: !!is_current,
+                sort_order: nextSortOrder
             })
             .select('id,name,is_current')
             .single();
@@ -1222,6 +1250,7 @@ const NADARL = (function () {
         addShooter,
         updateShooter,
         fetchSeasons,
+        reorderSeasons,
         pickCurrentSeason,
         seasonHasMatches,
         fetchDateOccupants,

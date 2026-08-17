@@ -16,7 +16,8 @@ create table if not exists public.season (
     name        text not null unique,          -- e.g. '2026-27'
     start_date  date,
     end_date    date,
-    is_current  boolean not null default false
+    is_current  boolean not null default false,
+    sort_order  integer                        -- manual display order; see 2026-08-17-season-sort-order.sql
 );
 
 create table if not exists public.team (
