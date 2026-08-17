@@ -825,6 +825,23 @@ const NADARL = (function () {
         return { ok: true, season: data };
     }
 
+    // Marks one season as current, clearing the flag on every other season
+    // first - this is the only way to change which season is current after
+    // it's been created (the "Current season" checkbox on the add form only
+    // applies at creation time). pickCurrentSeason() falls back to whichever
+    // season is last in the list if none of them have this flag set, so an
+    // explicit "current" is what keeps that fallback from silently kicking
+    // in. Admin only - RLS enforces.
+    async function setCurrentSeason(seasonId) {
+        await db().from('season').update({ is_current: false })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+        const { error } = await db().from('season')
+            .update({ is_current: true })
+            .eq('id', seasonId);
+        if (error) { console.error('setCurrentSeason', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
     // Create a team. Admin only - RLS enforces.
     async function addTeam({ name, venue, slug }) {
         const { data, error } = await db().from('team')
@@ -1251,6 +1268,7 @@ const NADARL = (function () {
         updateShooter,
         fetchSeasons,
         reorderSeasons,
+        setCurrentSeason,
         pickCurrentSeason,
         seasonHasMatches,
         fetchDateOccupants,

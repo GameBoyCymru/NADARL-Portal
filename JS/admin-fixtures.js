@@ -91,10 +91,30 @@ const FixturesAdmin = (function () {
         await loadAllocatedMatchDayInfo();
     }
 
+    // The only way to change which season is current after it's been
+    // created - the "Set as current season" checkbox on the add form only
+    // applies at the moment a season is created.
+    async function setCurrentSeason() {
+        const season = selectedSeason();
+        if (!season) return;
+        if (season.is_current) { show('"' + season.name + '" is already the current season.', 'success'); return; }
+
+        const btn = $('fxSeasonSetCurrent');
+        btn.disabled = true;
+        const res = await NADARL.setCurrentSeason(season.id);
+        btn.disabled = false;
+        if (!res.ok) { show('Could not set current season: ' + res.error, 'error'); return; }
+
+        seasons = await NADARL.fetchSeasons();
+        populateSeasons(season.id);
+        show('"' + season.name + '" is now the current season.', 'success');
+    }
+
     function wire() {
         $('fxAddSeason').addEventListener('click', createSeason);
         $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
+        $('fxSeasonSetCurrent').addEventListener('click', setCurrentSeason);
         $('fxSeasonMoveUp').addEventListener('click', () => moveSeason(-1));
         $('fxSeasonMoveDown').addEventListener('click', () => moveSeason(1));
         $('fxSeason').addEventListener('change', () => {
