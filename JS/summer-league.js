@@ -1,4 +1,4 @@
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '../JS/vendor/pdfjs/pdf.worker.min.js';
 
 function escapeHtml(s) {
     return String(s)
@@ -80,6 +80,7 @@ function renderSummerLeagueList(items) {
                     <button type="button" class="gallery-move-button summer-league-move-down" data-id="${item.id}" aria-label="Move down" ${index === items.length - 1 ? 'disabled' : ''}>&#8595;</button>
                 ` : ''}
                 <button type="button" class="gallery-button-secondary summer-league-view" data-id="${item.id}">View</button>
+                <a class="gallery-button-secondary summer-league-download" href="${summerLeagueDocUrl(item.filename)}" download="${escapeHtml(item.filename)}">Download</a>
                 ${isAdmin ? `<button type="button" class="gallery-edit-button summer-league-edit" data-id="${item.id}">Edit</button>` : ''}
             </div>
         </div>

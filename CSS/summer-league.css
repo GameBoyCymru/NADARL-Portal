@@ -1,3 +1,11 @@
+/* gallery.css's .gallery-header relies on a following .gallery-intro
+   paragraph for spacing below it - this page has no intro text, so add the
+   gap directly (scoped here rather than in gallery.css, so gallery/trophies/
+   sales pages - which do have that paragraph - don't end up with a double gap). */
+.gallery-header {
+    margin-bottom: 20px;
+}
+
 .summer-league-list {
     display: flex;
     flex-direction: column;
@@ -40,8 +48,29 @@
 
 .summer-league-list-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
     flex-shrink: 0;
+}
+
+.summer-league-list-actions a.gallery-button-secondary {
+    text-decoration: none;
+}
+
+/* .gallery-move-button normally sits in a fixed-width toolbar with
+   flex: 1 doing the sizing - here there's nothing to fill against, so it
+   collapses to the glyph's own tiny size. Give it real dimensions instead. */
+.summer-league-list-actions .gallery-move-button {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    max-width: none;
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .summer-league-lightbox-dialog {
