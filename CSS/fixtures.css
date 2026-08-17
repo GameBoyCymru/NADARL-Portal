@@ -801,6 +801,13 @@
     font-style: italic;
 }
 
+/* The "no fixtures" row is the table's only row, so it never gets a
+   .fixture-date-row class to pick up the usual top accent border - add it
+   directly so the table's border still reads as a complete box. */
+.fixture-table td.no-fixtures {
+    border-top: 3px solid rgba(196, 30, 58, 0.3);
+}
+
 @media (max-width: 1024px) {
     .desktop-fixtures {
         display: none;
