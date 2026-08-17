@@ -6,6 +6,13 @@
     margin-bottom: 20px;
 }
 
+.summer-league-season-hint {
+    margin: -6px 0 0;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #a0a0a0;
+}
+
 .summer-league-list {
     display: flex;
     flex-direction: column;
