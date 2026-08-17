@@ -6,7 +6,7 @@
     <title>Summer League - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/gallery.css?v=20260807b">
-    <link rel="stylesheet" href="../CSS/summer-league.css?v=20260817d">
+    <link rel="stylesheet" href="../CSS/summer-league.css?v=20260817f">
 </head>
 <body>
     <div class="container">
@@ -26,18 +26,20 @@
 
         <section class="section">
             <div class="gallery-header">
-                <h2 class="section-title">Summer League Results</h2>
+                <h2 class="section-title">Summer League Newsletters</h2>
                 <div class="gallery-header-actions">
-                    <button type="button" id="editSummerLeagueButton" class="gallery-button" hidden>Set Results PDF</button>
+                    <button type="button" id="addSummerLeagueButton" class="gallery-button" hidden>Add Newsletter</button>
                 </div>
             </div>
 
             <div id="summerLeagueMessage" class="gallery-message" role="alert" hidden></div>
 
             <div id="summerLeagueForm" class="gallery-wizard" hidden>
-                <label for="summerLeagueFilenameInput">Results PDF filename</label>
-                <input type="text" id="summerLeagueFilenameInput" class="gallery-input" maxlength="150" placeholder="e.g. summer-league-results-2026.pdf">
-                <p class="wizard-hint">The PDF file must already be uploaded to the <code>Documents/summer-league</code> folder on the server with the exact filename entered. Leave blank and save to remove the current PDF.</p>
+                <label for="summerLeagueTitleInput">Title</label>
+                <input type="text" id="summerLeagueTitleInput" class="gallery-input" maxlength="150" placeholder="e.g. Week 3 Results">
+                <label for="summerLeagueFilenameInput">PDF filename</label>
+                <input type="text" id="summerLeagueFilenameInput" class="gallery-input" maxlength="150" placeholder="e.g. week-3-results.pdf">
+                <p class="wizard-hint">The PDF file must already be uploaded to the <code>Documents/summer-league</code> folder on the server with the exact filename entered.</p>
                 <div class="wizard-actions">
                     <button type="button" id="summerLeagueDelete" class="gallery-button-danger" hidden>Delete</button>
                     <button type="button" id="summerLeagueCancel" class="gallery-button-secondary">Cancel</button>
@@ -45,23 +47,14 @@
                 </div>
             </div>
 
-            <div id="summerLeagueEmpty" class="gallery-empty" hidden>No results PDF has been published yet.</div>
+            <div id="summerLeagueEmpty" class="gallery-empty" hidden>No newsletters have been published yet.</div>
 
-            <div class="gallery-grid" id="summerLeagueGrid" style="display: none">
-                <div class="gallery-item">
-                    <div class="gallery-photo-wrap" id="summerLeagueThumbWrap">
-                        <img id="summerLeagueThumbImage" class="gallery-photo summer-league-thumb" alt="Summer League Results">
-                    </div>
-                    <div class="gallery-description">
-                        <span class="gallery-description-text">Summer League Results</span>
-                    </div>
-                </div>
-            </div>
+            <div class="summer-league-list" id="summerLeagueList"></div>
         </section>
 
         <div class="gallery-lightbox" id="summerLeagueLightbox" hidden>
             <div class="gallery-lightbox-backdrop" id="summerLeagueLightboxBackdrop"></div>
-            <div class="gallery-lightbox-dialog summer-league-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Summer League results PDF">
+            <div class="gallery-lightbox-dialog summer-league-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Summer League newsletter">
                 <button type="button" class="gallery-lightbox-close" id="summerLeagueLightboxClose" aria-label="Close">&times;</button>
                 <div class="summer-league-pages" id="summerLeaguePages"></div>
             </div>
@@ -103,6 +96,6 @@
     <script src="../JS/supabase-config.js"></script>
     <script src="../JS/data.js?v=20260807"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js"></script>
-    <script src="../JS/summer-league.js?v=20260817e"></script>
+    <script src="../JS/summer-league.js?v=20260817f"></script>
 </body>
 </html>

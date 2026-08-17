@@ -1,7 +1,47 @@
-.summer-league-thumb {
-    object-fit: cover;
-    object-position: top;
-    background: #ffffff;
+.summer-league-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.summer-league-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: border-color 0.3s ease;
+}
+
+.summer-league-list-item:hover {
+    border-color: rgba(196, 30, 58, 0.4);
+}
+
+.summer-league-list-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.summer-league-list-title {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.summer-league-list-date {
+    color: #a0a0a0;
+    font-size: 0.8rem;
+}
+
+.summer-league-list-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
 .summer-league-lightbox-dialog {

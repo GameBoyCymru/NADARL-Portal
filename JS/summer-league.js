@@ -1,5 +1,11 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js';
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function showSummerLeagueMessage(text, type) {
     const box = document.getElementById('summerLeagueMessage');
     box.textContent = text;
@@ -14,7 +20,8 @@ function hideSummerLeagueMessage() {
 let isAdmin = false;
 let seasons = [];
 let seasonIndex = 0;
-let currentFilename = null;
+let documents = [];
+let editingId = null;
 let pdfDocPromise = null;
 
 function currentSeason() {
@@ -23,6 +30,11 @@ function currentSeason() {
 
 function summerLeagueDocUrl(filename) {
     return '../Documents/summer-league/' + encodeURIComponent(filename);
+}
+
+function formatDocDate(isoString) {
+    if (!isoString) return '';
+    return new Date(isoString).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 // Renders one PDF page to an offscreen canvas at the given target width
@@ -45,53 +57,40 @@ async function renderPdfPageToImage(page, targetWidth) {
     return img;
 }
 
-function loadPdfDocument(filename) {
-    pdfDocPromise = pdfjsLib.getDocument(summerLeagueDocUrl(filename)).promise;
-    return pdfDocPromise;
-}
-
-async function renderThumbnail(filename) {
-    const wrap = document.getElementById('summerLeagueThumbWrap');
-    const thumbImg = document.getElementById('summerLeagueThumbImage');
-    try {
-        const pdf = await loadPdfDocument(filename);
-        const page = await pdf.getPage(1);
-        const rendered = await renderPdfPageToImage(page, wrap.clientWidth || 400);
-        thumbImg.src = rendered.src;
-    } catch (err) {
-        console.error('renderThumbnail', err);
-        showSummerLeagueMessage('Could not load the results PDF.', 'error');
-    }
-}
-
-function renderSummerLeagueDocument(filename) {
-    currentFilename = filename || null;
-    pdfDocPromise = null;
-
+function renderSummerLeagueList(items) {
+    const list = document.getElementById('summerLeagueList');
     const empty = document.getElementById('summerLeagueEmpty');
-    const grid = document.getElementById('summerLeagueGrid');
 
-    if (!currentFilename) {
+    if (!items.length) {
+        list.innerHTML = '';
         empty.hidden = false;
-        grid.style.display = 'none';
         return;
     }
 
     empty.hidden = true;
-    grid.style.display = '';
-    renderThumbnail(currentFilename);
+    list.innerHTML = items.map(item => `
+        <div class="summer-league-list-item" data-id="${item.id}">
+            <div class="summer-league-list-info">
+                <span class="summer-league-list-title">${escapeHtml(item.title || item.filename)}</span>
+                <span class="summer-league-list-date">${formatDocDate(item.created_at)}</span>
+            </div>
+            <div class="summer-league-list-actions">
+                <button type="button" class="gallery-button-secondary summer-league-view" data-id="${item.id}">View</button>
+                ${isAdmin ? `<button type="button" class="gallery-edit-button summer-league-edit" data-id="${item.id}">Edit</button>` : ''}
+            </div>
+        </div>
+    `).join('');
 }
 
-async function openSummerLeagueLightbox() {
-    if (!currentFilename) return;
-
+async function openSummerLeagueLightbox(item) {
     const pagesContainer = document.getElementById('summerLeaguePages');
-    pagesContainer.innerHTML = '<p class="summer-league-loading">Loading results&hellip;</p>';
+    pagesContainer.innerHTML = '<p class="summer-league-loading">Loading&hellip;</p>';
     document.getElementById('summerLeagueLightbox').hidden = false;
     document.body.style.overflow = 'hidden';
 
     try {
-        const pdf = await (pdfDocPromise || loadPdfDocument(currentFilename));
+        pdfDocPromise = pdfjsLib.getDocument(summerLeagueDocUrl(item.filename)).promise;
+        const pdf = await pdfDocPromise;
         const targetWidth = Math.min(document.getElementById('summerLeagueLightbox').clientWidth - 40, 900) || 800;
 
         pagesContainer.innerHTML = '';
@@ -99,12 +98,12 @@ async function openSummerLeagueLightbox() {
             const page = await pdf.getPage(pageNum);
             const img = await renderPdfPageToImage(page, targetWidth);
             img.className = 'summer-league-page-image';
-            img.alt = 'Summer League Results - page ' + pageNum;
+            img.alt = (item.title || 'Summer League newsletter') + ' - page ' + pageNum;
             pagesContainer.appendChild(img);
         }
     } catch (err) {
         console.error('openSummerLeagueLightbox', err);
-        pagesContainer.innerHTML = '<p class="summer-league-loading">Could not load the results PDF.</p>';
+        pagesContainer.innerHTML = '<p class="summer-league-loading">Could not load this PDF.</p>';
     }
 }
 
@@ -114,7 +113,6 @@ function closeSummerLeagueLightbox() {
 }
 
 function wireSummerLeagueLightbox() {
-    document.getElementById('summerLeagueThumbWrap').addEventListener('click', openSummerLeagueLightbox);
     document.getElementById('summerLeagueLightboxClose').addEventListener('click', closeSummerLeagueLightbox);
     document.getElementById('summerLeagueLightboxBackdrop').addEventListener('click', closeSummerLeagueLightbox);
     document.addEventListener('keydown', (e) => {
@@ -123,61 +121,93 @@ function wireSummerLeagueLightbox() {
     });
 }
 
-function openSummerLeagueForm() {
-    document.getElementById('summerLeagueFilenameInput').value = currentFilename || '';
+function wireSummerLeagueListClicks() {
+    document.getElementById('summerLeagueList').addEventListener('click', (e) => {
+        const viewBtn = e.target.closest('.summer-league-view');
+        if (viewBtn) {
+            const item = documents.find(d => d.id === viewBtn.dataset.id);
+            if (item) openSummerLeagueLightbox(item);
+            return;
+        }
+
+        const editBtn = e.target.closest('.summer-league-edit');
+        if (editBtn) {
+            const item = documents.find(d => d.id === editBtn.dataset.id);
+            if (item) openSummerLeagueForm(item);
+        }
+    });
+}
+
+function openSummerLeagueForm(item) {
+    editingId = item ? item.id : null;
+    document.getElementById('summerLeagueTitleInput').value = item ? (item.title || '') : '';
+    document.getElementById('summerLeagueFilenameInput').value = item ? item.filename : '';
+    document.getElementById('summerLeagueDelete').hidden = !item;
     document.getElementById('summerLeagueForm').hidden = false;
-    document.getElementById('editSummerLeagueButton').hidden = true;
-    document.getElementById('summerLeagueDelete').hidden = !currentFilename;
+    document.getElementById('addSummerLeagueButton').hidden = true;
     hideSummerLeagueMessage();
 }
 
 function closeSummerLeagueForm() {
+    editingId = null;
     document.getElementById('summerLeagueForm').hidden = true;
-    document.getElementById('editSummerLeagueButton').hidden = false;
+    document.getElementById('addSummerLeagueButton').hidden = !isAdmin || !currentSeason();
 }
 
 function wireSummerLeagueForm() {
-    document.getElementById('editSummerLeagueButton').addEventListener('click', openSummerLeagueForm);
+    document.getElementById('addSummerLeagueButton').addEventListener('click', () => openSummerLeagueForm(null));
     document.getElementById('summerLeagueCancel').addEventListener('click', closeSummerLeagueForm);
 
     document.getElementById('summerLeagueSave').addEventListener('click', async () => {
         const season = currentSeason();
         if (!season) return;
 
+        const title = document.getElementById('summerLeagueTitleInput').value.trim();
         const filename = document.getElementById('summerLeagueFilenameInput').value.trim();
+        if (!filename) {
+            showSummerLeagueMessage('Please enter the PDF filename.', 'error');
+            return;
+        }
 
         const saveButton = document.getElementById('summerLeagueSave');
         saveButton.disabled = true;
-        const res = await NADARL.updateSummerLeagueDocument(season.id, filename || null);
+        const res = editingId
+            ? await NADARL.updateSummerLeagueDocument(editingId, { title, filename })
+            : await NADARL.addSummerLeagueDocument(season.id, { title, filename });
         saveButton.disabled = false;
 
         if (!res.ok) {
-            showSummerLeagueMessage('Could not save the results PDF: ' + res.error, 'error');
+            showSummerLeagueMessage('Could not save the newsletter: ' + res.error, 'error');
             return;
         }
 
         closeSummerLeagueForm();
-        renderSummerLeagueDocument(res.document.filename);
+        await loadDocuments();
     });
 
     document.getElementById('summerLeagueDelete').addEventListener('click', async () => {
-        const season = currentSeason();
-        if (!season) return;
-        if (!confirm('Delete the results PDF for this season? This cannot be undone.')) return;
+        if (!editingId) return;
+        if (!confirm('Delete this newsletter? This cannot be undone.')) return;
 
         const deleteButton = document.getElementById('summerLeagueDelete');
         deleteButton.disabled = true;
-        const res = await NADARL.updateSummerLeagueDocument(season.id, null);
+        const res = await NADARL.deleteSummerLeagueDocument(editingId);
         deleteButton.disabled = false;
 
         if (!res.ok) {
-            showSummerLeagueMessage('Could not delete the results PDF: ' + res.error, 'error');
+            showSummerLeagueMessage('Could not delete the newsletter: ' + res.error, 'error');
             return;
         }
 
         closeSummerLeagueForm();
-        renderSummerLeagueDocument(null);
+        await loadDocuments();
     });
+}
+
+async function loadDocuments() {
+    const season = currentSeason();
+    documents = season ? await NADARL.fetchSummerLeagueDocuments(season.id) : [];
+    renderSummerLeagueList(documents);
 }
 
 async function loadSeason() {
@@ -190,12 +220,10 @@ async function loadSeason() {
     prevButton.disabled = seasonIndex <= 0;
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
-    document.getElementById('editSummerLeagueButton').hidden = !isAdmin || !season;
     closeSummerLeagueForm();
     hideSummerLeagueMessage();
 
-    const doc = season ? await NADARL.fetchSummerLeagueDocument(season.id) : { filename: null };
-    renderSummerLeagueDocument(doc.filename);
+    await loadDocuments();
 }
 
 function wireSeasonNav() {
@@ -213,6 +241,7 @@ async function initSummerLeaguePage() {
 
     wireSummerLeagueForm();
     wireSummerLeagueLightbox();
+    wireSummerLeagueListClicks();
     wireSeasonNav();
 
     seasons = await NADARL.fetchSeasons();

@@ -836,41 +836,49 @@ const NADARL = (function () {
         return { ok: true, count: data ? data.length : 0 };
     }
 
-    // Summer League results document for one season: the filename of a PDF
+    // Summer League newsletters for one season: each is a titled PDF
     // already uploaded to Documents/summer-league/ on the server (this
-    // table stores the filename only, not the PDF itself - same convention
-    // as gallery images). Summer League runs within the normal league
-    // season, so results are looked up per season_id. null filename means
-    // nothing uploaded yet for that season.
-    async function fetchSummerLeagueDocument(seasonId) {
-        if (!seasonId) return { filename: null, uploaded_at: null };
+    // table stores the filename + title only, not the PDF itself - same
+    // convention as gallery images). Newest first, since new newsletters
+    // push older ones down the page.
+    async function fetchSummerLeagueDocuments(seasonId) {
+        if (!seasonId) return [];
         const { data, error } = await db().from('summer_league_document')
-            .select('filename,uploaded_at')
+            .select('id,title,filename,created_at')
             .eq('season_id', seasonId)
-            .maybeSingle();
-        if (error) { console.error('fetchSummerLeagueDocument', error); return { filename: null, uploaded_at: null }; }
-        return data || { filename: null, uploaded_at: null };
+            .order('created_at', { ascending: false });
+        if (error) { console.error('fetchSummerLeagueDocuments', error); return []; }
+        return data;
     }
 
-    // Set (or clear, with filename = null) the Summer League results PDF
-    // for a season. Admin only - RLS enforces.
-    async function updateSummerLeagueDocument(seasonId, filename) {
-        const clean = filename ? String(filename).trim() : null;
-
-        if (!clean) {
-            const { error } = await db().from('summer_league_document')
-                .delete()
-                .eq('season_id', seasonId);
-            if (error) { console.error('updateSummerLeagueDocument', error); return { ok: false, error: error.message }; }
-            return { ok: true, document: { filename: null, uploaded_at: null } };
-        }
-
+    // Add a Summer League newsletter. Admin only - RLS enforces.
+    async function addSummerLeagueDocument(seasonId, { title, filename }) {
         const { data, error } = await db().from('summer_league_document')
-            .upsert({ season_id: seasonId, filename: clean, uploaded_at: new Date().toISOString() }, { onConflict: 'season_id' })
-            .select('filename,uploaded_at')
+            .insert({ season_id: seasonId, title: (title || '').trim(), filename: String(filename).trim() })
+            .select('id,title,filename,created_at')
+            .maybeSingle();
+        if (error) { console.error('addSummerLeagueDocument', error); return { ok: false, error: error.message }; }
+        return { ok: true, document: data };
+    }
+
+    // Update a Summer League newsletter's title/filename. Admin only - RLS enforces.
+    async function updateSummerLeagueDocument(id, { title, filename }) {
+        const { data, error } = await db().from('summer_league_document')
+            .update({ title: (title || '').trim(), filename: String(filename).trim() })
+            .eq('id', id)
+            .select('id,title,filename,created_at')
             .maybeSingle();
         if (error) { console.error('updateSummerLeagueDocument', error); return { ok: false, error: error.message }; }
         return { ok: true, document: data };
+    }
+
+    // Delete a Summer League newsletter. Admin only - RLS enforces.
+    async function deleteSummerLeagueDocument(id) {
+        const { error } = await db().from('summer_league_document')
+            .delete()
+            .eq('id', id);
+        if (error) { console.error('deleteSummerLeagueDocument', error); return { ok: false, error: error.message }; }
+        return { ok: true };
     }
 
     // Handicap formula config (single row): max(0, round((((target - avg) /
@@ -955,7 +963,7 @@ const NADARL = (function () {
     // freshly-migrated database, unlike every other table here. Upsert it
     // instead of insert so restoring the exported config doesn't collide
     // with that seeded default row.
-    const BACKUP_UPSERT_TABLES = { handicap_config: 'id', summer_league_document: 'season_id' };
+    const BACKUP_UPSERT_TABLES = { handicap_config: 'id' };
 
     // Restores a previous exportAllData() snapshot into an EMPTY database
     // whose schema already matches (supabase/schema.sql + migrations
@@ -1271,7 +1279,9 @@ const NADARL = (function () {
         updateSaleItem,
         deleteSaleItem,
         reorderSaleItems,
-        fetchSummerLeagueDocument,
-        updateSummerLeagueDocument
+        fetchSummerLeagueDocuments,
+        addSummerLeagueDocument,
+        updateSummerLeagueDocument,
+        deleteSummerLeagueDocument
     };
 })();
