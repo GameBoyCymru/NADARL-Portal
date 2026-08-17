@@ -6,11 +6,25 @@
     margin-bottom: 20px;
 }
 
-.summer-league-season-hint {
-    margin: -6px 0 0;
-    text-align: center;
-    font-size: 0.8rem;
-    color: #a0a0a0;
+.summer-league-period-admin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.summer-league-period-admin-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0 4px;
+}
+
+.summer-league-period-input {
+    width: 90px;
+    flex: none;
 }
 
 .summer-league-list {
@@ -67,7 +81,8 @@
 /* .gallery-move-button normally sits in a fixed-width toolbar with
    flex: 1 doing the sizing - here there's nothing to fill against, so it
    collapses to the glyph's own tiny size. Give it real dimensions instead. */
-.summer-league-list-actions .gallery-move-button {
+.summer-league-list-actions .gallery-move-button,
+.summer-league-period-admin .gallery-move-button {
     flex: none;
     width: 34px;
     height: 34px;

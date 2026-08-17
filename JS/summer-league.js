@@ -18,14 +18,14 @@ function hideSummerLeagueMessage() {
 }
 
 let isAdmin = false;
-let seasons = [];
-let seasonIndex = 0;
+let periods = [];
+let periodIndex = 0;
 let documents = [];
 let editingId = null;
 let pdfDocPromise = null;
 
-function currentSeason() {
-    return seasons[seasonIndex] || null;
+function currentPeriod() {
+    return periods[periodIndex] || null;
 }
 
 function summerLeagueDocUrl(filename) {
@@ -151,7 +151,7 @@ function wireSummerLeagueListClicks() {
 }
 
 // Swaps a newsletter with its neighbour and persists the new order for
-// every newsletter in this season (see reorderSummerLeagueDocuments) - lets
+// every newsletter in this period (see reorderSummerLeagueDocuments) - lets
 // an admin fix one added out of sequence.
 async function moveDocument(id, direction) {
     const idx = documents.findIndex(d => d.id === id);
@@ -180,7 +180,7 @@ function openSummerLeagueForm(item) {
 function closeSummerLeagueForm() {
     editingId = null;
     document.getElementById('summerLeagueForm').hidden = true;
-    document.getElementById('addSummerLeagueButton').hidden = !isAdmin || !currentSeason();
+    document.getElementById('addSummerLeagueButton').hidden = !isAdmin || !currentPeriod();
 }
 
 function wireSummerLeagueForm() {
@@ -188,8 +188,8 @@ function wireSummerLeagueForm() {
     document.getElementById('summerLeagueCancel').addEventListener('click', closeSummerLeagueForm);
 
     document.getElementById('summerLeagueSave').addEventListener('click', async () => {
-        const season = currentSeason();
-        if (!season) return;
+        const period = currentPeriod();
+        if (!period) return;
 
         const title = document.getElementById('summerLeagueTitleInput').value.trim();
         const filename = document.getElementById('summerLeagueFilenameInput').value.trim();
@@ -202,7 +202,7 @@ function wireSummerLeagueForm() {
         saveButton.disabled = true;
         const res = editingId
             ? await NADARL.updateSummerLeagueDocument(editingId, { title, filename })
-            : await NADARL.addSummerLeagueDocument(season.id, { title, filename });
+            : await NADARL.addSummerLeagueDocument(period.id, { title, filename });
         saveButton.disabled = false;
 
         if (!res.ok) {
@@ -234,33 +234,97 @@ function wireSummerLeagueForm() {
 }
 
 async function loadDocuments() {
-    const season = currentSeason();
-    documents = season ? await NADARL.fetchSummerLeagueDocuments(season.id) : [];
+    const period = currentPeriod();
+    documents = period ? await NADARL.fetchSummerLeagueDocuments(period.id) : [];
     renderSummerLeagueList(documents);
 }
 
-async function loadSeason() {
-    const season = currentSeason();
-    const label = document.getElementById('seasonLabel');
-    const prevButton = document.getElementById('seasonPrev');
-    const nextButton = document.getElementById('seasonNext');
+function updatePeriodAdminControls() {
+    const period = currentPeriod();
+    document.getElementById('periodAdminControls').style.display = isAdmin ? '' : 'none';
+    document.getElementById('periodMoveUp').disabled = !period || periodIndex <= 0;
+    document.getElementById('periodMoveDown').disabled = !period || periodIndex >= periods.length - 1;
+    document.getElementById('periodDelete').disabled = !period;
+}
 
-    label.textContent = season ? season.name : 'Season';
-    prevButton.disabled = seasonIndex <= 0;
-    nextButton.disabled = seasonIndex >= seasons.length - 1;
+async function loadPeriod() {
+    const period = currentPeriod();
+    const label = document.getElementById('periodLabel');
+    const prevButton = document.getElementById('periodPrev');
+    const nextButton = document.getElementById('periodNext');
 
+    label.textContent = period ? period.name : 'Summer League';
+    prevButton.disabled = periodIndex <= 0;
+    nextButton.disabled = periodIndex >= periods.length - 1;
+    updatePeriodAdminControls();
+
+    document.getElementById('addSummerLeagueButton').hidden = !isAdmin || !period;
     closeSummerLeagueForm();
     hideSummerLeagueMessage();
 
     await loadDocuments();
 }
 
-function wireSeasonNav() {
-    document.getElementById('seasonPrev').addEventListener('click', () => {
-        if (seasonIndex > 0) { seasonIndex--; loadSeason(); }
+function wirePeriodNav() {
+    document.getElementById('periodPrev').addEventListener('click', () => {
+        if (periodIndex > 0) { periodIndex--; loadPeriod(); }
     });
-    document.getElementById('seasonNext').addEventListener('click', () => {
-        if (seasonIndex < seasons.length - 1) { seasonIndex++; loadSeason(); }
+    document.getElementById('periodNext').addEventListener('click', () => {
+        if (periodIndex < periods.length - 1) { periodIndex++; loadPeriod(); }
+    });
+}
+
+// Swaps the current period with its neighbour and persists the new order
+// for every period (see reorderSummerLeaguePeriods) - lets an admin backfill
+// an older year before others, or fix one added out of sequence.
+async function movePeriod(direction) {
+    const period = currentPeriod();
+    if (!period) return;
+    const idx = periods.findIndex(p => p.id === period.id);
+    const swapIdx = idx + direction;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= periods.length) return;
+
+    const reordered = periods.slice();
+    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+
+    const res = await NADARL.reorderSummerLeaguePeriods(reordered.map(p => p.id));
+    if (!res.ok) { showSummerLeagueMessage('Could not reorder years: ' + res.error, 'error'); return; }
+
+    periods = await NADARL.fetchSummerLeaguePeriods();
+    periodIndex = periods.findIndex(p => p.id === period.id);
+    if (periodIndex === -1) periodIndex = periods.length - 1;
+    await loadPeriod();
+}
+
+function wirePeriodAdminControls() {
+    document.getElementById('periodMoveUp').addEventListener('click', () => movePeriod(-1));
+    document.getElementById('periodMoveDown').addEventListener('click', () => movePeriod(1));
+
+    document.getElementById('periodDelete').addEventListener('click', async () => {
+        const period = currentPeriod();
+        if (!period) return;
+        if (!confirm('Delete Summer League "' + period.name + '" and all of its newsletters? This cannot be undone.')) return;
+
+        const res = await NADARL.deleteSummerLeaguePeriod(period.id);
+        if (!res.ok) { showSummerLeagueMessage('Could not delete year: ' + res.error, 'error'); return; }
+
+        periods = await NADARL.fetchSummerLeaguePeriods();
+        periodIndex = periods.length - 1;
+        await loadPeriod();
+    });
+
+    document.getElementById('periodAdd').addEventListener('click', async () => {
+        const nameInput = document.getElementById('periodNewName');
+        const name = nameInput.value.trim();
+        if (!name) { showSummerLeagueMessage('Please enter a year (e.g. 2027).', 'error'); return; }
+
+        const res = await NADARL.addSummerLeaguePeriod(name);
+        if (!res.ok) { showSummerLeagueMessage('Could not add year: ' + res.error, 'error'); return; }
+
+        nameInput.value = '';
+        periods = await NADARL.fetchSummerLeaguePeriods();
+        periodIndex = periods.length - 1;
+        await loadPeriod();
     });
 }
 
@@ -271,21 +335,22 @@ async function initSummerLeaguePage() {
     wireSummerLeagueForm();
     wireSummerLeagueLightbox();
     wireSummerLeagueListClicks();
-    wireSeasonNav();
+    wirePeriodNav();
+    wirePeriodAdminControls();
 
-    seasons = await NADARL.fetchSeasons();
-    if (!seasons.length) {
-        document.getElementById('seasonLabel').textContent = '';
-        document.getElementById('seasonPrev').disabled = true;
-        document.getElementById('seasonNext').disabled = true;
+    periods = await NADARL.fetchSummerLeaguePeriods();
+    if (!periods.length) {
+        document.getElementById('periodLabel').textContent = 'Summer League';
+        document.getElementById('periodPrev').disabled = true;
+        document.getElementById('periodNext').disabled = true;
         document.getElementById('summerLeagueEmpty').hidden = false;
+        updatePeriodAdminControls();
         return;
     }
 
-    const season = NADARL.pickCurrentSeason(seasons);
-    seasonIndex = season ? seasons.indexOf(season) : seasons.length - 1;
+    periodIndex = periods.length - 1;
 
-    await loadSeason();
+    await loadPeriod();
 }
 
 document.addEventListener('DOMContentLoaded', initSummerLeaguePage);
