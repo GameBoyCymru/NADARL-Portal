@@ -266,7 +266,7 @@ async function loadPeriod() {
     const prevButton = document.getElementById('periodPrev');
     const nextButton = document.getElementById('periodNext');
 
-    label.textContent = period ? (period.name + (period.is_current ? '  (current)' : '')) : 'Summer League';
+    label.textContent = period ? (period.name + (isAdmin && period.is_current ? '  (current)' : '')) : 'Summer League';
     prevButton.disabled = periodIndex <= 0;
     nextButton.disabled = periodIndex >= periods.length - 1;
     updatePeriodAdminControls();
