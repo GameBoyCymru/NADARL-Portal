@@ -1,11 +1,12 @@
-let fixtures = [];        // fixtures for the browsed season (Season Fixtures table)
-let todayFixtures = [];   // fixtures for the actual current season (Today's Fixtures card)
+let fixtures = [];        // fixtures for the browsed season - drives both the
+                           // Season Fixtures table and the Today's/Next
+                           // Fixtures card, so both always agree with
+                           // whichever season is currently browsed
 let seasons = [];
 let seasonIndex = 0;
 let isAdmin = false;
 let slugMap = {};
-let highlightDate = null;   // date shown in "Today's Fixtures" (today's, or the next upcoming)
-let currentSeasonId = null; // the actual current season - highlightDate only applies when browsing it
+let highlightDate = null;   // date shown in "Today's Fixtures" (today's, or the next upcoming, within the browsed season)
 
 function teamBadgeHtml(teamName) {
     const slug = slugMap[teamName];
@@ -91,18 +92,19 @@ function isToday(dateStr) {
 
 function getNextFixtures() {
     const today = getTodayDate();
-    const futureFixtures = todayFixtures.filter(f => f.date > today);
+    const futureFixtures = fixtures.filter(f => f.date > today);
     const dates = [...new Set(futureFixtures.map(f => f.date))].sort().slice(0, 1);
     const dateSet = new Set(dates);
     return futureFixtures.filter(f => dateSet.has(f.date));
 }
 
-// The date shown in the "Today's Fixtures" card - today's date if there are
-// fixtures today, otherwise the next upcoming date. Used to highlight the
-// matching row(s) in the Season Fixtures table when that season is browsed.
+// The date shown in the "Today's Fixtures" card - today's date if the
+// browsed season has fixtures today, otherwise its next upcoming date (or
+// null if it has none). Also used to highlight the matching row(s) in the
+// Season Fixtures table below.
 function computeHighlightDate() {
     const today = getTodayDate();
-    if (todayFixtures.some(f => f.date === today)) return today;
+    if (fixtures.some(f => f.date === today)) return today;
     const next = getNextFixtures();
     return next.length ? next[0].date : null;
 }
@@ -122,21 +124,30 @@ function groupFixturesByDate(fixtureList) {
 }
 
 function renderTodayFixtures() {
+    const section = document.getElementById('todayFixturesSection');
+    const title = document.getElementById('todayFixturesTitle');
     const container = document.getElementById('todayFixtures');
-    const todaysFixtures = todayFixtures.filter(f => isToday(f.date));
+    container.innerHTML = '';
+    const todaysFixtures = fixtures.filter(f => isToday(f.date));
 
     if (todaysFixtures.length === 0) {
         const nextFixtures = getNextFixtures();
         if (nextFixtures.length > 0) {
-            document.querySelector('.section-title').textContent = 'Next Fixtures';
+            section.hidden = false;
+            title.textContent = 'Next Fixtures';
             const groupedFixtures = groupFixturesByDate(nextFixtures);
             Object.keys(groupedFixtures).forEach(date => {
                 container.innerHTML += createFixtureCardGroup(date, groupedFixtures[date], true);
             });
         } else {
-            container.innerHTML = '<div class="no-fixtures">No upcoming fixtures scheduled</div>';
+            // No fixtures today and none upcoming (nothing scheduled yet, or
+            // the season's fixtures have all been played) - nothing useful
+            // to show, so hide the whole card rather than an empty one.
+            section.hidden = true;
         }
     } else {
+        section.hidden = false;
+        title.textContent = "Today's Fixtures";
         const groupedFixtures = groupFixturesByDate(todaysFixtures);
         Object.keys(groupedFixtures).forEach(date => {
             container.innerHTML += createFixtureCardGroup(date, groupedFixtures[date], true);
@@ -233,14 +244,13 @@ function renderSeasonFixtures() {
         return;
     }
 
-    const highlightSeason = seasons[seasonIndex] && seasons[seasonIndex].id === currentSeasonId;
     const today = getTodayDate();
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const formattedDate = formatDate(date);
         const group = groupedFixtures[date];
         const altClass = dateIndex % 2 === 1 ? ' fixture-row-alt' : '';
-        const highlightClass = highlightSeason && date === highlightDate ? ' fixture-current-row' : '';
+        const highlightClass = date === highlightDate ? ' fixture-current-row' : '';
         const mixed = isMixedGroup(group);
 
         // A date with nothing but an exclusion (no match/competition/event
@@ -355,13 +365,12 @@ function renderMobileSeasonFixtures() {
     }
 
     const groupedFixtures = groupFixturesByDate(fixtures);
-    const highlightSeason = seasons[seasonIndex] && seasons[seasonIndex].id === currentSeasonId;
     const today = getTodayDate();
     let html = '';
 
     Object.keys(groupedFixtures).sort().forEach((date, dateIndex) => {
         const altClass = dateIndex % 2 === 1 ? ' mobile-fixture-group-alt' : '';
-        const highlightClass = highlightSeason && date === highlightDate ? ' mobile-fixture-current' : '';
+        const highlightClass = date === highlightDate ? ' mobile-fixture-current' : '';
         const group = groupedFixtures[date];
 
         const mixed = isMixedGroup(group);
@@ -504,6 +513,8 @@ async function loadBrowsedSeason() {
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
     fixtures = season ? await loadSeasonFixtures(season) : [];
+    highlightDate = computeHighlightDate();
+    renderTodayFixtures();
     renderSeasonFixtures();
     renderMobileSeasonFixtures();
 }
@@ -525,9 +536,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (seasonIndex < seasons.length - 1) { seasonIndex++; loadBrowsedSeason(); }
     });
 
-    currentSeasonId = currentSeason ? currentSeason.id : null;
-    todayFixtures = await loadSeasonFixtures(currentSeason);
-    highlightDate = computeHighlightDate();
-    renderTodayFixtures();
     await loadBrowsedSeason();
 });
