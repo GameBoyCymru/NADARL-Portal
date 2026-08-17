@@ -21,8 +21,13 @@ create table if not exists public.summer_league_period (
     id          uuid primary key default gen_random_uuid(),
     name        text not null unique,     -- e.g. '2026'
     sort_order  integer not null,
+    is_current  boolean not null default false,
     created_at  timestamptz not null default now()
 );
+
+-- Additive for installs where this table already existed before is_current
+-- was introduced ("create table if not exists" above is a no-op there.)
+alter table public.summer_league_period add column if not exists is_current boolean not null default false;
 
 create index if not exists idx_summer_league_period_sort_order on public.summer_league_period(sort_order);
 
@@ -41,12 +46,13 @@ grant select, insert, update, delete on public.summer_league_period to anon, aut
 drop table if exists public.summer_league_document;
 
 create table public.summer_league_document (
-    id          uuid primary key default gen_random_uuid(),
-    period_id   uuid not null references public.summer_league_period(id) on delete cascade,
-    title       text not null default '',
-    filename    text not null,        -- e.g. 'week-3-results.pdf', in Documents/summer-league/
-    sort_order  integer not null,
-    created_at  timestamptz not null default now()
+    id           uuid primary key default gen_random_uuid(),
+    period_id    uuid not null references public.summer_league_period(id) on delete cascade,
+    title        text not null default '',
+    filename     text not null,        -- e.g. 'week-3-results.pdf', in Documents/summer-league/
+    sort_order   integer not null,
+    published_at date not null default current_date,  -- shown on the page; editable, unlike created_at (e.g. to backfill the true date for several added in bulk)
+    created_at   timestamptz not null default now()
 );
 
 create index idx_summer_league_document_period on public.summer_league_document(period_id, sort_order);

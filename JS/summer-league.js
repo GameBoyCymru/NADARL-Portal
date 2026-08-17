@@ -32,9 +32,19 @@ function summerLeagueDocUrl(filename) {
     return '../Documents/summer-league/' + encodeURIComponent(filename);
 }
 
-function formatDocDate(isoString) {
-    if (!isoString) return '';
-    return new Date(isoString).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+// dateStr is a plain 'YYYY-MM-DD' date (published_at, not a timestamp) -
+// parsed as local calendar components rather than via `new Date(dateStr)`,
+// which treats a bare date string as UTC midnight and can display a day
+// early/late depending on the viewer's timezone.
+function formatDocDate(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function todayDateString() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 // Renders one PDF page to an offscreen canvas at the given target width
@@ -72,7 +82,7 @@ function renderSummerLeagueList(items) {
         <div class="summer-league-list-item" data-id="${item.id}">
             <div class="summer-league-list-info">
                 <span class="summer-league-list-title">${escapeHtml(item.title || item.filename)}</span>
-                <span class="summer-league-list-date">${formatDocDate(item.created_at)}</span>
+                <span class="summer-league-list-date">${formatDocDate(item.published_at)}</span>
             </div>
             <div class="summer-league-list-actions">
                 ${isAdmin ? `
@@ -171,6 +181,7 @@ function openSummerLeagueForm(item) {
     editingId = item ? item.id : null;
     document.getElementById('summerLeagueTitleInput').value = item ? (item.title || '') : '';
     document.getElementById('summerLeagueFilenameInput').value = item ? item.filename : '';
+    document.getElementById('summerLeagueDateInput').value = item ? item.published_at : todayDateString();
     document.getElementById('summerLeagueDelete').hidden = !item;
     document.getElementById('summerLeagueForm').hidden = false;
     document.getElementById('addSummerLeagueButton').hidden = true;
@@ -193,6 +204,7 @@ function wireSummerLeagueForm() {
 
         const title = document.getElementById('summerLeagueTitleInput').value.trim();
         const filename = document.getElementById('summerLeagueFilenameInput').value.trim();
+        const date = document.getElementById('summerLeagueDateInput').value || todayDateString();
         if (!filename) {
             showSummerLeagueMessage('Please enter the PDF filename.', 'error');
             return;
@@ -201,8 +213,8 @@ function wireSummerLeagueForm() {
         const saveButton = document.getElementById('summerLeagueSave');
         saveButton.disabled = true;
         const res = editingId
-            ? await NADARL.updateSummerLeagueDocument(editingId, { title, filename })
-            : await NADARL.addSummerLeagueDocument(period.id, { title, filename });
+            ? await NADARL.updateSummerLeagueDocument(editingId, { title, filename, date })
+            : await NADARL.addSummerLeagueDocument(period.id, { title, filename, date });
         saveButton.disabled = false;
 
         if (!res.ok) {
@@ -244,6 +256,7 @@ function updatePeriodAdminControls() {
     document.getElementById('periodAdminControls').style.display = isAdmin ? '' : 'none';
     document.getElementById('periodMoveUp').disabled = !period || periodIndex <= 0;
     document.getElementById('periodMoveDown').disabled = !period || periodIndex >= periods.length - 1;
+    document.getElementById('periodSetCurrent').disabled = !period || period.is_current;
     document.getElementById('periodDelete').disabled = !period;
 }
 
@@ -253,7 +266,7 @@ async function loadPeriod() {
     const prevButton = document.getElementById('periodPrev');
     const nextButton = document.getElementById('periodNext');
 
-    label.textContent = period ? period.name : 'Summer League';
+    label.textContent = period ? (period.name + (period.is_current ? '  (current)' : '')) : 'Summer League';
     prevButton.disabled = periodIndex <= 0;
     nextButton.disabled = periodIndex >= periods.length - 1;
     updatePeriodAdminControls();
@@ -299,6 +312,19 @@ async function movePeriod(direction) {
 function wirePeriodAdminControls() {
     document.getElementById('periodMoveUp').addEventListener('click', () => movePeriod(-1));
     document.getElementById('periodMoveDown').addEventListener('click', () => movePeriod(1));
+
+    document.getElementById('periodSetCurrent').addEventListener('click', async () => {
+        const period = currentPeriod();
+        if (!period || period.is_current) return;
+
+        const res = await NADARL.setCurrentSummerLeaguePeriod(period.id);
+        if (!res.ok) { showSummerLeagueMessage('Could not set current year: ' + res.error, 'error'); return; }
+
+        periods = await NADARL.fetchSummerLeaguePeriods();
+        periodIndex = periods.findIndex(p => p.id === period.id);
+        if (periodIndex === -1) periodIndex = periods.length - 1;
+        await loadPeriod();
+    });
 
     document.getElementById('periodDelete').addEventListener('click', async () => {
         const period = currentPeriod();
@@ -348,7 +374,8 @@ async function initSummerLeaguePage() {
         return;
     }
 
-    periodIndex = periods.length - 1;
+    const flaggedCurrent = periods.findIndex(p => p.is_current);
+    periodIndex = flaggedCurrent !== -1 ? flaggedCurrent : periods.length - 1;
 
     await loadPeriod();
 }

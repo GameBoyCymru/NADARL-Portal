@@ -887,7 +887,7 @@ const NADARL = (function () {
     // sort_order (see reorderSummerLeaguePeriods).
     async function fetchSummerLeaguePeriods() {
         const { data, error } = await db().from('summer_league_period')
-            .select('id,name,sort_order')
+            .select('id,name,sort_order,is_current')
             .order('sort_order', { ascending: true });
         if (error) { console.error('fetchSummerLeaguePeriods', error); return []; }
         return data;
@@ -905,10 +905,23 @@ const NADARL = (function () {
 
         const { data, error } = await db().from('summer_league_period')
             .insert({ name: String(name).trim(), sort_order: sortOrder })
-            .select('id,name,sort_order')
+            .select('id,name,sort_order,is_current')
             .maybeSingle();
         if (error) { console.error('addSummerLeaguePeriod', error); return { ok: false, error: error.message }; }
         return { ok: true, period: data };
+    }
+
+    // Marks one Summer League period as current, clearing the flag on every
+    // other period first. This is what the page defaults to on load.
+    // Admin only - RLS enforces.
+    async function setCurrentSummerLeaguePeriod(id) {
+        await db().from('summer_league_period').update({ is_current: false })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+        const { error } = await db().from('summer_league_period')
+            .update({ is_current: true })
+            .eq('id', id);
+        if (error) { console.error('setCurrentSummerLeaguePeriod', error); return { ok: false, error: error.message }; }
+        return { ok: true };
     }
 
     // Delete a Summer League period and all of its newsletters (cascade).
@@ -941,7 +954,7 @@ const NADARL = (function () {
     async function fetchSummerLeagueDocuments(periodId) {
         if (!periodId) return [];
         const { data, error } = await db().from('summer_league_document')
-            .select('id,title,filename,sort_order,created_at')
+            .select('id,title,filename,sort_order,published_at,created_at')
             .eq('period_id', periodId)
             .order('sort_order', { ascending: true });
         if (error) { console.error('fetchSummerLeagueDocuments', error); return []; }
@@ -961,8 +974,11 @@ const NADARL = (function () {
     }
 
     // Add a Summer League newsletter, defaulting to the top of the list
-    // (newest first). Admin only - RLS enforces.
-    async function addSummerLeagueDocument(periodId, { title, filename }) {
+    // (newest first). date (YYYY-MM-DD) defaults to today if omitted - it's
+    // shown on the page and can be edited later (see updateSummerLeagueDocument),
+    // e.g. to backfill the true date for several newsletters added in bulk.
+    // Admin only - RLS enforces.
+    async function addSummerLeagueDocument(periodId, { title, filename, date }) {
         const { data: minRow } = await db().from('summer_league_document')
             .select('sort_order')
             .eq('period_id', periodId)
@@ -971,20 +987,23 @@ const NADARL = (function () {
             .maybeSingle();
         const sortOrder = minRow ? minRow.sort_order - 1 : 0;
 
+        const payload = { period_id: periodId, title: (title || '').trim(), filename: String(filename).trim(), sort_order: sortOrder };
+        if (date) payload.published_at = date;
+
         const { data, error } = await db().from('summer_league_document')
-            .insert({ period_id: periodId, title: (title || '').trim(), filename: String(filename).trim(), sort_order: sortOrder })
-            .select('id,title,filename,sort_order,created_at')
+            .insert(payload)
+            .select('id,title,filename,sort_order,published_at,created_at')
             .maybeSingle();
         if (error) { console.error('addSummerLeagueDocument', error); return { ok: false, error: error.message }; }
         return { ok: true, document: data };
     }
 
-    // Update a Summer League newsletter's title/filename. Admin only - RLS enforces.
-    async function updateSummerLeagueDocument(id, { title, filename }) {
+    // Update a Summer League newsletter's title/filename/date. Admin only - RLS enforces.
+    async function updateSummerLeagueDocument(id, { title, filename, date }) {
         const { data, error } = await db().from('summer_league_document')
-            .update({ title: (title || '').trim(), filename: String(filename).trim() })
+            .update({ title: (title || '').trim(), filename: String(filename).trim(), published_at: date })
             .eq('id', id)
-            .select('id,title,filename,sort_order,created_at')
+            .select('id,title,filename,sort_order,published_at,created_at')
             .maybeSingle();
         if (error) { console.error('updateSummerLeagueDocument', error); return { ok: false, error: error.message }; }
         return { ok: true, document: data };
@@ -1403,6 +1422,7 @@ const NADARL = (function () {
         addSummerLeaguePeriod,
         deleteSummerLeaguePeriod,
         reorderSummerLeaguePeriods,
+        setCurrentSummerLeaguePeriod,
         fetchSummerLeagueDocuments,
         addSummerLeagueDocument,
         updateSummerLeagueDocument,
