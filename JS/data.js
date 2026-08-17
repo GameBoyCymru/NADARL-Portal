@@ -836,6 +836,43 @@ const NADARL = (function () {
         return { ok: true, count: data ? data.length : 0 };
     }
 
+    // Summer League results document for one season: the filename of a PDF
+    // already uploaded to Documents/summer-league/ on the server (this
+    // table stores the filename only, not the PDF itself - same convention
+    // as gallery images). Summer League runs within the normal league
+    // season, so results are looked up per season_id. null filename means
+    // nothing uploaded yet for that season.
+    async function fetchSummerLeagueDocument(seasonId) {
+        if (!seasonId) return { filename: null, uploaded_at: null };
+        const { data, error } = await db().from('summer_league_document')
+            .select('filename,uploaded_at')
+            .eq('season_id', seasonId)
+            .maybeSingle();
+        if (error) { console.error('fetchSummerLeagueDocument', error); return { filename: null, uploaded_at: null }; }
+        return data || { filename: null, uploaded_at: null };
+    }
+
+    // Set (or clear, with filename = null) the Summer League results PDF
+    // for a season. Admin only - RLS enforces.
+    async function updateSummerLeagueDocument(seasonId, filename) {
+        const clean = filename ? String(filename).trim() : null;
+
+        if (!clean) {
+            const { error } = await db().from('summer_league_document')
+                .delete()
+                .eq('season_id', seasonId);
+            if (error) { console.error('updateSummerLeagueDocument', error); return { ok: false, error: error.message }; }
+            return { ok: true, document: { filename: null, uploaded_at: null } };
+        }
+
+        const { data, error } = await db().from('summer_league_document')
+            .upsert({ season_id: seasonId, filename: clean, uploaded_at: new Date().toISOString() }, { onConflict: 'season_id' })
+            .select('filename,uploaded_at')
+            .maybeSingle();
+        if (error) { console.error('updateSummerLeagueDocument', error); return { ok: false, error: error.message }; }
+        return { ok: true, document: data };
+    }
+
     // Handicap formula config (single row): max(0, round((((target - avg) /
     // divisor) - offset_value) * factor)). { target, divisor, offset_value, factor }.
     const HANDICAP_CONFIG_DEFAULTS = { target: 70, divisor: 2, offset_value: 0.95, factor: 1.4 };
@@ -888,8 +925,8 @@ const NADARL = (function () {
     // a freshly-restored project won't have matching rows for. Re-invite
     // admins/captains after a restore and reassign their role/team instead.
     // ---------------------------------------------------------------------
-    const BACKUP_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'user_profile'];
-    const BACKUP_IMPORT_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config'];
+    const BACKUP_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'summer_league_document', 'user_profile'];
+    const BACKUP_IMPORT_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'summer_league_document'];
     const BACKUP_CHUNK_SIZE = 500;
 
     // Downloads every row of every table as one JSON snapshot. Admin only -
@@ -918,7 +955,7 @@ const NADARL = (function () {
     // freshly-migrated database, unlike every other table here. Upsert it
     // instead of insert so restoring the exported config doesn't collide
     // with that seeded default row.
-    const BACKUP_UPSERT_TABLES = { handicap_config: 'id' };
+    const BACKUP_UPSERT_TABLES = { handicap_config: 'id', summer_league_document: 'season_id' };
 
     // Restores a previous exportAllData() snapshot into an EMPTY database
     // whose schema already matches (supabase/schema.sql + migrations
@@ -1233,6 +1270,8 @@ const NADARL = (function () {
         addSaleItem,
         updateSaleItem,
         deleteSaleItem,
-        reorderSaleItems
+        reorderSaleItems,
+        fetchSummerLeagueDocument,
+        updateSummerLeagueDocument
     };
 })();

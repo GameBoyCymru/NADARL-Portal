@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Summer League - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/gallery.css?v=20260807b">
+    <link rel="stylesheet" href="../CSS/summer-league.css?v=20260817d">
 </head>
 <body>
     <div class="container">
@@ -15,9 +17,55 @@
         </header>
 
         <section class="section">
-            <h2 class="section-title">Summer League</h2>
-            <p>Details of the Summer League will be published here soon.</p>
+            <div class="season-nav">
+                <button type="button" id="seasonPrev" class="season-arrow" aria-label="Previous season">&#8249;</button>
+                <h2 class="section-title" id="seasonLabel">Season</h2>
+                <button type="button" id="seasonNext" class="season-arrow" aria-label="Next season">&#8250;</button>
+            </div>
         </section>
+
+        <section class="section">
+            <div class="gallery-header">
+                <h2 class="section-title">Summer League Results</h2>
+                <div class="gallery-header-actions">
+                    <button type="button" id="editSummerLeagueButton" class="gallery-button" hidden>Set Results PDF</button>
+                </div>
+            </div>
+
+            <div id="summerLeagueMessage" class="gallery-message" role="alert" hidden></div>
+
+            <div id="summerLeagueForm" class="gallery-wizard" hidden>
+                <label for="summerLeagueFilenameInput">Results PDF filename</label>
+                <input type="text" id="summerLeagueFilenameInput" class="gallery-input" maxlength="150" placeholder="e.g. summer-league-results-2026.pdf">
+                <p class="wizard-hint">The PDF file must already be uploaded to the <code>Documents/summer-league</code> folder on the server with the exact filename entered. Leave blank and save to remove the current PDF.</p>
+                <div class="wizard-actions">
+                    <button type="button" id="summerLeagueDelete" class="gallery-button-danger" hidden>Delete</button>
+                    <button type="button" id="summerLeagueCancel" class="gallery-button-secondary">Cancel</button>
+                    <button type="button" id="summerLeagueSave" class="gallery-button">Save</button>
+                </div>
+            </div>
+
+            <div id="summerLeagueEmpty" class="gallery-empty" hidden>No results PDF has been published yet.</div>
+
+            <div class="gallery-grid" id="summerLeagueGrid" style="display: none">
+                <div class="gallery-item">
+                    <div class="gallery-photo-wrap" id="summerLeagueThumbWrap">
+                        <img id="summerLeagueThumbImage" class="gallery-photo summer-league-thumb" alt="Summer League Results">
+                    </div>
+                    <div class="gallery-description">
+                        <span class="gallery-description-text">Summer League Results</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="gallery-lightbox" id="summerLeagueLightbox" hidden>
+            <div class="gallery-lightbox-backdrop" id="summerLeagueLightboxBackdrop"></div>
+            <div class="gallery-lightbox-dialog summer-league-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Summer League results PDF">
+                <button type="button" class="gallery-lightbox-close" id="summerLeagueLightboxClose" aria-label="Close">&times;</button>
+                <div class="summer-league-pages" id="summerLeaguePages"></div>
+            </div>
+        </div>
 
         <footer class="footer">
             <div class="footer-content">
@@ -49,5 +97,12 @@
             </div>
         </footer>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS/supabase-keys.js"></script>
+    <script src="../JS/supabase-config.js"></script>
+    <script src="../JS/data.js?v=20260807"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js"></script>
+    <script src="../JS/summer-league.js?v=20260817e"></script>
 </body>
 </html>
