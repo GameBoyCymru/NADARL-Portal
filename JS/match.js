@@ -106,8 +106,8 @@ function calculateTeamScores(shooters) {
     const aTeam = sorted.slice(0, 5).reduce((sum, s) => sum + s.effective, 0);
     const bTeam = sorted.slice(4, 7).reduce((sum, s) => sum + s.effective, 0);
 
-    const aTeamShooters = sorted.slice(0, 5).map(s => ({ name: s.name, total: s.effective }));
-    const bTeamShooters = sorted.slice(4, 7).map(s => ({ name: s.name, total: s.effective }));
+    const aTeamShooters = sorted.slice(0, 5).map(s => ({ name: s.name, shooter_id: s.shooter_id, total: s.effective }));
+    const bTeamShooters = sorted.slice(4, 7).map(s => ({ name: s.name, shooter_id: s.shooter_id, total: s.effective }));
 
     return { aTeam, bTeam, aTeamShooters, bTeamShooters };
 }
@@ -137,7 +137,9 @@ function renderShooterTable(tbodyId, shooters) {
         if (shooters.length && rankedTotal === maxTotal) totalClass += ' total-highest';
         else if (shooters.length && rankedTotal === minTotal) totalClass += ' total-lowest';
         html += `<tr>`;
-        html += `<td class="shooter-cell">${shooter.name}</td>`;
+        html += shooter.shooter_id
+            ? `<td class="shooter-cell"><a class="shooter-link" href="shooter.html?id=${encodeURIComponent(shooter.shooter_id)}">${shooter.name}</a></td>`
+            : `<td class="shooter-cell">${shooter.name}</td>`;
         shooter.scores.forEach(score => {
             html += `<td class="score-cell">${score}</td>`;
         });
@@ -164,14 +166,18 @@ function renderTeamSummary(tbodyId, scores, opponentScores) {
         return;
     }
 
+    const nameCell = s => s.shooter_id
+        ? `<a class="shooter-link" href="shooter.html?id=${encodeURIComponent(s.shooter_id)}">${s.name}</a>`
+        : s.name;
+
     scores.aTeamShooters.forEach((s, i) => {
         const bScore = (i === 4 && scores.bTeamShooters[0] && scores.bTeamShooters[0].name === s.name) ? s.total : '';
-        html += `<tr><td class="summary-shooter">${s.name}</td><td class="score-cell">${s.total}</td><td class="score-cell">${bScore}</td></tr>`;
+        html += `<tr><td class="summary-shooter">${nameCell(s)}</td><td class="score-cell">${s.total}</td><td class="score-cell">${bScore}</td></tr>`;
     });
 
     scores.bTeamShooters.forEach((s, i) => {
         if (i === 0) return;
-        html += `<tr><td class="summary-shooter">${s.name}</td><td class="score-cell"></td><td class="score-cell">${s.total}</td></tr>`;
+        html += `<tr><td class="summary-shooter">${nameCell(s)}</td><td class="score-cell"></td><td class="score-cell">${s.total}</td></tr>`;
     });
 
     const aClass = scores.aTeam > opponentScores.aTeam ? ' score-winner' : '';
@@ -1042,13 +1048,13 @@ async function initMatchPage() {
     if (homeEditable) {
         renderEditableGrid('homeShooters', match.id, homeTeamId, homeShooters, homeExisting, true, params, 'homeShooters', 'awayShooters');
     } else {
-        renderShooterTable('homeShooters', homeExisting.map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total })));
+        renderShooterTable('homeShooters', homeExisting.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
     }
     if (match.away_team_id) {
         if (awayEditable) {
             renderEditableGrid('awayShooters', match.id, awayTeamId, awayShooters, awayExisting, true, params, 'homeShooters', 'awayShooters');
         } else {
-            renderShooterTable('awayShooters', awayExisting.map(r => ({ name: r.shooter_name, scores: r.shots || [], total: r.total })));
+            renderShooterTable('awayShooters', awayExisting.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
         }
     }
 

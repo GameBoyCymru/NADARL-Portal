@@ -203,6 +203,16 @@
     color: #d0d0d0;
 }
 
+.shooter-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.shooter-link:hover {
+    color: #d4a017;
+    text-decoration: underline;
+}
+
 .score-table .empty-table-msg {
     text-align: center;
     color: #a0a0a0;
