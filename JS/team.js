@@ -245,12 +245,33 @@ function buildRow(shooter, canEdit) {
     // Stats columns (read-only)
     tdAppendStat(tr, shooter.matches_played);        // Season Matches Shot (current season)
 
-    // Personal Best (all-time) and Season Best (current season) are both
-    // always read-only here: Personal Best is just the highest Season Best
-    // across every season, and Season Best itself is purely computed from
-    // real submitted matches now - no manual override for either.
+    // Personal Best (all-time) stays read-only - it's just the highest
+    // Season Best override across every season, so raising this season's
+    // override (below) raises it automatically when it's the new max.
     tdAppendStat(tr, shooter.best);
-    tdAppendStat(tr, shooter.season_best);
+
+    // Season Best is admin-editable (for backfilling pre-digital history or
+    // correcting bad data): an input pre-filled with the raw override for
+    // this season (shooter.season_best_override, distinct from season_best
+    // itself, which is greatest(override, computed-from-real-matches)).
+    // Captains in edit mode still see it as plain text.
+    let pbInput = null;
+    if (isAdmin && canEdit) {
+        const td = document.createElement('td');
+        td.className = 'score-cell';
+        pbInput = document.createElement('input');
+        pbInput.type = 'number';
+        pbInput.min = '0';
+        pbInput.className = 'shooter-input pb-override-input';
+        pbInput.placeholder = String(shooter.season_best);
+        pbInput.value = shooter.season_best_override == null ? '' : shooter.season_best_override;
+        pbInput.title = 'Override this season\'s Personal Best. Leave blank to use the real computed value.';
+        td.appendChild(pbInput);
+        tr.appendChild(td);
+    } else {
+        tdAppendStat(tr, shooter.season_best);
+    }
+
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
     tdAppendStat(tr, shooter.handicap == null ? 'N/A' : shooter.handicap);
@@ -264,18 +285,35 @@ function buildRow(shooter, canEdit) {
         save.className = 'shooter-button';
         save.textContent = 'Save';
         save.addEventListener('click', async () => {
-            const nameInput = tr.querySelector('.shooter-input');
+            const nameInput = tr.querySelector('.shooter-name-cell .shooter-input');
             const roleSelect = tr.querySelector('.shooter-select');
             const name = nameInput.value.trim();
             if (!name) { showEditMessage('Shooter name cannot be empty.', 'error'); return; }
             const patch = { name, role: roleSelect.value };
             save.disabled = true;
             const res = await NADARL.updateShooter(shooter.shooter_id, patch);
-            save.disabled = false;
             if (!res.ok) {
+                save.disabled = false;
                 showEditMessage('Could not save: ' + res.error, 'error');
                 return;
             }
+            if (pbInput) {
+                const raw = pbInput.value.trim();
+                const pbValue = raw === '' ? null : Number(raw);
+                if (raw !== '' && (isNaN(pbValue) || pbValue < 0)) {
+                    save.disabled = false;
+                    showEditMessage('Personal Best override must be a positive number (or blank).', 'error');
+                    return;
+                }
+                const season = seasons[seasonIndex];
+                const pbRes = await NADARL.updateShooterSeasonBest(shooter.shooter_id, season.id, pbValue);
+                if (!pbRes.ok) {
+                    save.disabled = false;
+                    showEditMessage('Saved ' + name + ', but could not save Personal Best override: ' + pbRes.error, 'error');
+                    return;
+                }
+            }
+            save.disabled = false;
             showEditMessage('Saved ' + name + '.', 'success');
             await refreshShooters();
         });

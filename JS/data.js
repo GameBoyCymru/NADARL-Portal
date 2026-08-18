@@ -308,6 +308,23 @@ const NADARL = (function () {
         return stats.filter(s => s.team_id === teamId);
     }
 
+    // Admin-only override of a shooter's Season Best for one season (raising
+    // it also raises their all-time Personal Best, which is just the max
+    // override across every season - see shooter_stats/shooter_stats_for_
+    // season). Pass personalBest: null to clear the override and fall back
+    // to whatever's actually been shot that season. RLS enforces admin-only.
+    async function updateShooterSeasonBest(shooterId, seasonId, personalBest) {
+        const { data, error } = await db().from('shooter_season_best')
+            .upsert(
+                { shooter_id: shooterId, season_id: seasonId, personal_best: personalBest },
+                { onConflict: 'shooter_id,season_id' }
+            )
+            .select('shooter_id,season_id,personal_best')
+            .maybeSingle();
+        if (error) { console.error('updateShooterSeasonBest', error); return { ok: false, error: error.message }; }
+        return { ok: true, override: data };
+    }
+
     // A single shooter's basic info + team, for the Shooter Profile page header.
     async function fetchShooterById(shooterId) {
         const { data, error } = await db().from('shooter')
@@ -1329,6 +1346,7 @@ const NADARL = (function () {
         fetchTeamSlugMap,
         fetchTeamShootersStats,
         fetchTeamShootersStatsForSeason,
+        updateShooterSeasonBest,
         fetchAllShooterStats,
         fetchShooterStatsForSeason,
         fetchShooterById,
