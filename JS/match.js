@@ -673,25 +673,27 @@ function recalcSummary(params, homeTbodyId, awayTbodyId) {
     updateTotalHighlights(awayTbodyId);
 }
 
-// True while the user has focus inside this tbody, or a shooter-picker
-// dropdown open in it - a live update arriving mid-edit skips that tbody
-// rather than yanking focus or closing the picker out from under them.
-function tbodyBusy(tbodyId) {
+// Applies a live scorecard refresh to an editable grid one row at a time,
+// rebuilding each row from the fresh data - except a row the user has focus
+// in (or has its shooter-picker dropdown open), which is left alone so a
+// remote update never yanks their cursor or closes a menu mid-edit. Only
+// that one row is stale until they move on; everything else stays live.
+// renderEditableGrid's keydown/input/change listeners are delegated on the
+// tbody itself, so swapping individual <tr> elements needs no re-binding.
+function updateEditableRowsLive(tbodyId, shooterList, existingRows, teamId) {
     const tbody = document.getElementById(tbodyId);
-    if (!tbody) return false;
-    if (tbody.contains(document.activeElement)) return true;
-    return !!tbody.querySelector('.shooter-picker-panel:not([hidden])');
-}
-
-// renderEditableGrid attaches its keydown/input/change listeners straight to
-// the tbody element, so re-rendering it in place (innerHTML swap) would
-// stack duplicate listeners on every live update. Swapping in a fresh clone
-// first drops the old listeners along with the old element.
-function replaceFreshTbody(tbodyId) {
-    const old = document.getElementById(tbodyId);
-    const fresh = old.cloneNode(false);
-    old.parentNode.replaceChild(fresh, old);
-    return fresh;
+    if (!tbody) return;
+    const trs = Array.from(tbody.querySelectorAll('tr.score-edit-row'));
+    const rowCount = Math.max(trs.length, existingRows.length);
+    for (let i = 0; i < rowCount; i++) {
+        const tr = trs[i];
+        if (tr && (tr.contains(document.activeElement) || tr.querySelector('.shooter-picker-panel:not([hidden])'))) {
+            continue;
+        }
+        const fresh = buildEditRow(shooterList, existingRows[i] || null, teamId);
+        if (tr) tr.replaceWith(fresh);
+        else tbody.appendChild(fresh);
+    }
 }
 
 function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows, editable, params, homeTbodyId, awayTbodyId) {
@@ -1099,19 +1101,13 @@ async function initMatchPage() {
             const freshAway = fresh.filter(r => r.team_name === params.away);
 
             if (homeEditable) {
-                if (!tbodyBusy('homeShooters')) {
-                    replaceFreshTbody('homeShooters');
-                    renderEditableGrid('homeShooters', match.id, homeTeamId, homeShooters, freshHome, true, params, 'homeShooters', 'awayShooters');
-                }
+                updateEditableRowsLive('homeShooters', homeShooters, freshHome, homeTeamId);
             } else {
                 renderShooterTable('homeShooters', freshHome.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
             }
             if (match.away_team_id) {
                 if (awayEditable) {
-                    if (!tbodyBusy('awayShooters')) {
-                        replaceFreshTbody('awayShooters');
-                        renderEditableGrid('awayShooters', match.id, awayTeamId, awayShooters, freshAway, true, params, 'homeShooters', 'awayShooters');
-                    }
+                    updateEditableRowsLive('awayShooters', awayShooters, freshAway, awayTeamId);
                 } else {
                     renderShooterTable('awayShooters', freshAway.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
                 }
