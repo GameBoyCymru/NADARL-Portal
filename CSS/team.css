@@ -35,6 +35,13 @@
     text-align: center;
 }
 
+.team-detail-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 6px;
+}
+
 .team-detail-venue {
     font-size: 1.1rem;
     color: #d4a017;
