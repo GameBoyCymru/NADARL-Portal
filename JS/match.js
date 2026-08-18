@@ -159,6 +159,11 @@ function renderTeamSummary(tbodyId, scores, opponentScores) {
     const tbody = document.getElementById(tbodyId);
     let html = '';
 
+    if (!scores.aTeamShooters.length && !scores.bTeamShooters.length) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-table-msg">No scores entered yet</td></tr>';
+        return;
+    }
+
     scores.aTeamShooters.forEach((s, i) => {
         const bScore = (i === 4 && scores.bTeamShooters[0] && scores.bTeamShooters[0].name === s.name) ? s.total : '';
         html += `<tr><td class="summary-shooter">${s.name}</td><td class="score-cell">${s.total}</td><td class="score-cell">${bScore}</td></tr>`;
