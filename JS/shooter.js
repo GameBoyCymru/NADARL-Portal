@@ -63,6 +63,139 @@ function renderHistoryTable() {
     tbody.innerHTML = html;
 }
 
+const shotPatternCharts = {};
+
+function renderShotPatternChart(canvasId, emptyId, rows) {
+    const canvas = document.getElementById(canvasId);
+    const empty = document.getElementById(emptyId);
+
+    const shotCount = rows.reduce((max, r) => Math.max(max, (r.shots || []).length), 0);
+    const averages = [];
+    for (let i = 0; i < shotCount; i++) {
+        const values = rows.map(r => (r.shots || [])[i]).filter(v => v != null);
+        averages.push(values.length ? values.reduce((a, b) => a + b, 0) / values.length : null);
+    }
+
+    if (shotPatternCharts[canvasId]) {
+        shotPatternCharts[canvasId].destroy();
+        delete shotPatternCharts[canvasId];
+    }
+
+    if (!shotCount) {
+        canvas.hidden = true;
+        empty.hidden = false;
+        return;
+    }
+    canvas.hidden = false;
+    empty.hidden = true;
+
+    shotPatternCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: averages.map((_, i) => `Shot ${i + 1}`),
+            datasets: [{
+                data: averages,
+                borderColor: '#d4a017',
+                backgroundColor: '#d4a017',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: '#d4a017',
+                pointBorderColor: '#d4a017',
+                tension: 0,
+                spanGaps: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `Average: ${ctx.parsed.y.toFixed(2)}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#a0a0a0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                },
+                y: {
+                    min: 0,
+                    max: 10,
+                    ticks: { color: '#a0a0a0', stepSize: 2 },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                }
+            }
+        }
+    });
+}
+
+function renderRunningAverageChart(canvasId, emptyId, rows) {
+    const canvas = document.getElementById(canvasId);
+    const empty = document.getElementById(emptyId);
+
+    if (shotPatternCharts[canvasId]) {
+        shotPatternCharts[canvasId].destroy();
+        delete shotPatternCharts[canvasId];
+    }
+
+    if (!rows.length) {
+        canvas.hidden = true;
+        empty.hidden = false;
+        return;
+    }
+    canvas.hidden = false;
+    empty.hidden = true;
+
+    let runningTotal = 0;
+    const runningAverages = rows.map((row, i) => {
+        runningTotal += row.total;
+        return runningTotal / (i + 1);
+    });
+
+    shotPatternCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: rows.map(row => formatDate(row.date)),
+            datasets: [{
+                data: runningAverages,
+                borderColor: '#d4a017',
+                backgroundColor: '#d4a017',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: '#d4a017',
+                pointBorderColor: '#d4a017',
+                tension: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `Average: ${ctx.parsed.y.toFixed(2)}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#a0a0a0', maxRotation: 0, autoSkip: true },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                },
+                y: {
+                    min: 0,
+                    ticks: { color: '#a0a0a0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                }
+            }
+        }
+    });
+}
+
 function renderStatTiles(stats) {
     const container = document.getElementById('statTiles');
     const tiles = [
@@ -97,6 +230,8 @@ async function loadSeason() {
     if (!season) {
         historyRows = [];
         document.getElementById('matchHistoryTable').innerHTML = '<tr><td colspan="6">No results available.</td></tr>';
+        renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', []);
+        renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', []);
         return;
     }
 
@@ -113,6 +248,14 @@ async function loadSeason() {
     sortDir = 1;
     updateSortIndicators();
     renderHistoryTable();
+    renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', historyRows);
+    renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', historyRows);
+}
+
+async function loadAllTimeCharts() {
+    const allTimeHistory = await NADARL.fetchShooterMatchHistoryAllTime(currentShooter.id);
+    renderShotPatternChart('shotPatternChartAllTime', 'shotPatternEmptyAllTime', allTimeHistory);
+    renderRunningAverageChart('averageChartAllTime', 'averageEmptyAllTime', allTimeHistory);
 }
 
 async function initShooterPage() {
@@ -184,7 +327,7 @@ async function initShooterPage() {
         renderHistoryTable();
     });
 
-    await loadSeason();
+    await Promise.all([loadSeason(), loadAllTimeCharts()]);
 }
 
 document.addEventListener('DOMContentLoaded', initShooterPage);

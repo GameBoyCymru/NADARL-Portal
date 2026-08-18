@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/table.css?v=20260808">
     <link rel="stylesheet" href="../CSS/team.css?v=20260808">
-    <link rel="stylesheet" href="../CSS/shooter.css?v=20260808">
+    <link rel="stylesheet" href="../CSS/shooter.css?v=20260818">
 </head>
 <body>
     <div class="container">
@@ -55,6 +55,42 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="shot-pattern-wrapper">
+                <h3 class="shot-pattern-title">Shot Pattern</h3>
+                <p class="shot-pattern-subtitle">Average score by shot number this season</p>
+                <div class="shot-pattern-canvas-wrap">
+                    <canvas id="shotPatternChart" height="220"></canvas>
+                </div>
+                <p class="shot-pattern-empty" id="shotPatternEmpty" hidden>No shot data for this season yet.</p>
+            </div>
+
+            <div class="shot-pattern-wrapper">
+                <h3 class="shot-pattern-title">Shot Pattern &ndash; All Time</h3>
+                <p class="shot-pattern-subtitle">Average score by shot number across every season</p>
+                <div class="shot-pattern-canvas-wrap">
+                    <canvas id="shotPatternChartAllTime" height="220"></canvas>
+                </div>
+                <p class="shot-pattern-empty" id="shotPatternEmptyAllTime" hidden>No shot data yet.</p>
+            </div>
+
+            <div class="shot-pattern-wrapper">
+                <h3 class="shot-pattern-title">Average &ndash; This Season</h3>
+                <p class="shot-pattern-subtitle">Running average score across matches this season</p>
+                <div class="shot-pattern-canvas-wrap">
+                    <canvas id="averageChartSeason" height="220"></canvas>
+                </div>
+                <p class="shot-pattern-empty" id="averageEmptySeason" hidden>No results for this season yet.</p>
+            </div>
+
+            <div class="shot-pattern-wrapper">
+                <h3 class="shot-pattern-title">Average &ndash; All Time</h3>
+                <p class="shot-pattern-subtitle">Running average score across every match</p>
+                <div class="shot-pattern-canvas-wrap">
+                    <canvas id="averageChartAllTime" height="220"></canvas>
+                </div>
+                <p class="shot-pattern-empty" id="averageEmptyAllTime" hidden>No results yet.</p>
+            </div>
         </section>
 
         <footer class="footer">
@@ -97,9 +133,10 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260808"></script>
-    <script src="../JS/shooter.js?v=20260808"></script>
+    <script src="../JS/data.js?v=20260818"></script>
+    <script src="../JS/shooter.js?v=20260818"></script>
 </body>
 </html>
