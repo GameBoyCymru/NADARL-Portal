@@ -257,10 +257,10 @@
 
 .fixture-table .fixture-excluded-row .fixture-date-header {
     background: rgba(80, 85, 100, 0.6) !important;
-    border-left: 2px solid rgba(255, 255, 255, 0.5);
-    border-right: 2px solid rgba(255, 255, 255, 0.5);
-    border-top: 2px solid rgba(255, 255, 255, 0.5);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    border-left: 3px solid rgba(255, 255, 255, 0.5);
+    border-right: 3px solid rgba(255, 255, 255, 0.5);
+    border-top: 3px solid rgba(255, 255, 255, 0.5);
+    border-bottom: 3px solid rgba(255, 255, 255, 0.5);
 }
 
 .fixture-excluded-row.fixture-row-alt .fixture-date-header {
