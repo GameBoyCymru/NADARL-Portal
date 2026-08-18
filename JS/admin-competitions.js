@@ -1,7 +1,8 @@
 // =====================================================================
 //  Admin competitions panel (admin only): competition create/edit/delete.
-//  Results entry (shooters + scores) happens on competition.html itself,
-//  not here - this panel only owns the competition's own metadata.
+//  Results are a single PDF - the filename field here just points at a
+//  file the admin has already placed in Documents/competitions on the
+//  server (same convention as Summer League newsletters).
 //  Adding, moving or deleting a competition only shifts fixtures that are
 //  actually in the way of its date - a week later to make room, or a
 //  week earlier to close the gap - see shiftSeasonFixtures in data.js.
@@ -82,8 +83,9 @@ const CompetitionsAdmin = (function () {
         const nameIn = textInput(c.name);
         const venueIn = textInput(c.venue || '');
         const descIn = textInput(c.description || '');
+        const filenameIn = textInput(c.filename || '');
 
-        [dateIn, nameIn, venueIn, descIn].forEach(input => {
+        [dateIn, nameIn, venueIn, descIn, filenameIn].forEach(input => {
             const td = document.createElement('td');
             td.appendChild(input);
             tr.appendChild(td);
@@ -128,7 +130,8 @@ const CompetitionsAdmin = (function () {
                 event_date: dateIn.value,
                 name: nameIn.value.trim(),
                 venue: venueIn.value.trim(),
-                description: descIn.value.trim()
+                description: descIn.value.trim(),
+                filename: filenameIn.value.trim()
             });
             if (!res.ok || !res.count) {
                 save.disabled = false;
@@ -159,7 +162,7 @@ const CompetitionsAdmin = (function () {
         del.textContent = 'Delete';
         del.addEventListener('click', async () => {
             if (!confirm(
-                'Delete competition "' + c.name + '" and all its results? If a fixture is scheduled ' +
+                'Delete competition "' + c.name + '"? If a fixture is scheduled ' +
                 'the week after, it (and any run right behind it) will move a week earlier to close ' +
                 'the gap. This cannot be undone.'
             )) return;
@@ -228,7 +231,8 @@ const CompetitionsAdmin = (function () {
                 event_date: date,
                 name,
                 venue: $('compNewVenue').value.trim(),
-                description: $('compNewDesc').value.trim()
+                description: $('compNewDesc').value.trim(),
+                filename: $('compNewFilename').value.trim()
             });
             btn.disabled = false;
             if (!res.ok) { show('Could not add competition: ' + res.error, 'error'); return; }
@@ -237,6 +241,7 @@ const CompetitionsAdmin = (function () {
             $('compNewName').value = '';
             $('compNewVenue').value = '';
             $('compNewDesc').value = '';
+            $('compNewFilename').value = '';
             show('Added "' + name + '"' + shiftSuffix(shiftRes.count, 'forward a week') + '.', 'success');
             await load();
         });
@@ -262,7 +267,7 @@ const CompetitionsAdmin = (function () {
         const season = selectedSeason();
         if (!season) { show('No season selected.', 'error'); return; }
         if (!confirm(
-            'Permanently delete every competition (and all their results) for season "' + season.name +
+            'Permanently delete every competition for season "' + season.name +
             '"? Fixtures are not shifted back automatically - check the schedule afterwards. This cannot be undone.'
         )) return;
 

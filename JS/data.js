@@ -540,15 +540,15 @@ const NADARL = (function () {
 
     // ---------------------------------------------------------------------
     // Competitions - a season-scoped calendar entry with its own results
-    // page (competition.html). Generic MVP: a name/venue/description plus a
-    // shooter+score entry list (competition_entry) - not yet split into
-    // bespoke per-competition-type shapes.
+    // page (competition.html). Results are a single PDF: an admin uploads it
+    // to Documents/competitions and records the filename here, the same
+    // static-file convention as Summer League newsletters.
     // ---------------------------------------------------------------------
 
     // All competitions, optionally scoped to one season, ordered by date.
     async function fetchCompetitions(seasonId) {
         let query = db().from('competition')
-            .select('id,season_id,event_date,name,venue,description')
+            .select('id,season_id,event_date,name,venue,description,filename')
             .order('event_date');
         if (seasonId) query = query.eq('season_id', seasonId);
         const { data, error } = await query;
@@ -559,7 +559,8 @@ const NADARL = (function () {
             date: c.event_date,
             name: c.name,
             venue: c.venue,
-            description: c.description
+            description: c.description,
+            filename: c.filename
         }));
     }
 
@@ -567,7 +568,7 @@ const NADARL = (function () {
     // write - RLS enforces.
     async function fetchCompetitionById(id) {
         const { data, error } = await db().from('competition')
-            .select('id,season_id,event_date,name,venue,description')
+            .select('id,season_id,event_date,name,venue,description,filename')
             .eq('id', id)
             .maybeSingle();
         if (error) { console.error('fetchCompetitionById', error); return null; }
@@ -578,29 +579,30 @@ const NADARL = (function () {
             date: data.event_date,
             name: data.name,
             venue: data.venue,
-            description: data.description
+            description: data.description,
+            filename: data.filename
         };
     }
 
-    async function addCompetition({ season_id, event_date, name, venue, description }) {
+    async function addCompetition({ season_id, event_date, name, venue, description, filename }) {
         const { data, error } = await db().from('competition')
-            .insert({ season_id, event_date, name, venue: venue || null, description: description || null })
-            .select('id,season_id,event_date,name,venue,description')
+            .insert({ season_id, event_date, name, venue: venue || null, description: description || null, filename: filename || null })
+            .select('id,season_id,event_date,name,venue,description,filename')
             .single();
         if (error) { console.error('addCompetition', error); return { ok: false, error: error.message }; }
         return { ok: true, competition: data };
     }
 
-    async function updateCompetition(id, { event_date, name, venue, description }) {
+    async function updateCompetition(id, { event_date, name, venue, description, filename }) {
         const { data, error } = await db().from('competition')
-            .update({ event_date, name, venue: venue || null, description: description || null })
+            .update({ event_date, name, venue: venue || null, description: description || null, filename: filename || null })
             .eq('id', id)
             .select('id');
         if (error) { console.error('updateCompetition', error); return { ok: false, error: error.message }; }
         return { ok: true, count: data ? data.length : 0 };
     }
 
-    // Deletes the competition and its results (competition_entry cascades).
+    // Deletes the competition.
     async function deleteCompetition(id) {
         const { data, error } = await db().from('competition')
             .delete()
@@ -610,7 +612,7 @@ const NADARL = (function () {
         return { ok: true, count: data ? data.length : 0 };
     }
 
-    // Delete every competition (and its results) for one season. Admin only - RLS enforces.
+    // Delete every competition for one season. Admin only - RLS enforces.
     async function clearCompetitions(seasonId) {
         const { data, error } = await db().from('competition')
             .delete()
@@ -618,62 +620,6 @@ const NADARL = (function () {
             .select('id');
         if (error) { console.error('clearCompetitions', error); return { ok: false, error: error.message }; }
         return { ok: true, count: data ? data.length : 0 };
-    }
-
-    // A competition's results, highest score first.
-    async function fetchCompetitionEntries(competitionId) {
-        const { data, error } = await db().from('competition_entry')
-            .select('id,competition_id,shooter_id,score,notes')
-            .eq('competition_id', competitionId)
-            .order('score', { ascending: false });
-        if (error) { console.error('fetchCompetitionEntries', error); return []; }
-        return data;
-    }
-
-    // Every shooter league-wide (competitions aren't team-scoped, unlike
-    // match score entry) - for the competition results shooter picker.
-    async function fetchAllShooters() {
-        const { data, error } = await db().from('shooter')
-            .select('id,shooter_no,name,team_id')
-            .order('name');
-        if (error) { console.error('fetchAllShooters', error); return []; }
-        return data;
-    }
-
-    // Add or update one shooter's result for a competition (real upsert on
-    // the (competition_id, shooter_id) unique constraint - entries are
-    // edited one row at a time, not autosaved as a whole block like match
-    // scores). Admin only - RLS enforces.
-    async function upsertCompetitionEntry(competitionId, shooterId, { score, notes }) {
-        const { data, error } = await db().from('competition_entry')
-            .upsert(
-                { competition_id: competitionId, shooter_id: shooterId, score: Number(score) || 0, notes: notes || null },
-                { onConflict: 'competition_id,shooter_id' }
-            )
-            .select('id,competition_id,shooter_id,score,notes')
-            .maybeSingle();
-        if (error) { console.error('upsertCompetitionEntry', error); return { ok: false, error: error.message }; }
-        return { ok: true, entry: data };
-    }
-
-    async function deleteCompetitionEntry(id) {
-        const { data, error } = await db().from('competition_entry')
-            .delete()
-            .eq('id', id)
-            .select('id');
-        if (error) { console.error('deleteCompetitionEntry', error); return { ok: false, error: error.message }; }
-        return { ok: true, count: data ? data.length : 0 };
-    }
-
-    // Live updates: fire onChange whenever a competition's results change.
-    // Tear down with the existing generic unsubscribeChannel().
-    function subscribeCompetitionEntries(competitionId, onChange) {
-        if (!db || !db().channel) return null;
-        return db().channel('competition-entries-' + competitionId)
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'competition_entry', filter: 'competition_id=eq.' + competitionId },
-                onChange)
-            .subscribe();
     }
 
     // ---------------------------------------------------------------------
@@ -1394,11 +1340,6 @@ const NADARL = (function () {
         updateCompetition,
         deleteCompetition,
         clearCompetitions,
-        fetchCompetitionEntries,
-        fetchAllShooters,
-        upsertCompetitionEntry,
-        deleteCompetitionEntry,
-        subscribeCompetitionEntries,
         fetchEvents,
         fetchEventById,
         addEvent,

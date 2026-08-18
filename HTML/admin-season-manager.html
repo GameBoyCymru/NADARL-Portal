@@ -141,8 +141,9 @@
                 <section id="competitionsPanel" class="fx-section">
                     <h2 class="section-title">Competitions</h2>
                     <p class="login-intro">
-                        Create a competition (open meetings, cup nights, etc). Add or edit its results -
-                        shooters and scores - from its own results page.
+                        Create a competition (open meetings, cup nights, etc). Results are a single PDF -
+                        upload the file to the <code>Documents/competitions</code> folder on the server,
+                        then enter its exact filename here.
                     </p>
 
                     <div id="compMessage" class="login-message" role="alert" hidden></div>
@@ -162,6 +163,7 @@
                         <input type="text" id="compNewName" class="fx-text-input" placeholder="Name" style="width:180px;">
                         <input type="text" id="compNewVenue" class="fx-text-input" placeholder="Venue (optional)" style="width:160px;">
                         <input type="text" id="compNewDesc" class="fx-text-input" placeholder="Description (optional)" style="width:220px;">
+                        <input type="text" id="compNewFilename" class="fx-text-input" placeholder="Results PDF filename (optional)" style="width:220px;">
                         <button type="button" id="compAdd" class="shooter-button">Add Competition</button>
                     </div>
 
@@ -173,6 +175,7 @@
                                     <th>Name</th>
                                     <th>Venue</th>
                                     <th>Description</th>
+                                    <th>Results PDF</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -295,11 +298,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260817b"></script>
+    <script src="../JS/data.js?v=20260818"></script>
     <script src="../JS/admin-common.js?v=20260809a"></script>
     <script src="../JS/admin-fixtures.js?v=20260817b"></script>
     <script src="../JS/admin-exceptions.js?v=20260809f"></script>
-    <script src="../JS/admin-competitions.js?v=20260809f"></script>
+    <script src="../JS/admin-competitions.js?v=20260818"></script>
     <script src="../JS/admin-events.js?v=20260809f"></script>
     <script src="../JS/admin-fixture-editor.js?v=20260809m"></script>
 </body>

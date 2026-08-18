@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Competition - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/login.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/table.css?v=20260808">
-    <link rel="stylesheet" href="../CSS/admin.css?v=20260808">
-    <link rel="stylesheet" href="../CSS/competition.css?v=20260808b">
+    <link rel="stylesheet" href="../CSS/gallery.css?v=20260807b">
+    <link rel="stylesheet" href="../CSS/competition.css?v=20260818">
 </head>
 <body>
     <div class="container">
@@ -24,49 +22,13 @@
         </section>
 
         <section class="section">
-            <h2 class="section-title">Results</h2>
-            <div class="table-wrapper">
-                <table class="league-table">
-                    <thead>
-                        <tr>
-                            <th>Pos</th>
-                            <th>Shooter</th>
-                            <th>Team</th>
-                            <th>Score</th>
-                            <th>Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody id="entriesTable">
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="section" id="adminEntryPanel" hidden>
-            <h2 class="section-title">Add / Edit Result</h2>
-            <div id="entryMessage" class="login-message" role="alert" hidden></div>
-
-            <div class="fx-season-create">
-                <select id="entryShooter" class="fx-text-input" style="width:240px;"></select>
-                <input type="number" id="entryScore" class="fx-text-input" placeholder="Score" min="0" style="width:100px;">
-                <input type="text" id="entryNotes" class="fx-text-input" placeholder="Notes (optional)" style="width:220px;">
-                <button type="button" id="entrySave" class="shooter-button">Save Result</button>
+            <div class="gallery-header">
+                <h2 class="section-title">Results</h2>
+                <a id="compDownload" class="gallery-button-secondary" hidden>Download PDF</a>
             </div>
 
-            <div class="table-wrap">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Shooter</th>
-                            <th>Team</th>
-                            <th>Score</th>
-                            <th>Notes</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminEntriesBody"></tbody>
-                </table>
-            </div>
+            <div id="compPdfEmpty" class="gallery-empty" hidden>Results have not been uploaded yet.</div>
+            <div class="comp-pdf-pages" id="compPdfPages"></div>
         </section>
 
         <footer class="footer">
@@ -103,7 +65,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260808c"></script>
-    <script src="../JS/competition.js?v=20260808"></script>
+    <script src="../JS/data.js?v=20260818"></script>
+    <script src="../JS/vendor/pdfjs/pdf.min.js?v=3.11.174"></script>
+    <script src="../JS/competition.js?v=20260818"></script>
 </body>
 </html>

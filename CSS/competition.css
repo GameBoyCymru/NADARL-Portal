@@ -1,3 +1,36 @@
+/* gallery.css's .gallery-header relies on a following .gallery-intro
+   paragraph for spacing below it - this page has no intro text, so add the
+   gap directly (scoped here rather than in gallery.css, so pages that do
+   have that paragraph don't end up with a double gap). */
+.gallery-header {
+    margin-bottom: 20px;
+}
+
+a.gallery-button-secondary {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.comp-pdf-pages {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.comp-pdf-page-image {
+    width: 100%;
+    display: block;
+    border-radius: 6px;
+    background: #ffffff;
+}
+
+.comp-pdf-loading {
+    padding: 30px 0;
+    text-align: center;
+    color: #a0a0a0;
+    font-size: 0.9rem;
+}
+
 .comp-header {
     text-align: center;
     padding: 30px 25px;
