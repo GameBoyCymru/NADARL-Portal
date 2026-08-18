@@ -270,10 +270,44 @@ const FixtureEditorAdmin = (function () {
         });
         controls.appendChild(del);
 
+        controls.appendChild(pushButton(f, 7, 'Push +1wk', 'forward'));
+        controls.appendChild(pushButton(f, -7, 'Push -1wk', 'back'));
+
         tdAction.appendChild(controls);
         tr.appendChild(tdAction);
 
         return tr;
+    }
+
+    // A cascading push/pull button: shifts this match's date, and every
+    // match on or after it in the season, by deltaDays (positive = forward,
+    // negative = back) - see push_matches_forward, which (unlike
+    // shiftSeasonFixtures) doesn't stop at the first free week.
+    function pushButton(f, deltaDays, label, direction) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'row-button row-button-secondary';
+        btn.textContent = label;
+        btn.title = `Push this match, and every match on or after its date, ${direction} one week`;
+        btn.addEventListener('click', async () => {
+            const season = selectedSeason();
+            if (!season) return;
+            if (!confirm(
+                `Push ${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam} (${f.date}), and every match on or ` +
+                `after that date, ${direction} one week? This cannot be undone.`
+            )) return;
+            btn.disabled = true;
+            const res = await NADARL.pushMatchesForward(season.id, f.date, deltaDays);
+            btn.disabled = false;
+            if (!res.ok) {
+                show(`Could not push fixtures ${direction}: ` + res.error, 'error');
+                return;
+            }
+            show(`Pushed ${res.count} fixture(s) ${direction} one week.`, 'success');
+            await load();
+            refreshAllocatedStats();
+        });
+        return btn;
     }
 
     function wire() {

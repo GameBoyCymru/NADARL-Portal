@@ -538,6 +538,19 @@ const NADARL = (function () {
         return { ok: true, count: data || 0 };
     }
 
+    // Pushes one match's date, and every match on/after it in the same
+    // season, forward by deltaDays (a real cascade - unlike
+    // shiftSeasonFixtures, it doesn't stop at the first free week).
+    async function pushMatchesForward(seasonId, startDate, deltaDays) {
+        const { data, error } = await db().rpc('push_matches_forward', {
+            p_season_id: seasonId,
+            p_start_date: startDate,
+            p_delta_days: deltaDays
+        });
+        if (error) { console.error('pushMatchesForward', error); return { ok: false, error: error.message }; }
+        return { ok: true, count: data || 0 };
+    }
+
     // ---------------------------------------------------------------------
     // Competitions - a season-scoped calendar entry with its own results
     // page (competition.html). Results are a single PDF: an admin uploads it
@@ -1334,6 +1347,7 @@ const NADARL = (function () {
         deleteExclusion,
         updateExclusion,
         shiftSeasonFixtures,
+        pushMatchesForward,
         fetchCompetitions,
         fetchCompetitionById,
         addCompetition,
