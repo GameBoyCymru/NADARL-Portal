@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.ok) {
-                alert('Thank you for your enquiry! A member of the committee will be in touch soon.');
+                alert('Thank you for your enquiry. A member of the committee will be in touch soon.');
                 form.reset();
             } else {
                 alert('Something went wrong. Please try again later.');
