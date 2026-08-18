@@ -236,6 +236,26 @@ const editRights = {
 // Confirmation / submission state and context.
 let matchStatus = { home_confirmed: false, away_confirmed: false, submitted: false };
 let confirmCtx = { matchId: null, canScore: false, homePick: false, awayPick: false };
+let matchParams = null;
+let lockedToReadOnly = false;
+
+// Once a match is submitted, everyone (including the captains who entered
+// it) sees the same plain read-only scorecard a guest would - the shooter
+// pickers and shot-entry boxes disappear entirely rather than just locking.
+async function lockMatchToReadOnly() {
+    if (lockedToReadOnly || !matchParams) return;
+    lockedToReadOnly = true;
+
+    const rows = await NADARL.fetchMatchScorecard(matchParams.date, matchParams.home, matchParams.away);
+    if (isHandicapMatch) {
+        handicapMap = await NADARL.fetchHandicaps(
+            rows.map(r => r.shooter_id).filter(Boolean), matchParams.date);
+    }
+
+    document.body.classList.remove('edit-mode');
+    document.querySelectorAll('.match-confirm').forEach(el => el.remove());
+    renderReadOnly(matchParams, rows);
+}
 
 function createShooterPicker(shooterList, selectedId, teamId) {
     const container = document.createElement('div');
@@ -836,6 +856,10 @@ function refreshConfirmUI() {
     const { submitted, home_confirmed, away_confirmed } = matchStatus;
     const both = home_confirmed && away_confirmed;
 
+    if (submitted) {
+        lockMatchToReadOnly();
+    }
+
     // Status text under each table
     document.querySelectorAll('.match-confirm').forEach(wrap => {
         const side = wrap.getAttribute('data-side');
@@ -923,6 +947,8 @@ async function setupConfirmFlow(match, canScore, homePick, awayPick, isEdit) {
 async function initMatchPage() {
     const params = getQueryParams();
 
+    matchParams = params;
+
     if (!params.home || !params.away) {
         document.querySelector('.container').innerHTML = '<div class="no-match">No match data found. Please go back to <a href="fixtures.html">Fixtures</a>.</div>';
         return;
@@ -969,6 +995,7 @@ async function initMatchPage() {
     const canEdit = homeEditable || awayEditable;
 
     if (!canEdit) {
+        lockedToReadOnly = true;
         if (isHandicapMatch) {
             handicapMap = await NADARL.fetchHandicaps(
                 rows.map(r => r.shooter_id).filter(Boolean), params.date);
