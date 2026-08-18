@@ -25,6 +25,29 @@ async function renderTeamCards() {
     });
 
     grid.innerHTML = html;
+    equalizeCardHeights(grid);
+}
+
+// Grid rows only equalize heights within the same row, so a team with a
+// longer venue only stretches the cards next to it. Measure the tallest
+// card and apply it to all of them so every box matches regardless of row.
+function equalizeCardHeights(grid) {
+    const cards = grid.querySelectorAll('.team-card');
+    if (!cards.length) return;
+
+    const sync = () => {
+        cards.forEach(card => { card.style.minHeight = ''; });
+        const max = Math.max(...Array.from(cards).map(card => card.offsetHeight));
+        cards.forEach(card => { card.style.minHeight = `${max}px`; });
+    };
+
+    requestAnimationFrame(sync);
+
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(sync, 150);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', renderTeamCards);
