@@ -84,6 +84,9 @@
 .shooters-table th[data-sort] {
     cursor: pointer;
     user-select: none;
+    position: relative;
+    padding-left: 26px;
+    padding-right: 26px;
 }
 
 .shooters-table th[data-sort]:hover {
@@ -92,9 +95,11 @@
 
 .shooters-table th[data-sort]::after {
     content: '';
-    display: inline-block;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 0.6em;
-    margin-left: 4px;
     opacity: 0.5;
 }
 
