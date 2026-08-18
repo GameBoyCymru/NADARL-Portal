@@ -133,7 +133,11 @@
 
 .shots-cell {
     font-size: 0.85rem;
-    color: #a0a0a0;
+    color: #ffffff;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+#matchHistoryTable td:first-child {
+    color: #ffffff;
 }
