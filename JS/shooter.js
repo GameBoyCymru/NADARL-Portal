@@ -193,7 +193,8 @@ function drawRunningAverageLine(canvasId, emptyId, labels, values) {
                     grid: { color: 'rgba(255, 255, 255, 0.08)' }
                 },
                 y: {
-                    min: 0,
+                    min: Math.max(0, Math.min(...values) - 5),
+                    max: Math.min(70, Math.max(...values) + 5),
                     ticks: { color: '#a0a0a0' },
                     grid: { color: 'rgba(255, 255, 255, 0.08)' }
                 }
