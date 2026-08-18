@@ -673,6 +673,27 @@ function recalcSummary(params, homeTbodyId, awayTbodyId) {
     updateTotalHighlights(awayTbodyId);
 }
 
+// True while the user has focus inside this tbody, or a shooter-picker
+// dropdown open in it - a live update arriving mid-edit skips that tbody
+// rather than yanking focus or closing the picker out from under them.
+function tbodyBusy(tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return false;
+    if (tbody.contains(document.activeElement)) return true;
+    return !!tbody.querySelector('.shooter-picker-panel:not([hidden])');
+}
+
+// renderEditableGrid attaches its keydown/input/change listeners straight to
+// the tbody element, so re-rendering it in place (innerHTML swap) would
+// stack duplicate listeners on every live update. Swapping in a fresh clone
+// first drops the old listeners along with the old element.
+function replaceFreshTbody(tbodyId) {
+    const old = document.getElementById(tbodyId);
+    const fresh = old.cloneNode(false);
+    old.parentNode.replaceChild(fresh, old);
+    return fresh;
+}
+
 function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows, editable, params, homeTbodyId, awayTbodyId) {
     const tbody = document.getElementById(tbodyId);
     tbody.innerHTML = '';
@@ -1061,6 +1082,45 @@ async function initMatchPage() {
     recalcSummary(params, 'homeShooters', 'awayShooters');
     updateCurrentShooters();
     setupConfirmFlow(match, canScore, homeCanPick, awayCanPick, true);
+
+    // Live updates: when the other editor (e.g. the other team's captain)
+    // picks a shooter or saves scores, reflect it here too instead of only
+    // on the next page load.
+    let scoresRefreshTimer = null;
+    const scoresChannel = NADARL.subscribeMatchScores(match.id, () => {
+        clearTimeout(scoresRefreshTimer);
+        scoresRefreshTimer = setTimeout(async () => {
+            const fresh = await NADARL.fetchMatchScorecard(params.date, params.home, params.away);
+            if (isHandicapMatch) {
+                handicapMap = await NADARL.fetchHandicaps(
+                    fresh.map(r => r.shooter_id).filter(Boolean), params.date);
+            }
+            const freshHome = fresh.filter(r => r.team_name === params.home);
+            const freshAway = fresh.filter(r => r.team_name === params.away);
+
+            if (homeEditable) {
+                if (!tbodyBusy('homeShooters')) {
+                    replaceFreshTbody('homeShooters');
+                    renderEditableGrid('homeShooters', match.id, homeTeamId, homeShooters, freshHome, true, params, 'homeShooters', 'awayShooters');
+                }
+            } else {
+                renderShooterTable('homeShooters', freshHome.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
+            }
+            if (match.away_team_id) {
+                if (awayEditable) {
+                    if (!tbodyBusy('awayShooters')) {
+                        replaceFreshTbody('awayShooters');
+                        renderEditableGrid('awayShooters', match.id, awayTeamId, awayShooters, freshAway, true, params, 'homeShooters', 'awayShooters');
+                    }
+                } else {
+                    renderShooterTable('awayShooters', freshAway.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
+                }
+            }
+            recalcSummary(params, 'homeShooters', 'awayShooters');
+            updateCurrentShooters();
+        }, 300);
+    });
+    window.addEventListener('beforeunload', () => NADARL.unsubscribeChannel(scoresChannel));
 }
 
 document.addEventListener('DOMContentLoaded', initMatchPage);
