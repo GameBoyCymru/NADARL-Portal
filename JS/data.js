@@ -1018,6 +1018,28 @@ const NADARL = (function () {
         return { ok: true, config: data };
     }
 
+    // Rules page document (single row): a filename in Documents/rules,
+    // admin-set the same way as Summer League newsletters and competition
+    // results PDFs.
+    async function fetchRulesDocument() {
+        const { data, error } = await db().from('rules_document')
+            .select('filename')
+            .eq('id', 1)
+            .maybeSingle();
+        if (error) { console.error('fetchRulesDocument', error); return { filename: null }; }
+        return data || { filename: null };
+    }
+
+    async function updateRulesDocument(filename) {
+        const { data, error } = await db().from('rules_document')
+            .update({ filename: filename || null, updated_at: new Date().toISOString() })
+            .eq('id', 1)
+            .select('filename')
+            .maybeSingle();
+        if (error) { console.error('updateRulesDocument', error); return { ok: false, error: error.message }; }
+        return { ok: true, filename: data ? data.filename : null };
+    }
+
     // Handicaps for a set of shooters as-of a date (YYYY-MM-DD), or to date if null.
     // Returns a Map-like object: { shooterId -> number }.
     async function fetchHandicaps(shooterIds, asOfDate) {
@@ -1042,8 +1064,8 @@ const NADARL = (function () {
     // a freshly-restored project won't have matching rows for. Re-invite
     // admins/captains after a restore and reassign their role/team instead.
     // ---------------------------------------------------------------------
-    const BACKUP_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'summer_league_document', 'user_profile'];
-    const BACKUP_IMPORT_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'summer_league_document'];
+    const BACKUP_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'summer_league_document', 'rules_document', 'user_profile'];
+    const BACKUP_IMPORT_TABLES = ['season', 'team', 'shooter', 'match', 'exclusion', 'score', 'handicap_config', 'summer_league_document', 'rules_document'];
     const BACKUP_CHUNK_SIZE = 500;
 
     // Downloads every row of every table as one JSON snapshot. Admin only -
@@ -1072,7 +1094,7 @@ const NADARL = (function () {
     // freshly-migrated database, unlike every other table here. Upsert it
     // instead of insert so restoring the exported config doesn't collide
     // with that seeded default row.
-    const BACKUP_UPSERT_TABLES = { handicap_config: 'id' };
+    const BACKUP_UPSERT_TABLES = { handicap_config: 'id', rules_document: 'id' };
 
     // Restores a previous exportAllData() snapshot into an EMPTY database
     // whose schema already matches (supabase/schema.sql + migrations
@@ -1369,6 +1391,8 @@ const NADARL = (function () {
         deleteTeam,
         fetchHandicapConfig,
         updateHandicapConfig,
+        fetchRulesDocument,
+        updateRulesDocument,
         fetchHandicaps,
         exportAllData,
         importAllData,

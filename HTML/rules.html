@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rules - Newport & District Air Rifle League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/rules.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/gallery.css?v=20260807b">
+    <link rel="stylesheet" href="../CSS/rules.css?v=20260818">
 </head>
 <body>
     <div class="container">
@@ -16,92 +17,13 @@
         </header>
 
         <section class="section">
-            <h2 class="section-title">Equipment</h2>
-            <ul class="rules-list">
-                <li>
-                    <span class="rules-label">Calibre:</span>
-                    All shooting is conducted with <strong>.177 calibre (4.5&nbsp;mm)</strong> air rifles only.
-                </li>
-                <li>
-                    <span class="rules-label">Power limit:</span>
-                    Rifle muzzle energy must not exceed <strong>9.26&nbsp;joules (6.83&nbsp;ft/lbs)</strong>. Any rifle may be chronographed at the discretion of the Match Secretary.
-                </li>
-                <li>
-                    <span class="rules-label">Pellets:</span>
-                    Only standard lead or lead-alloy airgun pellets of .177 calibre are permitted. No explosive, tracer or incendiary ammunition is allowed.
-                </li>
-                <li>
-                    <span class="rules-label">Sights:</span>
-                    Open or dioptre iron sights only. Telescopic, red-dot, laser or any optical sighting aid is prohibited.
-                </li>
-                <li>
-                    <span class="rules-label">Field target rifles:</span>
-                    Permitted provided the power is reduced below <strong>9.26&nbsp;joules (6.83&nbsp;ft/lbs)</strong> and iron sights are fitted.
-                </li>
-                <li>
-                    <span class="rules-label">Trigger:</span>
-                    Triggers must be safe and predictable. The Match Secretary may bar any rifle deemed unsafe.
-                </li>
-            </ul>
-        </section>
+            <div class="gallery-header">
+                <h2 class="section-title">Rules</h2>
+                <a id="rulesDownload" class="gallery-button-secondary" hidden>Download PDF</a>
+            </div>
 
-        <section class="section">
-            <h2 class="section-title">The Range &amp; Target</h2>
-            <ul class="rules-list">
-                <li>
-                    <span class="rules-label">Distance:</span>
-                    All matches are shot at a fixed distance of <strong>7&nbsp;yards</strong>.
-                </li>
-                <li>
-                    <span class="rules-label">Target:</span>
-                    A painted steel <strong>bell target</strong> is used. The striker rings the bell on a successful strike.
-                </li>
-                <li>
-                    <span class="rules-label">Scoring ring:</span>
-                    The target face is marked with concentric scoring rings. A clean bull scores <strong>10 points</strong>, graduating down to <strong>0</strong> for a complete miss.
-                </li>
-                <li>
-                    <span class="rules-label">Shot count:</span>
-                    Each shooter fires a set string of shots per match (typically seven counting shots).
-                </li>
-            </ul>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Match Conduct</h2>
-            <ul class="rules-list">
-                <li>
-                    <span class="rules-label">Team size:</span>
-                    Each team may field up to <strong>9 shooters</strong> per match, with the top scores counting towards the match result.
-                </li>
-                <li>
-                    <span class="rules-label">League season:</span>
-                    Matches are shot on <strong>Monday evenings</strong> throughout the season as published in the fixture list.
-                </li>
-                <li>
-                    <span class="rules-label">Scoring:</span>
-                    Match results are decided on aggregate team score. A clean bull counts 10, with scores graduating downward by ring.
-                </li>
-                <li>
-                    <span class="rules-label">Shooter conduct:</span>
-                    Shooters must remain quiet and still on the firing point while others are shooting. Coaching from the firing point is not permitted during a counting string.
-                </li>
-                <li>
-                    <span class="rules-label">Safety:</span>
-                    Rifles must be kept unloaded, actions open and pointed in a safe direction except when on the firing point. The Range Officer's word is final on all safety matters.
-                </li>
-                <li>
-                    <span class="rules-label">Disputes:</span>
-                    Any dispute over a score or conduct must be referred to the Match Secretary, whose decision is final on the day.
-                </li>
-            </ul>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Competitions</h2>
-            <p class="rules-intro">
-                In addition to the weekly league, the NADARL hosts open competitions during the season and an annual Open competition where non-members are welcome to enter. The equipment and conduct rules above apply to all competitions unless the competition entry sheet states otherwise.
-            </p>
+            <div id="rulesPdfEmpty" class="gallery-empty" hidden>The rules have not been uploaded yet.</div>
+            <div class="rules-pdf-pages" id="rulesPdfPages"></div>
         </section>
 
         <footer class="footer">
@@ -134,5 +56,12 @@
             </div>
         </footer>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS/supabase-keys.js"></script>
+    <script src="../JS/supabase-config.js"></script>
+    <script src="../JS/data.js?v=20260818"></script>
+    <script src="../JS/vendor/pdfjs/pdf.min.js?v=3.11.174"></script>
+    <script src="../JS/rules.js?v=20260818"></script>
 </body>
 </html>

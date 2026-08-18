@@ -66,6 +66,21 @@
                     </div>
                 </section>
 
+                <section id="rulesPanel" class="fx-section">
+                    <h2 class="section-title">Rules PDF</h2>
+                    <p class="login-intro">
+                        The Rules page shows a single PDF. Upload the file to the
+                        <code>Documents/rules</code> folder on the server, then enter its exact filename here.
+                    </p>
+
+                    <div id="rulesMessage" class="login-message" role="alert" hidden></div>
+
+                    <div class="fx-season-create">
+                        <input type="text" id="rulesFilename" class="fx-text-input" placeholder="e.g. nadarl-rules-2026.pdf" style="width:280px;">
+                        <button type="button" id="rulesSave" class="shooter-button">Save</button>
+                    </div>
+                </section>
+
                 <section id="backupPanel" class="fx-section">
                     <h2 class="section-title">Data Backup &amp; Restore</h2>
                     <p class="login-intro">
@@ -119,9 +134,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260809e"></script>
+    <script src="../JS/data.js?v=20260818"></script>
     <script src="../JS/admin-common.js?v=20260809a"></script>
     <script src="../JS/admin-handicap.js"></script>
+    <script src="../JS/admin-rules.js"></script>
     <script src="../JS/admin-backup.js"></script>
 </body>
 </html>

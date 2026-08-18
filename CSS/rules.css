@@ -1,39 +1,32 @@
-.rules-list {
-    list-style: none;
+/* gallery.css's .gallery-header relies on a following .gallery-intro
+   paragraph for spacing below it - this page has no intro text, so add the
+   gap directly (scoped here rather than in gallery.css, so pages that do
+   have that paragraph don't end up with a double gap). */
+.gallery-header {
+    margin-bottom: 20px;
+}
+
+a.gallery-button-secondary {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.rules-pdf-pages {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
-.rules-list li {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px 20px;
-    color: #e0d6c8;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-.rules-label {
+.rules-pdf-page-image {
+    width: 100%;
     display: block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: #c41e3a;
-    margin-bottom: 4px;
+    border-radius: 6px;
+    background: #ffffff;
 }
 
-.rules-intro {
-    color: #e0d6c8;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-@media (max-width: 480px) {
-    .rules-list li {
-        padding: 14px 16px;
-        font-size: 0.9rem;
-    }
+.rules-pdf-loading {
+    padding: 30px 0;
+    text-align: center;
+    color: #a0a0a0;
+    font-size: 0.9rem;
 }
