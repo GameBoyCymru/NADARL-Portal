@@ -18,6 +18,7 @@ async function renderTeamCards() {
                         <img src="../Images/teams/${team.slug}.png" alt="${team.name} logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <span class="badge-fallback" style="display:none;">${team.name.split(' ').map(w => w[0]).join('')}</span>
                     </div>
+                    <p class="team-name">${team.name}</p>
                     <p class="team-venue">${team.venue}</p>
                 </div>
             </a>

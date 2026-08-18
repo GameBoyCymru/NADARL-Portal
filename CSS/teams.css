@@ -74,6 +74,13 @@
     color: #d4a017;
 }
 
+.team-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 4px;
+}
+
 .team-venue {
     font-size: 0.9rem;
     color: #a0a0a0;
