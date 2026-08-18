@@ -84,8 +84,17 @@
             </div>
 
             <div class="shot-pattern-wrapper">
-                <h3 class="shot-pattern-title">Average &ndash; All Time</h3>
-                <p class="shot-pattern-subtitle">Running average score across every match</p>
+                <div class="shot-pattern-header-row">
+                    <div>
+                        <h3 class="shot-pattern-title">Average &ndash; All Time</h3>
+                        <p class="shot-pattern-subtitle">Running average score across every match</p>
+                    </div>
+                    <div class="chart-page-nav" id="averageAllTimePageNav" hidden>
+                        <button type="button" id="averageAllTimePagePrev" class="season-arrow" aria-label="Older matches">&#8249;</button>
+                        <span id="averageAllTimePageLabel" class="chart-page-label"></span>
+                        <button type="button" id="averageAllTimePageNext" class="season-arrow" aria-label="More recent matches">&#8250;</button>
+                    </div>
+                </div>
                 <div class="shot-pattern-canvas-wrap">
                     <canvas id="averageChartAllTime" height="220"></canvas>
                 </div>

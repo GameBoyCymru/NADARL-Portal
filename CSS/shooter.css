@@ -79,6 +79,29 @@
     margin-top: 25px;
 }
 
+.shot-pattern-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.chart-page-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.chart-page-label {
+    color: #a0a0a0;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    min-width: 90px;
+    text-align: center;
+}
+
 .shot-pattern-title {
     color: #ffffff;
     font-size: 1.05rem;

@@ -6,6 +6,10 @@ let historyRows = [];
 let sortKey = null;
 let sortDir = 1;
 
+const AVERAGE_ALL_TIME_PAGE_SIZE = 30;
+let allTimeAverageRows = [];
+let allTimeAveragePage = 0;
+
 // Same comparator convention as the league table / team page: strings
 // compare case-insensitively, numbers numerically, booleans true-first
 // (so "Home" sorts before "Away"), nulls last.
@@ -132,7 +136,15 @@ function renderShotPatternChart(canvasId, emptyId, rows) {
     });
 }
 
-function renderRunningAverageChart(canvasId, emptyId, rows) {
+function computeRunningAverages(rows) {
+    let runningTotal = 0;
+    return rows.map((row, i) => {
+        runningTotal += row.total;
+        return runningTotal / (i + 1);
+    });
+}
+
+function drawRunningAverageLine(canvasId, emptyId, labels, values) {
     const canvas = document.getElementById(canvasId);
     const empty = document.getElementById(emptyId);
 
@@ -141,7 +153,7 @@ function renderRunningAverageChart(canvasId, emptyId, rows) {
         delete shotPatternCharts[canvasId];
     }
 
-    if (!rows.length) {
+    if (!values.length) {
         canvas.hidden = true;
         empty.hidden = false;
         return;
@@ -149,18 +161,12 @@ function renderRunningAverageChart(canvasId, emptyId, rows) {
     canvas.hidden = false;
     empty.hidden = true;
 
-    let runningTotal = 0;
-    const runningAverages = rows.map((row, i) => {
-        runningTotal += row.total;
-        return runningTotal / (i + 1);
-    });
-
     shotPatternCharts[canvasId] = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
-            labels: rows.map(row => formatDate(row.date)),
+            labels: labels,
             datasets: [{
-                data: runningAverages,
+                data: values,
                 borderColor: '#d4a017',
                 backgroundColor: '#d4a017',
                 borderWidth: 2,
@@ -194,6 +200,48 @@ function renderRunningAverageChart(canvasId, emptyId, rows) {
             }
         }
     });
+}
+
+function renderRunningAverageChart(canvasId, emptyId, rows) {
+    drawRunningAverageLine(canvasId, emptyId, rows.map(row => formatDate(row.date)), computeRunningAverages(rows));
+}
+
+// The all-time average chart grows one point per match played, so unlike the
+// season chart (naturally capped at a season's worth of matches) it's paged
+// to keep the number of rendered points/markers bounded as history grows.
+function renderAverageAllTimePage() {
+    const nav = document.getElementById('averageAllTimePageNav');
+    const total = allTimeAverageRows.length;
+
+    if (!total) {
+        nav.hidden = true;
+        drawRunningAverageLine('averageChartAllTime', 'averageEmptyAllTime', [], []);
+        return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(total / AVERAGE_ALL_TIME_PAGE_SIZE));
+    allTimeAveragePage = Math.min(Math.max(allTimeAveragePage, 0), totalPages - 1);
+
+    const start = allTimeAveragePage * AVERAGE_ALL_TIME_PAGE_SIZE;
+    const end = Math.min(start + AVERAGE_ALL_TIME_PAGE_SIZE, total);
+
+    // Running average at each point still reflects the shooter's whole
+    // history - only the window of points drawn on screen is paged.
+    const fullAverages = computeRunningAverages(allTimeAverageRows);
+    const pageRows = allTimeAverageRows.slice(start, end);
+    const pageAverages = fullAverages.slice(start, end);
+
+    drawRunningAverageLine(
+        'averageChartAllTime',
+        'averageEmptyAllTime',
+        pageRows.map(row => formatDate(row.date)),
+        pageAverages
+    );
+
+    nav.hidden = totalPages <= 1;
+    document.getElementById('averageAllTimePagePrev').disabled = allTimeAveragePage <= 0;
+    document.getElementById('averageAllTimePageNext').disabled = allTimeAveragePage >= totalPages - 1;
+    document.getElementById('averageAllTimePageLabel').textContent = `${start + 1}–${end} of ${total}`;
 }
 
 function renderStatTiles(stats) {
@@ -255,7 +303,10 @@ async function loadSeason() {
 async function loadAllTimeCharts() {
     const allTimeHistory = await NADARL.fetchShooterMatchHistoryAllTime(currentShooter.id);
     renderShotPatternChart('shotPatternChartAllTime', 'shotPatternEmptyAllTime', allTimeHistory);
-    renderRunningAverageChart('averageChartAllTime', 'averageEmptyAllTime', allTimeHistory);
+
+    allTimeAverageRows = allTimeHistory;
+    allTimeAveragePage = Math.max(0, Math.ceil(allTimeHistory.length / AVERAGE_ALL_TIME_PAGE_SIZE) - 1);
+    renderAverageAllTimePage();
 }
 
 async function initShooterPage() {
@@ -325,6 +376,15 @@ async function initShooterPage() {
         }
         updateSortIndicators();
         renderHistoryTable();
+    });
+
+    document.getElementById('averageAllTimePagePrev').addEventListener('click', () => {
+        allTimeAveragePage--;
+        renderAverageAllTimePage();
+    });
+    document.getElementById('averageAllTimePageNext').addEventListener('click', () => {
+        allTimeAveragePage++;
+        renderAverageAllTimePage();
     });
 
     await Promise.all([loadSeason(), loadAllTimeCharts()]);
