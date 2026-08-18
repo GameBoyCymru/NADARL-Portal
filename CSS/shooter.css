@@ -94,6 +94,10 @@
     flex-shrink: 0;
 }
 
+.chart-page-nav[hidden] {
+    display: none;
+}
+
 .chart-page-label {
     color: #a0a0a0;
     font-size: 0.8rem;
