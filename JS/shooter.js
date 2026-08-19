@@ -10,6 +10,7 @@ let compareAllTimeHistory = [];
 
 let previousSeasonHistoryRows = [];
 let comparePreviousSeasonHistoryRows = [];
+let showPreviousSeason = false;
 
 const COMPARE_PRIMARY_COLOR = '#d4a017';
 const COMPARE_SECONDARY_COLOR = '#4fc3f7';
@@ -452,6 +453,12 @@ function wireCompare() {
     });
 
     document.getElementById('compareClear').addEventListener('click', clearCompareShooter);
+
+    document.getElementById('previousSeasonToggle').addEventListener('click', async (e) => {
+        showPreviousSeason = !showPreviousSeason;
+        e.currentTarget.setAttribute('aria-pressed', String(showPreviousSeason));
+        await loadSeason();
+    });
 }
 
 async function loadSeason() {
@@ -467,7 +474,7 @@ async function loadSeason() {
     document.getElementById('matchHistoryTable').innerHTML = `<tr><td colspan="${matchTableColCount()}">Loading&hellip;</td></tr>`;
     renderStatTiles('statTiles', null);
 
-    const previousSeason = seasons[seasonIndex - 1] || null;
+    const previousSeason = showPreviousSeason ? (seasons[seasonIndex - 1] || null) : null;
 
     if (!season) {
         historyRows = [];

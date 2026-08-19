@@ -73,6 +73,9 @@
 
 .compare-bar {
     position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 25px;
 }
 
@@ -91,7 +94,14 @@
     border-color: rgba(212, 160, 23, 0.4);
 }
 
+.compare-toggle[aria-pressed="true"] {
+    border-color: rgba(212, 160, 23, 0.6);
+    background: rgba(212, 160, 23, 0.18);
+    color: #ffffff;
+}
+
 .compare-search {
+    flex-basis: 100%;
     margin-top: 10px;
 }
 
