@@ -312,6 +312,7 @@ const FixtureEditorAdmin = (function () {
 
     function wire() {
         $('fxeSeason').addEventListener('change', load);
+        $('fxeCopyPrevious').addEventListener('click', copyPreviousSeasonFixtures);
         $('fxeDeleteAll').addEventListener('click', deleteAllFixtures);
         $('fxeAdd').addEventListener('click', createMatches);
     }
@@ -449,6 +450,103 @@ const FixtureEditorAdmin = (function () {
             pairingRows = [];
             addPairingRow();
             show('Created ' + created + ' match(es) on ' + date + '.', 'success');
+        }
+        await load();
+        refreshAllocatedStats();
+    }
+
+    function addDays(dateStr, days) {
+        const d = new Date(dateStr + 'T00:00:00');
+        d.setDate(d.getDate() + days);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function daysBetween(fromDateStr, toDateStr) {
+        const from = new Date(fromDateStr + 'T00:00:00');
+        const to = new Date(toDateStr + 'T00:00:00');
+        return Math.round((to - from) / 86400000);
+    }
+
+    // Recreates every fixture from the season immediately before the
+    // selected one (by season list order, same convention as elsewhere on
+    // the site) into the selected season - same pairings, venues and half,
+    // dates shifted to line up with the new season's start date. Adds
+    // alongside anything already scheduled rather than replacing it.
+    async function copyPreviousSeasonFixtures() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+
+        const idx = seasons.findIndex(s => s.id === season.id);
+        const previousSeason = idx > 0 ? seasons[idx - 1] : null;
+        if (!previousSeason) { show('No earlier season to copy fixtures from.', 'error'); return; }
+
+        const previousFixtures = await NADARL.fetchFixtures(previousSeason.id);
+        if (!previousFixtures.length) { show(`"${previousSeason.name}" has no fixtures to copy.`, 'error'); return; }
+
+        // The match table's uniqueness constraint is on (date, home, away)
+        // alone - it isn't scoped per season. So a day offset of 0 doesn't
+        // just look wrong, it actively fails: every copied fixture would
+        // collide with the original one still sitting in the previous
+        // season. Fall back to exactly 364 days (52 weeks, same weekday)
+        // whenever the two seasons' start dates aren't both set or don't
+        // actually differ.
+        let dayOffset = (season.start_date && previousSeason.start_date)
+            ? daysBetween(previousSeason.start_date, season.start_date)
+            : 0;
+        let usedFallbackOffset = false;
+        if (!dayOffset) {
+            dayOffset = 364;
+            usedFallbackOffset = true;
+        }
+        const offsetNote = usedFallbackOffset
+            ? `Both seasons need a start date set to line the schedule up automatically, so fixtures will instead be shifted forward by 364 days (52 weeks, same weekday) - you may want to Push them afterwards.`
+            : `Dates will be shifted by ${dayOffset} day(s) to line up with "${season.name}"'s start date.`;
+
+        if (!confirm(
+            `Copy ${previousFixtures.length} fixture(s) from "${previousSeason.name}" into "${season.name}"? ` +
+            offsetNote + ` This adds alongside anything already scheduled in "${season.name}" - it won't touch or delete existing fixtures.`
+        )) return;
+
+        const btn = $('fxeCopyPrevious');
+        btn.disabled = true;
+
+        let created = 0;
+        const failures = [];
+        for (const f of previousFixtures) {
+            const homeTeam = teams.find(t => t.name === f.homeTeam);
+            const awayTeam = f.isBye ? null : teams.find(t => t.name === f.awayTeam);
+            if (!homeTeam || (!f.isBye && !awayTeam)) {
+                failures.push(`${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam} (${f.date}): team no longer exists`);
+                continue;
+            }
+
+            // Only carry the venue over as an explicit override if it
+            // genuinely differed from the home team's own venue back then -
+            // otherwise leave it blank so the copy keeps following the home
+            // team's current registered venue.
+            const venue = (f.venue && f.venue !== homeTeam.venue) ? f.venue : '';
+
+            const res = await NADARL.addMatch({
+                season_id: season.id,
+                match_date: addDays(f.date, dayOffset),
+                home_team_id: homeTeam.id,
+                away_team_id: awayTeam ? awayTeam.id : null,
+                venue,
+                half: f.half
+            });
+            if (res.ok) created++;
+            else failures.push(`${f.homeTeam} vs ${f.isBye ? 'BYE' : f.awayTeam}: ${res.error || 'unknown error'}`);
+        }
+
+        btn.disabled = false;
+
+        if (failures.length) {
+            show(`Copied ${created} of ${previousFixtures.length} fixture(s). Failed: ` + failures.join('; '), created ? 'success' : 'error');
+        } else {
+            show(`Copied ${created} fixture(s) from "${previousSeason.name}" into "${season.name}".`, 'success');
         }
         await load();
         refreshAllocatedStats();
