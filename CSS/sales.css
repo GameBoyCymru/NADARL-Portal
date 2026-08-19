@@ -127,6 +127,39 @@
     margin-bottom: 6px;
 }
 
+.wizard-spaced-label {
+    margin-top: 12px;
+}
+
+.sale-category {
+    margin-top: 30px;
+}
+
+.sale-category:first-of-type {
+    margin-top: 0;
+}
+
+.sale-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sale-category-title {
+    color: #d4a017;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.sale-category-description {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: #a0a0a0;
+    margin: 6px 0 18px;
+}
+
 .sale-textarea,
 .sale-input {
     padding: 8px 10px;

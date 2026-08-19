@@ -18,7 +18,6 @@
             <div class="sale-header">
                 <h2 class="section-title">For Sale</h2>
                 <div class="sale-header-actions">
-                    <button type="button" id="reorderSaleButton" class="sale-button-secondary" hidden>Reorder Items</button>
                     <button type="button" id="addSaleButton" class="sale-button" hidden>Add Item</button>
                 </div>
             </div>
@@ -27,14 +26,6 @@
             </p>
 
             <div id="saleMessage" class="sale-message" role="alert" hidden></div>
-
-            <div id="reorderToolbar" class="reorder-toolbar" hidden>
-                <p class="reorder-hint">Use the arrows to move items, then save your new order.</p>
-                <div class="reorder-toolbar-actions">
-                    <button type="button" id="reorderCancel" class="sale-button-secondary">Cancel</button>
-                    <button type="button" id="reorderSave" class="sale-button">Save Order</button>
-                </div>
-            </div>
 
             <div id="saleWizard" class="sale-wizard" hidden>
                 <div class="wizard-step" id="wizardStep1">
@@ -49,7 +40,12 @@
                             <input type="text" id="salePriceInput" class="sale-input" maxlength="40" placeholder="e.g. &pound;450 ono">
                         </div>
                     </div>
-                    <label for="saleDescriptionInput" style="margin-top: 12px;">Description</label>
+                    <label for="saleCategoryInput" class="wizard-spaced-label">Category</label>
+                    <select id="saleCategoryInput" class="sale-input">
+                        <option value="league">League Merchandise</option>
+                        <option value="private">Private Sales</option>
+                    </select>
+                    <label for="saleDescriptionInput" class="wizard-spaced-label">Description</label>
                     <textarea id="saleDescriptionInput" class="sale-textarea" maxlength="500" rows="3" placeholder="e.g. Good condition, includes case and diabolo pellets."></textarea>
                     <div class="wizard-actions">
                         <button type="button" id="wizardCancel1" class="sale-button-secondary">Cancel</button>
@@ -70,7 +66,37 @@
                 </div>
             </div>
 
-            <div class="sale-grid" id="saleGrid"></div>
+            <div class="sale-category">
+                <div class="sale-category-header">
+                    <h3 class="sale-category-title">League Merchandise</h3>
+                    <button type="button" id="reorderLeagueButton" class="sale-button-secondary" hidden>Reorder Items</button>
+                </div>
+                <p class="sale-category-description">Official league-branded kit and equipment available to buy.</p>
+                <div id="reorderToolbarLeague" class="reorder-toolbar" hidden>
+                    <p class="reorder-hint">Use the arrows to move items, then save your new order.</p>
+                    <div class="reorder-toolbar-actions">
+                        <button type="button" id="reorderCancelLeague" class="sale-button-secondary">Cancel</button>
+                        <button type="button" id="reorderSaveLeague" class="sale-button">Save Order</button>
+                    </div>
+                </div>
+                <div class="sale-grid" id="saleGridLeague"></div>
+            </div>
+
+            <div class="sale-category">
+                <div class="sale-category-header">
+                    <h3 class="sale-category-title">Private Sales</h3>
+                    <button type="button" id="reorderPrivateButton" class="sale-button-secondary" hidden>Reorder Items</button>
+                </div>
+                <p class="sale-category-description">Items listed for sale by individual members.</p>
+                <div id="reorderToolbarPrivate" class="reorder-toolbar" hidden>
+                    <p class="reorder-hint">Use the arrows to move items, then save your new order.</p>
+                    <div class="reorder-toolbar-actions">
+                        <button type="button" id="reorderCancelPrivate" class="sale-button-secondary">Cancel</button>
+                        <button type="button" id="reorderSavePrivate" class="sale-button">Save Order</button>
+                    </div>
+                </div>
+                <div class="sale-grid" id="saleGridPrivate"></div>
+            </div>
         </section>
 
         <div class="sale-lightbox" id="saleLightbox" hidden>

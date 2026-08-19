@@ -16,16 +16,25 @@ function hideSaleMessage() {
     box.hidden = true;
 }
 
+const SALE_CATEGORIES = [
+    { key: 'league', gridId: 'saleGridLeague', reorderButtonId: 'reorderLeagueButton', reorderToolbarId: 'reorderToolbarLeague', reorderCancelId: 'reorderCancelLeague', reorderSaveId: 'reorderSaveLeague' },
+    { key: 'private', gridId: 'saleGridPrivate', reorderButtonId: 'reorderPrivateButton', reorderToolbarId: 'reorderToolbarPrivate', reorderCancelId: 'reorderCancelPrivate', reorderSaveId: 'reorderSavePrivate' }
+];
+
 let saleItems = [];
 let isAdmin = false;
 let editingItemId = null;
-let reorderMode = false;
+let reorderCategory = null;
 let reorderWorkingItems = [];
 let lightboxImages = [];
 let lightboxIndex = 0;
 let lightboxName = '';
 let lightboxPrice = '';
 let lightboxDescription = '';
+
+function itemsForCategory(items, category) {
+    return items.filter(item => (item.category || 'league') === category);
+}
 
 function buildViewHtml(item) {
     return `
@@ -62,12 +71,18 @@ function getFilenameListValues(list) {
 
 function buildEditFormHtml(item) {
     const filenames = item.images && item.images.length ? item.images : [''];
+    const category = item.category || 'league';
     return `
         <div class="sale-edit-form">
             <label>Item name</label>
             <input type="text" class="sale-input sale-edit-name" maxlength="120" value="${escapeHtml(item.name || '')}">
             <label>Price</label>
             <input type="text" class="sale-input sale-edit-price" maxlength="40" value="${escapeHtml(item.price || '')}">
+            <label>Category</label>
+            <select class="sale-input sale-edit-category">
+                <option value="league" ${category === 'league' ? 'selected' : ''}>League Merchandise</option>
+                <option value="private" ${category === 'private' ? 'selected' : ''}>Private Sales</option>
+            </select>
             <label>Description</label>
             <textarea class="sale-textarea sale-edit-description" rows="3" maxlength="500">${escapeHtml(item.description || '')}</textarea>
             <label>Image filenames</label>
@@ -93,11 +108,11 @@ function buildReorderControlsHtml(item, index, total) {
     `;
 }
 
-function renderSaleItems(items) {
-    const grid = document.getElementById('saleGrid');
+function renderSaleItemsInto(gridId, items, isReorderActive) {
+    const grid = document.getElementById(gridId);
 
     if (!items.length) {
-        grid.innerHTML = '<p class="sale-empty">Nothing for sale right now.</p>';
+        grid.innerHTML = '<p class="sale-empty">Nothing here right now.</p>';
         return;
     }
 
@@ -105,20 +120,27 @@ function renderSaleItems(items) {
         const images = item.images || [];
         const countBadge = images.length > 1 ? `<span class="sale-photo-count"><span class="sale-photo-count-icon" aria-hidden="true">&#128247;</span>${images.length}</span>` : '';
         return `
-        <div class="sale-item${reorderMode ? ' reorder-active' : ''}" data-id="${item.id}">
+        <div class="sale-item${isReorderActive ? ' reorder-active' : ''}" data-id="${item.id}">
             <div class="sale-photo-wrap">
                 <img class="sale-photo" src="../Images/sales/${escapeHtml(images[0] || '')}" alt="${escapeHtml(item.name || '')}" loading="lazy">
                 ${countBadge}
             </div>
-            ${reorderMode ? buildReorderControlsHtml(item, index, items.length) : (editingItemId === item.id ? buildEditFormHtml(item) : buildViewHtml(item))}
+            ${isReorderActive ? buildReorderControlsHtml(item, index, items.length) : (editingItemId === item.id ? buildEditFormHtml(item) : buildViewHtml(item))}
         </div>
     `;
     }).join('');
 }
 
+function renderSaleItems() {
+    SALE_CATEGORIES.forEach(cat => {
+        const items = reorderCategory === cat.key ? reorderWorkingItems : itemsForCategory(saleItems, cat.key);
+        renderSaleItemsInto(cat.gridId, items, reorderCategory === cat.key);
+    });
+}
+
 async function loadSaleItems() {
     saleItems = await NADARL.fetchSaleItems();
-    renderSaleItems(saleItems);
+    renderSaleItems();
 }
 
 function moveReorderItem(id, direction) {
@@ -126,49 +148,53 @@ function moveReorderItem(id, direction) {
     const swapIdx = idx + direction;
     if (idx === -1 || swapIdx < 0 || swapIdx >= reorderWorkingItems.length) return;
     [reorderWorkingItems[idx], reorderWorkingItems[swapIdx]] = [reorderWorkingItems[swapIdx], reorderWorkingItems[idx]];
-    renderSaleItems(reorderWorkingItems);
+    renderSaleItems();
 }
 
-function enterReorderMode() {
-    reorderMode = true;
-    reorderWorkingItems = saleItems.slice();
+function enterReorderMode(category) {
+    reorderCategory = category;
+    reorderWorkingItems = itemsForCategory(saleItems, category);
     editingItemId = null;
+    SALE_CATEGORIES.forEach(cat => {
+        document.getElementById(cat.reorderButtonId).hidden = true;
+        document.getElementById(cat.reorderToolbarId).hidden = cat.key !== category;
+    });
     document.getElementById('addSaleButton').hidden = true;
-    document.getElementById('reorderSaleButton').hidden = true;
-    document.getElementById('reorderToolbar').hidden = false;
-    renderSaleItems(reorderWorkingItems);
+    renderSaleItems();
 }
 
 function exitReorderMode() {
-    reorderMode = false;
+    reorderCategory = null;
     reorderWorkingItems = [];
-    document.getElementById('reorderToolbar').hidden = true;
-    if (isAdmin) {
-        document.getElementById('addSaleButton').hidden = false;
-        document.getElementById('reorderSaleButton').hidden = false;
-    }
-    renderSaleItems(saleItems);
+    SALE_CATEGORIES.forEach(cat => {
+        document.getElementById(cat.reorderToolbarId).hidden = true;
+        if (isAdmin) document.getElementById(cat.reorderButtonId).hidden = false;
+    });
+    if (isAdmin) document.getElementById('addSaleButton').hidden = false;
+    renderSaleItems();
 }
 
 function wireReorderToolbar() {
-    document.getElementById('reorderSaleButton').addEventListener('click', enterReorderMode);
-    document.getElementById('reorderCancel').addEventListener('click', exitReorderMode);
+    SALE_CATEGORIES.forEach(cat => {
+        document.getElementById(cat.reorderButtonId).addEventListener('click', () => enterReorderMode(cat.key));
+        document.getElementById(cat.reorderCancelId).addEventListener('click', exitReorderMode);
 
-    document.getElementById('reorderSave').addEventListener('click', async () => {
-        if (!confirm('Save this new item order?')) return;
+        document.getElementById(cat.reorderSaveId).addEventListener('click', async () => {
+            if (!confirm('Save this new item order?')) return;
 
-        const saveButton = document.getElementById('reorderSave');
-        saveButton.disabled = true;
-        const res = await NADARL.reorderSaleItems(reorderWorkingItems.map(item => item.id));
-        saveButton.disabled = false;
+            const saveButton = document.getElementById(cat.reorderSaveId);
+            saveButton.disabled = true;
+            const res = await NADARL.reorderSaleItems(reorderWorkingItems.map(item => item.id));
+            saveButton.disabled = false;
 
-        if (!res.ok) {
-            showSaleMessage('Could not save item order: ' + res.error, 'error');
-            return;
-        }
+            if (!res.ok) {
+                showSaleMessage('Could not save item order: ' + res.error, 'error');
+                return;
+            }
 
-        exitReorderMode();
-        await loadSaleItems();
+            exitReorderMode();
+            await loadSaleItems();
+        });
     });
 }
 
@@ -228,9 +254,9 @@ function wireLightbox() {
 }
 
 function wireSaleGrid() {
-    document.getElementById('saleGrid').addEventListener('click', async (e) => {
+    const onGridClick = async (e) => {
         const photo = e.target.closest('.sale-photo-wrap');
-        if (photo && !reorderMode) {
+        if (photo && reorderCategory === null) {
             const id = photo.closest('.sale-item').dataset.id;
             const item = saleItems.find(i => i.id === id);
             if (item) openLightbox(item);
@@ -246,14 +272,14 @@ function wireSaleGrid() {
         const editBtn = e.target.closest('.sale-item-edit');
         if (editBtn) {
             editingItemId = editBtn.dataset.id;
-            renderSaleItems(saleItems);
+            renderSaleItems();
             return;
         }
 
         const cancelBtn = e.target.closest('.sale-item-cancel');
         if (cancelBtn) {
             editingItemId = null;
-            renderSaleItems(saleItems);
+            renderSaleItems();
             return;
         }
 
@@ -297,6 +323,7 @@ function wireSaleGrid() {
             const card = saveBtn.closest('.sale-item');
             const name = card.querySelector('.sale-edit-name').value.trim();
             const price = card.querySelector('.sale-edit-price').value.trim();
+            const category = card.querySelector('.sale-edit-category').value;
             const description = card.querySelector('.sale-edit-description').value.trim();
             const filenames = getFilenameListValues(card.querySelector('.sale-edit-filenames'));
             if (!name) {
@@ -308,7 +335,7 @@ function wireSaleGrid() {
                 return;
             }
             saveBtn.disabled = true;
-            const res = await NADARL.updateSaleItem(id, { name, price, filenames, description });
+            const res = await NADARL.updateSaleItem(id, { name, price, filenames, description, category });
             saveBtn.disabled = false;
             if (!res.ok) {
                 showSaleMessage('Could not save item: ' + res.error, 'error');
@@ -317,6 +344,10 @@ function wireSaleGrid() {
             editingItemId = null;
             await loadSaleItems();
         }
+    };
+
+    SALE_CATEGORIES.forEach(cat => {
+        document.getElementById(cat.gridId).addEventListener('click', onGridClick);
     });
 }
 
@@ -331,6 +362,7 @@ function openWizard() {
     document.getElementById('addSaleButton').hidden = true;
     document.getElementById('saleNameInput').value = '';
     document.getElementById('salePriceInput').value = '';
+    document.getElementById('saleCategoryInput').value = 'league';
     document.getElementById('saleDescriptionInput').value = '';
     const filenameList = document.getElementById('wizardFilenameList');
     filenameList.innerHTML = '';
@@ -376,6 +408,7 @@ function wireWizard() {
     document.getElementById('wizardSave').addEventListener('click', async () => {
         const name = document.getElementById('saleNameInput').value.trim();
         const price = document.getElementById('salePriceInput').value.trim();
+        const category = document.getElementById('saleCategoryInput').value;
         const description = document.getElementById('saleDescriptionInput').value.trim();
         const filenames = getFilenameListValues(document.getElementById('wizardFilenameList'));
         if (!filenames.length) {
@@ -385,7 +418,7 @@ function wireWizard() {
 
         const saveButton = document.getElementById('wizardSave');
         saveButton.disabled = true;
-        const res = await NADARL.addSaleItem({ name, price, filenames, description });
+        const res = await NADARL.addSaleItem({ name, price, filenames, description, category });
         saveButton.disabled = false;
 
         if (!res.ok) {
@@ -403,7 +436,9 @@ async function initSalesPage() {
     isAdmin = !!me && me.role === 'admin';
     if (isAdmin) {
         document.getElementById('addSaleButton').hidden = false;
-        document.getElementById('reorderSaleButton').hidden = false;
+        SALE_CATEGORIES.forEach(cat => {
+            document.getElementById(cat.reorderButtonId).hidden = false;
+        });
     }
     wireWizard();
     wireReorderToolbar();

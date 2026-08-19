@@ -1275,7 +1275,7 @@ const NADARL = (function () {
     // fetchTrophyItems.
     async function fetchSaleItems() {
         const { data, error } = await db().from('sale_item')
-            .select('id,name,price,description,created_at,sort_order,sale_item_image(filename,sort_order)')
+            .select('id,name,price,description,category,created_at,sort_order,sale_item_image(filename,sort_order)')
             .order('sort_order', { ascending: true, nullsFirst: false })
             .order('created_at', { ascending: false })
             .order('sort_order', { ascending: true, foreignTable: 'sale_item_image' });
@@ -1300,29 +1300,31 @@ const NADARL = (function () {
     // Add a for-sale item with one or more images. Each filename must match
     // an image already uploaded to Images/sales/ on the server. Admin only
     // - RLS enforces.
-    async function addSaleItem({ name, price, filenames, description }) {
+    async function addSaleItem({ name, price, filenames, description, category }) {
         const { data, error } = await db().rpc('save_sale_item', {
             p_id: null,
             p_name: name || '',
             p_price: price || '',
             p_description: description || '',
-            p_filenames: filenames
+            p_filenames: filenames,
+            p_category: category || 'league'
         });
         if (error) { console.error('addSaleItem', error); return { ok: false, error: error.message }; }
         const images = filenames.map(f => String(f).trim()).filter(Boolean);
         return { ok: true, item: { ...data[0], images } };
     }
 
-    // Update a for-sale item's name, price, description, and image list
-    // (the image list is replaced wholesale, atomically). Admin only - RLS
-    // enforces.
-    async function updateSaleItem(id, { name, price, filenames, description }) {
+    // Update a for-sale item's name, price, description, category, and image
+    // list (the image list is replaced wholesale, atomically). Admin only -
+    // RLS enforces.
+    async function updateSaleItem(id, { name, price, filenames, description, category }) {
         const { data, error } = await db().rpc('save_sale_item', {
             p_id: id,
             p_name: name || '',
             p_price: price || '',
             p_description: description || '',
-            p_filenames: filenames
+            p_filenames: filenames,
+            p_category: category || 'league'
         });
         if (error) { console.error('updateSaleItem', error); return { ok: false, error: error.message }; }
         const images = filenames.map(f => String(f).trim()).filter(Boolean);

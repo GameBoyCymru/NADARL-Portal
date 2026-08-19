@@ -13,9 +13,15 @@ create table if not exists public.sale_item (
     name        text not null default '',
     price       text not null default '',
     description text not null default '',
+    category    text not null default 'league',
     sort_order  integer,
     created_at  timestamptz not null default now()
 );
+
+alter table public.sale_item add column if not exists category text not null default 'league';
+
+alter table public.sale_item drop constraint if exists sale_item_category_check;
+alter table public.sale_item add constraint sale_item_category_check check (category in ('league', 'private'));
 
 create index if not exists idx_sale_item_created on public.sale_item(created_at);
 create index if not exists idx_sale_item_sort_order on public.sale_item(sort_order);
@@ -56,18 +62,22 @@ grant select, insert, update, delete on public.sale_item_image to anon, authenti
 -- rows, wrapped in one transaction (same pattern as save_trophy_item /
 -- save_gallery_item) so a failure partway through can't leave a listing
 -- with a stale image list.
+drop function if exists public.save_sale_item(uuid, text, text, text, text[]);
+
 create or replace function public.save_sale_item(
     p_id uuid,
     p_name text,
     p_price text,
     p_description text,
-    p_filenames text[]
+    p_filenames text[],
+    p_category text default 'league'
 )
 returns table (
     id          uuid,
     name        text,
     price       text,
     description text,
+    category    text,
     created_at  timestamptz,
     sort_order  integer
 )
@@ -77,20 +87,24 @@ set search_path = public
 as $$
 declare
     v_id uuid;
+    v_category text;
 begin
     if not public.is_admin() then
         raise exception 'not authorized';
     end if;
 
+    v_category := case when p_category = 'private' then 'private' else 'league' end;
+
     if p_id is null then
-        insert into public.sale_item (name, price, description)
-        values (coalesce(trim(p_name), ''), coalesce(trim(p_price), ''), coalesce(trim(p_description), ''))
+        insert into public.sale_item (name, price, description, category)
+        values (coalesce(trim(p_name), ''), coalesce(trim(p_price), ''), coalesce(trim(p_description), ''), v_category)
         returning sale_item.id into v_id;
     else
         update public.sale_item
         set name = coalesce(trim(p_name), ''),
             price = coalesce(trim(p_price), ''),
-            description = coalesce(trim(p_description), '')
+            description = coalesce(trim(p_description), ''),
+            category = v_category
         where sale_item.id = p_id;
         if not found then
             raise exception 'sale item not found';
@@ -106,10 +120,10 @@ begin
     where trim(f) <> '';
 
     return query
-    select si.id, si.name, si.price, si.description, si.created_at, si.sort_order
+    select si.id, si.name, si.price, si.description, si.category, si.created_at, si.sort_order
     from public.sale_item si
     where si.id = v_id;
 end;
 $$;
 
-grant execute on function public.save_sale_item(uuid, text, text, text, text[]) to authenticated;
+grant execute on function public.save_sale_item(uuid, text, text, text, text[], text) to authenticated;
