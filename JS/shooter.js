@@ -8,8 +8,13 @@ let currentSeasonStatsRows = [];
 let compareHistoryRows = [];
 let compareAllTimeHistory = [];
 
+let previousSeasonHistoryRows = [];
+let comparePreviousSeasonHistoryRows = [];
+
 const COMPARE_PRIMARY_COLOR = '#d4a017';
 const COMPARE_SECONDARY_COLOR = '#4fc3f7';
+const PREVIOUS_SEASON_COLOR = 'rgba(212, 160, 23, 0.35)';
+const COMPARE_PREVIOUS_SEASON_COLOR = 'rgba(79, 195, 247, 0.35)';
 
 function padArray(arr, length) {
     const padded = arr.slice();
@@ -116,14 +121,16 @@ function shotAveragesFor(rows, shotCount) {
     return averages;
 }
 
-function renderShotPatternChart(canvasId, emptyId, rows, compareRows, primaryLabel, compareLabel) {
+// seriesList: [{ rows, label, color, dashed }, ...] - the first entry is
+// always the primary (current) shooter and is always drawn even if empty;
+// later entries (compare shooter, previous season, ...) are skipped when
+// they have no rows.
+function renderShotPatternChart(canvasId, emptyId, seriesList) {
     const canvas = document.getElementById(canvasId);
     const empty = document.getElementById(emptyId);
 
-    const shotCount = Math.max(
-        rows.reduce((max, r) => Math.max(max, (r.shots || []).length), 0),
-        (compareRows || []).reduce((max, r) => Math.max(max, (r.shots || []).length), 0)
-    );
+    const shotCount = seriesList.reduce((max, s) =>
+        Math.max(max, (s.rows || []).reduce((m, r) => Math.max(m, (r.shots || []).length), 0)), 0);
 
     if (shotPatternCharts[canvasId]) {
         shotPatternCharts[canvasId].destroy();
@@ -138,11 +145,10 @@ function renderShotPatternChart(canvasId, emptyId, rows, compareRows, primaryLab
     canvas.hidden = false;
     empty.hidden = true;
 
-    const datasets = [{ data: shotAveragesFor(rows, shotCount), label: primaryLabel, color: COMPARE_PRIMARY_COLOR }];
-    if (compareRows && compareRows.length) {
-        datasets.push({ data: shotAveragesFor(compareRows, shotCount), label: compareLabel, color: COMPARE_SECONDARY_COLOR });
-    }
-    const showLegend = datasets.length > 1;
+    const datasets = seriesList
+        .filter((s, i) => i === 0 || (s.rows && s.rows.length))
+        .map(s => ({ data: shotAveragesFor(s.rows || [], shotCount), label: s.label, color: s.color, dashed: s.dashed }));
+    const showLegend = datasets.filter(d => d.label).length > 1;
 
     shotPatternCharts[canvasId] = new Chart(canvas.getContext('2d'), {
         type: 'line',
@@ -154,7 +160,8 @@ function renderShotPatternChart(canvasId, emptyId, rows, compareRows, primaryLab
                 borderColor: ds.color,
                 backgroundColor: ds.color,
                 borderWidth: 2,
-                pointRadius: 4,
+                borderDash: ds.dashed ? [6, 4] : undefined,
+                pointRadius: ds.dashed ? 0 : 4,
                 pointBackgroundColor: ds.color,
                 pointBorderColor: ds.color,
                 tension: 0,
@@ -226,7 +233,8 @@ function drawRunningAverageLine(canvasId, emptyId, labels, datasets) {
                 borderColor: ds.color,
                 backgroundColor: ds.color,
                 borderWidth: 2,
-                pointRadius: 3,
+                borderDash: ds.dashed ? [6, 4] : undefined,
+                pointRadius: ds.dashed ? 0 : 3,
                 pointBackgroundColor: ds.color,
                 pointBorderColor: ds.color,
                 tension: 0,
@@ -260,25 +268,28 @@ function drawRunningAverageLine(canvasId, emptyId, labels, datasets) {
     });
 }
 
-// When comparing against another shooter, their matches fall on different
-// dates, so a shared date-based x-axis can't align the two lines
-// meaningfully - fall back to "Match N" (progression index) labels instead.
-function renderRunningAverageChart(canvasId, emptyId, rows, compareRows, primaryLabel, compareLabel) {
-    const primaryValues = computeRunningAverages(rows);
+// seriesList: [{ rows, label, color, dashed }, ...] - the first entry is
+// the primary (current) shooter, always drawn even if empty. When any
+// other entry has rows (compare shooter, previous season, ...), their
+// matches fall on different dates than the primary's, so a shared
+// date-based x-axis can't align the lines meaningfully - fall back to
+// "Match N" (progression index) labels instead.
+function renderRunningAverageChart(canvasId, emptyId, seriesList) {
+    const primary = seriesList[0];
+    const primaryValues = computeRunningAverages(primary.rows || []);
+    const others = seriesList.slice(1).filter(s => s.rows && s.rows.length);
 
-    if (compareRows && compareRows.length) {
-        const compareValues = computeRunningAverages(compareRows);
-        const maxLen = Math.max(rows.length, compareRows.length);
+    if (others.length) {
+        const maxLen = Math.max((primary.rows || []).length, ...others.map(s => s.rows.length));
         const labels = Array.from({ length: maxLen }, (_, i) => `Match ${i + 1}`);
-        drawRunningAverageLine(canvasId, emptyId, labels, [
-            { data: padArray(primaryValues, maxLen), label: primaryLabel, color: COMPARE_PRIMARY_COLOR },
-            { data: padArray(compareValues, maxLen), label: compareLabel, color: COMPARE_SECONDARY_COLOR }
-        ]);
+        const datasets = [{ data: padArray(primaryValues, maxLen), label: primary.label, color: primary.color, dashed: primary.dashed }];
+        others.forEach(s => datasets.push({ data: padArray(computeRunningAverages(s.rows), maxLen), label: s.label, color: s.color, dashed: s.dashed }));
+        drawRunningAverageLine(canvasId, emptyId, labels, datasets);
         return;
     }
 
-    drawRunningAverageLine(canvasId, emptyId, rows.map(row => formatDate(row.date)), [
-        { data: primaryValues, label: primaryLabel, color: COMPARE_PRIMARY_COLOR }
+    drawRunningAverageLine(canvasId, emptyId, (primary.rows || []).map(row => formatDate(row.date)), [
+        { data: primaryValues, label: primary.label, color: primary.color, dashed: primary.dashed }
     ]);
 }
 
@@ -456,22 +467,28 @@ async function loadSeason() {
     document.getElementById('matchHistoryTable').innerHTML = `<tr><td colspan="${matchTableColCount()}">Loading&hellip;</td></tr>`;
     renderStatTiles('statTiles', null);
 
+    const previousSeason = seasons[seasonIndex - 1] || null;
+
     if (!season) {
         historyRows = [];
         compareHistoryRows = [];
+        previousSeasonHistoryRows = [];
+        comparePreviousSeasonHistoryRows = [];
         currentSeasonStatsRows = [];
         renderCompareStats();
         document.getElementById('shooterColumnHead').hidden = !compareShooter;
         document.getElementById('matchHistoryTable').innerHTML = `<tr><td colspan="${matchTableColCount()}">No results available.</td></tr>`;
-        renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', [], [], currentShooter.name, null);
-        renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', [], [], currentShooter.name, null);
+        renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', [{ rows: [], label: currentShooter.name, color: COMPARE_PRIMARY_COLOR }]);
+        renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', [{ rows: [], label: currentShooter.name, color: COMPARE_PRIMARY_COLOR }]);
         return;
     }
 
-    const [seasonStatsRows, history, compareHistory] = await Promise.all([
+    const [seasonStatsRows, history, compareHistory, previousSeasonHistory, comparePreviousSeasonHistory] = await Promise.all([
         NADARL.fetchShooterStatsForSeason(season.id),
         NADARL.fetchShooterMatchHistory(currentShooter.id, season.id),
-        compareShooter ? NADARL.fetchShooterMatchHistory(compareShooter.shooter_id, season.id) : Promise.resolve([])
+        compareShooter ? NADARL.fetchShooterMatchHistory(compareShooter.shooter_id, season.id) : Promise.resolve([]),
+        previousSeason ? NADARL.fetchShooterMatchHistory(currentShooter.id, previousSeason.id) : Promise.resolve([]),
+        (compareShooter && previousSeason) ? NADARL.fetchShooterMatchHistory(compareShooter.shooter_id, previousSeason.id) : Promise.resolve([])
     ]);
 
     currentSeasonStatsRows = seasonStatsRows;
@@ -481,12 +498,21 @@ async function loadSeason() {
 
     historyRows = history;
     compareHistoryRows = compareHistory;
+    previousSeasonHistoryRows = previousSeasonHistory;
+    comparePreviousSeasonHistoryRows = comparePreviousSeasonHistory;
     sortKey = null;
     sortDir = 1;
     updateSortIndicators();
     renderHistoryTable();
-    renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', historyRows, compareHistoryRows, currentShooter.name, compareShooter ? compareShooter.name : null);
-    renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', historyRows, compareHistoryRows, currentShooter.name, compareShooter ? compareShooter.name : null);
+
+    const seasonSeries = [
+        { rows: historyRows, label: currentShooter.name, color: COMPARE_PRIMARY_COLOR },
+        ...(compareShooter ? [{ rows: compareHistoryRows, label: compareShooter.name, color: COMPARE_SECONDARY_COLOR }] : []),
+        ...(previousSeason ? [{ rows: previousSeasonHistoryRows, label: `${currentShooter.name} (${previousSeason.name})`, color: PREVIOUS_SEASON_COLOR, dashed: true }] : []),
+        ...(compareShooter && previousSeason ? [{ rows: comparePreviousSeasonHistoryRows, label: `${compareShooter.name} (${previousSeason.name})`, color: COMPARE_PREVIOUS_SEASON_COLOR, dashed: true }] : [])
+    ];
+    renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', seasonSeries);
+    renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', seasonSeries);
 }
 
 async function loadAllTimeCharts() {
@@ -495,7 +521,12 @@ async function loadAllTimeCharts() {
         compareShooter ? NADARL.fetchShooterMatchHistoryAllTime(compareShooter.shooter_id) : Promise.resolve([])
     ]);
     compareAllTimeHistory = compareAllTime;
-    renderShotPatternChart('shotPatternChartAllTime', 'shotPatternEmptyAllTime', allTimeHistory, compareAllTimeHistory, currentShooter.name, compareShooter ? compareShooter.name : null);
+
+    const allTimeSeries = [
+        { rows: allTimeHistory, label: currentShooter.name, color: COMPARE_PRIMARY_COLOR },
+        ...(compareShooter ? [{ rows: compareAllTimeHistory, label: compareShooter.name, color: COMPARE_SECONDARY_COLOR }] : [])
+    ];
+    renderShotPatternChart('shotPatternChartAllTime', 'shotPatternEmptyAllTime', allTimeSeries);
 
     allTimeAverageRows = allTimeHistory;
     allTimeAveragePage = Math.max(0, Math.ceil(allTimeHistory.length / AVERAGE_ALL_TIME_PAGE_SIZE) - 1);
