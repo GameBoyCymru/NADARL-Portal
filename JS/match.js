@@ -239,6 +239,18 @@ const editRights = {
     awayShooters: { pick: false, score: false }
 };
 
+// Whether each tbody has local edits that haven't been confirmed saved yet
+// (dirty) or a save currently in-flight - set/cleared by renderEditableGrid's
+// save cycle. The live-update subscription checks this before rebuilding a
+// tbody from a fresh fetch: a fetch kicked off while there are unconfirmed
+// local edits can't possibly reflect them yet, so applying it would revert
+// whatever was just typed. See updateEditableRowsLive's per-row focus check
+// for the complementary guard within an otherwise-safe-to-refresh tbody.
+const saveState = {
+    homeShooters: { dirty: false, saveInFlight: false },
+    awayShooters: { dirty: false, saveInFlight: false }
+};
+
 // Confirmation / submission state and context.
 let matchStatus = { home_confirmed: false, away_confirmed: false, submitted: false };
 let confirmCtx = { matchId: null, canScore: false, homePick: false, awayPick: false };
@@ -792,24 +804,23 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
         column.appendChild(statusEl);
     }
 
+    const rowSaveState = saveState[tbodyId];
     let saveTimer = null;
-    let saveInFlight = false;
-    let dirty = false;
     function scheduleSave() {
         if (statusEl) statusEl.textContent = 'Editing…';
-        dirty = true;
+        rowSaveState.dirty = true;
         clearTimeout(saveTimer);
         saveTimer = setTimeout(flushSave, 700);
     }
     async function flushSave() {
-        if (saveInFlight) { saveTimer = setTimeout(flushSave, 300); return; }
-        if (!dirty) return;
-        dirty = false;
-        saveInFlight = true;
+        if (rowSaveState.saveInFlight) { saveTimer = setTimeout(flushSave, 300); return; }
+        if (!rowSaveState.dirty) return;
+        rowSaveState.dirty = false;
+        rowSaveState.saveInFlight = true;
         if (statusEl) statusEl.textContent = 'Saving…';
         const rows = gatherTeamRows(tbodyId);
         const res = await NADARL.saveTeamScores(matchId, teamId, rows);
-        saveInFlight = false;
+        rowSaveState.saveInFlight = false;
         if (statusEl) {
             statusEl.textContent = res.ok
                 ? 'Saved ' + rows.length + ' score(s)'
@@ -820,7 +831,7 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
             matchStatus = (await NADARL.fetchMatchStatus(matchId)) || matchStatus;
             refreshConfirmUI();
         }
-        if (dirty) flushSave();
+        if (rowSaveState.dirty) flushSave();
     }
 
     return calculateTeamScores(existingRows.map(r => ({ name: r.shooter_name, total: r.total })));
@@ -1109,14 +1120,23 @@ async function initMatchPage() {
             const freshHome = fresh.filter(r => r.team_name === params.home);
             const freshAway = fresh.filter(r => r.team_name === params.away);
 
+            // A tbody with unconfirmed local edits (typed but not yet saved,
+            // or mid-save) is skipped entirely - this fetch was kicked off
+            // before those edits were captured, so it can't reflect them,
+            // and applying it would revert what was just typed. The next
+            // save's own follow-up refresh will reconcile once things settle.
             if (homeEditable) {
-                updateEditableRowsLive('homeShooters', homeShooters, freshHome, homeTeamId);
+                if (!saveState.homeShooters.dirty && !saveState.homeShooters.saveInFlight) {
+                    updateEditableRowsLive('homeShooters', homeShooters, freshHome, homeTeamId);
+                }
             } else {
                 renderShooterTable('homeShooters', freshHome.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
             }
             if (match.away_team_id) {
                 if (awayEditable) {
-                    updateEditableRowsLive('awayShooters', awayShooters, freshAway, awayTeamId);
+                    if (!saveState.awayShooters.dirty && !saveState.awayShooters.saveInFlight) {
+                        updateEditableRowsLive('awayShooters', awayShooters, freshAway, awayTeamId);
+                    }
                 } else {
                     renderShooterTable('awayShooters', freshAway.map(r => ({ name: r.shooter_name, shooter_id: r.shooter_id, scores: r.shots || [], total: r.total })));
                 }
