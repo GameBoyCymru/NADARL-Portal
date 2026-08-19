@@ -312,7 +312,8 @@ const FixtureEditorAdmin = (function () {
 
     function wire() {
         $('fxeSeason').addEventListener('change', load);
-        $('fxeCopyPrevious').addEventListener('click', copyPreviousSeasonFixtures);
+        $('fxeCopyPrevious').addEventListener('click', () => copyAdjacentSeasonFixtures(-1, 'fxeCopyPrevious'));
+        $('fxeCopyNext').addEventListener('click', () => copyAdjacentSeasonFixtures(1, 'fxeCopyNext'));
         $('fxeDeleteAll').addEventListener('click', deleteAllFixtures);
         $('fxeAdd').addEventListener('click', createMatches);
     }
@@ -470,52 +471,55 @@ const FixtureEditorAdmin = (function () {
         return Math.round((to - from) / 86400000);
     }
 
-    // Recreates every fixture from the season immediately before the
-    // selected one (by season list order, same convention as elsewhere on
-    // the site) into the selected season - same pairings, venues and half,
-    // dates shifted to line up with the new season's start date. Adds
-    // alongside anything already scheduled rather than replacing it.
-    async function copyPreviousSeasonFixtures() {
+    // Recreates every fixture from the season immediately before or after
+    // the selected one (by season list order, same convention as elsewhere
+    // on the site) into the selected season - same pairings, venues and
+    // half, dates shifted to line up with the selected season's start date.
+    // Adds alongside anything already scheduled rather than replacing it.
+    // direction: -1 = previous season, +1 = next season.
+    async function copyAdjacentSeasonFixtures(direction, btnId) {
         const season = selectedSeason();
         if (!season) { show('No season selected.', 'error'); return; }
 
         const idx = seasons.findIndex(s => s.id === season.id);
-        const previousSeason = idx > 0 ? seasons[idx - 1] : null;
-        if (!previousSeason) { show('No earlier season to copy fixtures from.', 'error'); return; }
+        const otherIdx = idx + direction;
+        const otherSeason = (idx !== -1 && otherIdx >= 0 && otherIdx < seasons.length) ? seasons[otherIdx] : null;
+        const otherLabel = direction < 0 ? 'earlier' : 'later';
+        if (!otherSeason) { show(`No ${otherLabel} season to copy fixtures from.`, 'error'); return; }
 
-        const previousFixtures = await NADARL.fetchFixtures(previousSeason.id);
-        if (!previousFixtures.length) { show(`"${previousSeason.name}" has no fixtures to copy.`, 'error'); return; }
+        const otherFixtures = await NADARL.fetchFixtures(otherSeason.id);
+        if (!otherFixtures.length) { show(`"${otherSeason.name}" has no fixtures to copy.`, 'error'); return; }
 
         // The match table's uniqueness constraint is on (date, home, away)
         // alone - it isn't scoped per season. So a day offset of 0 doesn't
         // just look wrong, it actively fails: every copied fixture would
-        // collide with the original one still sitting in the previous
-        // season. Fall back to exactly 364 days (52 weeks, same weekday)
-        // whenever the two seasons' start dates aren't both set or don't
-        // actually differ.
-        let dayOffset = (season.start_date && previousSeason.start_date)
-            ? daysBetween(previousSeason.start_date, season.start_date)
+        // collide with the original one still sitting in the other season.
+        // Fall back to exactly 364 days (52 weeks, same weekday, in the
+        // requested direction) whenever the two seasons' start dates aren't
+        // both set or don't actually differ.
+        let dayOffset = (season.start_date && otherSeason.start_date)
+            ? daysBetween(otherSeason.start_date, season.start_date)
             : 0;
         let usedFallbackOffset = false;
         if (!dayOffset) {
-            dayOffset = 364;
+            dayOffset = direction < 0 ? 364 : -364;
             usedFallbackOffset = true;
         }
         const offsetNote = usedFallbackOffset
-            ? `Both seasons need a start date set to line the schedule up automatically, so fixtures will instead be shifted forward by 364 days (52 weeks, same weekday) - you may want to Push them afterwards.`
+            ? `Both seasons need a start date set to line the schedule up automatically, so fixtures will instead be shifted ${direction < 0 ? 'forward' : 'back'} by 364 days (52 weeks, same weekday) - you may want to Push them afterwards.`
             : `Dates will be shifted by ${dayOffset} day(s) to line up with "${season.name}"'s start date.`;
 
         if (!confirm(
-            `Copy ${previousFixtures.length} fixture(s) from "${previousSeason.name}" into "${season.name}"? ` +
+            `Copy ${otherFixtures.length} fixture(s) from "${otherSeason.name}" into "${season.name}"? ` +
             offsetNote + ` This adds alongside anything already scheduled in "${season.name}" - it won't touch or delete existing fixtures.`
         )) return;
 
-        const btn = $('fxeCopyPrevious');
+        const btn = $(btnId);
         btn.disabled = true;
 
         let created = 0;
         const failures = [];
-        for (const f of previousFixtures) {
+        for (const f of otherFixtures) {
             const homeTeam = teams.find(t => t.name === f.homeTeam);
             const awayTeam = f.isBye ? null : teams.find(t => t.name === f.awayTeam);
             if (!homeTeam || (!f.isBye && !awayTeam)) {
@@ -544,9 +548,9 @@ const FixtureEditorAdmin = (function () {
         btn.disabled = false;
 
         if (failures.length) {
-            show(`Copied ${created} of ${previousFixtures.length} fixture(s). Failed: ` + failures.join('; '), created ? 'success' : 'error');
+            show(`Copied ${created} of ${otherFixtures.length} fixture(s). Failed: ` + failures.join('; '), created ? 'success' : 'error');
         } else {
-            show(`Copied ${created} fixture(s) from "${previousSeason.name}" into "${season.name}".`, 'success');
+            show(`Copied ${created} fixture(s) from "${otherSeason.name}" into "${season.name}".`, 'success');
         }
         await load();
         refreshAllocatedStats();
