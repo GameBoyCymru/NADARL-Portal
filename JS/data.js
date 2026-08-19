@@ -1353,6 +1353,62 @@ const NADARL = (function () {
         return { ok: true };
     }
 
+    // All history timeline entries. Manually ordered items (sort_order set)
+    // come first in that order; the rest fall back to newest-first. Mirrors
+    // fetchSaleItems.
+    async function fetchHistoryItems() {
+        const { data, error } = await db().from('history_item')
+            .select('id,year,heading,body,filename,created_at,sort_order')
+            .order('sort_order', { ascending: true, nullsFirst: false })
+            .order('created_at', { ascending: false });
+        if (error) { console.error('fetchHistoryItems', error); return []; }
+        return data;
+    }
+
+    // Add a history timeline entry. filename must match an image already
+    // uploaded to Images/history/ on the server. Admin only - RLS enforces.
+    async function addHistoryItem({ year, heading, body, filename }) {
+        const { data, error } = await db().from('history_item')
+            .insert({ year: year || '', heading: heading || '', body: body || '', filename: filename || '' })
+            .select('id,year,heading,body,filename,created_at,sort_order')
+            .single();
+        if (error) { console.error('addHistoryItem', error); return { ok: false, error: error.message }; }
+        return { ok: true, item: data };
+    }
+
+    // Update a history timeline entry's year, heading, body text, and image.
+    // Admin only - RLS enforces.
+    async function updateHistoryItem(id, { year, heading, body, filename }) {
+        const { data, error } = await db().from('history_item')
+            .update({ year: year || '', heading: heading || '', body: body || '', filename: filename || '' })
+            .eq('id', id)
+            .select('id,year,heading,body,filename,created_at,sort_order')
+            .single();
+        if (error) { console.error('updateHistoryItem', error); return { ok: false, error: error.message }; }
+        return { ok: true, item: data };
+    }
+
+    // Delete a history timeline entry. Admin only - RLS enforces.
+    async function deleteHistoryItem(id) {
+        const { error } = await db().from('history_item')
+            .delete()
+            .eq('id', id);
+        if (error) { console.error('deleteHistoryItem', error); return { ok: false, error: error.message }; }
+        return { ok: true };
+    }
+
+    // Persist a new display order for history timeline entries. orderedIds
+    // is the full list of item ids in the desired order. Admin only - RLS
+    // enforces.
+    async function reorderHistoryItems(orderedIds) {
+        const results = await Promise.all(orderedIds.map((id, index) =>
+            db().from('history_item').update({ sort_order: index }).eq('id', id)
+        ));
+        const failed = results.find(r => r.error);
+        if (failed) { console.error('reorderHistoryItems', failed.error); return { ok: false, error: failed.error.message }; }
+        return { ok: true };
+    }
+
     return {
         fetchTeams,
         fetchTeamByName,
@@ -1443,6 +1499,11 @@ const NADARL = (function () {
         updateSaleItem,
         deleteSaleItem,
         reorderSaleItems,
+        fetchHistoryItems,
+        addHistoryItem,
+        updateHistoryItem,
+        deleteHistoryItem,
+        reorderHistoryItems,
         fetchSummerLeaguePeriods,
         addSummerLeaguePeriod,
         deleteSummerLeaguePeriod,

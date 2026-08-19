@@ -4,6 +4,242 @@
     color: #d0d0d0;
 }
 
+.history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.history-header .section-title {
+    margin-bottom: 0;
+}
+
+.history-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.history-button,
+.history-button-secondary {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.history-button {
+    border: none;
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
+    color: #ffffff;
+}
+
+.history-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.history-button-secondary {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0d6c8;
+}
+
+.history-button-danger {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(196, 30, 58, 0.15);
+    border: 1px solid rgba(196, 30, 58, 0.5);
+    color: #ff8a8a;
+    margin-left: auto;
+}
+
+.history-message {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.history-message-error {
+    background: rgba(196, 30, 58, 0.15);
+    border: 1px solid rgba(196, 30, 58, 0.5);
+    color: #ffb3c0;
+}
+
+.history-message-success {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.5);
+    color: #b5e8bd;
+}
+
+.history-reorder-toolbar[hidden] {
+    display: none;
+}
+
+.history-reorder-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.history-reorder-hint {
+    font-size: 0.9rem;
+    color: #e0d6c8;
+}
+
+.history-reorder-toolbar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.history-wizard {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.history-wizard-title {
+    font-size: 1rem;
+    color: #d4a017;
+    margin-bottom: 12px;
+}
+
+.history-wizard label,
+.history-edit-form label {
+    display: block;
+    font-size: 0.85rem;
+    color: #e0d6c8;
+    margin-bottom: 6px;
+}
+
+.history-spaced-label {
+    margin-top: 12px;
+}
+
+.history-textarea,
+.history-input {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.history-textarea:focus,
+.history-input:focus {
+    outline: none;
+    border-color: #c41e3a;
+}
+
+.history-form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.history-form-row > div {
+    flex: 1;
+    min-width: 160px;
+}
+
+.history-hint {
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    margin: 8px 0 0;
+}
+
+.history-hint code {
+    color: #d4a017;
+}
+
+.history-wizard-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.history-empty {
+    text-align: center;
+    color: #a0a0a0;
+    font-style: italic;
+    padding: 40px 0;
+}
+
+.timeline-edit-button {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0d6c8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    float: right;
+}
+
+.timeline-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.timeline-edit-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.timeline-reorder-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-move-button {
+    flex: 1;
+    max-width: 90px;
+    padding: 6px 0;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0d6c8;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.timeline-move-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
 .timeline {
     position: relative;
     padding-left: 40px;
