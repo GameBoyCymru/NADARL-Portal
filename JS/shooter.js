@@ -27,7 +27,7 @@ let historyRows = [];
 let sortKey = null;
 let sortDir = 1;
 
-const AVERAGE_ALL_TIME_PAGE_SIZE = 30;
+const AVERAGE_ALL_TIME_PAGE_SIZE = 20;
 let allTimeAverageRows = [];
 let allTimeAveragePage = 0;
 
@@ -166,12 +166,16 @@ function renderShotPatternChart(canvasId, emptyId, seriesList) {
                 pointBackgroundColor: ds.color,
                 pointBorderColor: ds.color,
                 tension: 0,
-                spanGaps: true
+                spanGaps: true,
+                clip: false
             }))
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: { top: 6, bottom: 6 }
+            },
             plugins: {
                 legend: { display: showLegend, labels: { color: '#e0d6c8' } },
                 tooltip: {
@@ -239,12 +243,16 @@ function drawRunningAverageLine(canvasId, emptyId, labels, datasets) {
                 pointBackgroundColor: ds.color,
                 pointBorderColor: ds.color,
                 tension: 0,
-                spanGaps: true
+                spanGaps: true,
+                clip: false
             }))
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: { top: 6, bottom: 6 }
+            },
             plugins: {
                 legend: { display: showLegend, labels: { color: '#e0d6c8' } },
                 tooltip: {
