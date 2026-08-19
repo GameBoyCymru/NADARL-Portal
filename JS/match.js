@@ -641,9 +641,15 @@ function gatherTeamRows(tbodyId) {
             const shooterId = picker.getAttribute('data-shooter-id');
             if (!shooterId) return;
             const name = picker.getAttribute('data-name');
-            const shots = Array.from(tr.querySelectorAll('.shot-input')).map(i =>
-                i.value === '' ? 0 : (parseInt(i.value, 10) || 0)
-            );
+            // Only the shots actually entered so far are saved - an unfilled
+            // box must never be persisted as a scored 0, or a shooter picked
+            // ahead of their turn would look like they'd already shot a
+            // string of zeros (and the row would wrongly read as complete).
+            const shots = [];
+            for (const input of tr.querySelectorAll('.shot-input')) {
+                if (input.value === '') break;
+                shots.push(parseInt(input.value, 10) || 0);
+            }
             const total = shots.reduce((a, b) => a + b, 0);
             const tens = shots.filter(s => s === 10).length;
             rows.push({ shooter_id: shooterId, name, shots, total, tens });
