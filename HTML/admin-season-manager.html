@@ -48,10 +48,11 @@
                                 <button type="button" id="fxSeasonSetCurrent" class="shooter-button fx-button-secondary" title="Make this the season shown by default across the site">Set as Current</button>
                                 <button type="button" id="fxSeasonMoveUp" class="shooter-button fx-button-secondary" title="Move earlier in the list">&#8593; Move Up</button>
                                 <button type="button" id="fxSeasonMoveDown" class="shooter-button fx-button-secondary" title="Move later in the list">&#8595; Move Down</button>
+                                <button type="button" id="fxFillTestData" class="shooter-button fx-button-secondary">Fill Season With Test Data</button>
                                 <button type="button" id="fxResetSeason" class="shooter-button fx-button-danger">Reset Season</button>
                                 <button type="button" id="fxDeleteSeason" class="shooter-button fx-button-danger">Delete Season</button>
                             </div>
-                            <span class="fx-hint">Set as Current controls which season pages like Fixtures, League Table and Summer League show by default - pick the selected season above and click it any time, not just when a season is first created. Move Up/Down reorders the season list - use it to slot a newly-added historical season in before others, or fix one entered out of order. Reset Season clears all scores and stats for the selected season, including any Personal Best set or manually entered within it - a shooter's all-time Personal Best is just the highest Season Best across every season. Other seasons are untouched.</span>
+                            <span class="fx-hint">Set as Current controls which season pages like Fixtures, League Table and Summer League show by default - pick the selected season above and click it any time, not just when a season is first created. Move Up/Down reorders the season list - use it to slot a newly-added historical season in before others, or fix one entered out of order. Fill Season With Test Data generates and submits random scorecards for every not-yet-submitted fixture in the selected season (topping teams up to 7 dummy shooters where needed) - for testing only, use Reset Season afterwards to clear it back out. Reset Season clears all scores and stats for the selected season, including any Personal Best set or manually entered within it - a shooter's all-time Personal Best is just the highest Season Best across every season. Other seasons are untouched.</span>
                         </div>
                     </div>
 
@@ -299,9 +300,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
-    <script src="../JS/data.js?v=20260818"></script>
+    <script src="../JS/data.js?v=20260819"></script>
     <script src="../JS/admin-common.js?v=20260809a"></script>
-    <script src="../JS/admin-fixtures.js?v=20260817b"></script>
+    <script src="../JS/admin-fixtures.js?v=20260819"></script>
     <script src="../JS/admin-exceptions.js?v=20260809f"></script>
     <script src="../JS/admin-competitions.js?v=20260818"></script>
     <script src="../JS/admin-events.js?v=20260809f"></script>

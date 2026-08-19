@@ -280,6 +280,9 @@ function buildRow(shooter, canEdit) {
     if (canEdit) {
         const tdActions = document.createElement('td');
         tdActions.className = 'col-actions';
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'col-actions-buttons';
+        tdActions.appendChild(actionButtons);
         const save = document.createElement('button');
         save.type = 'button';
         save.className = 'shooter-button';
@@ -317,7 +320,26 @@ function buildRow(shooter, canEdit) {
             showEditMessage('Saved ' + name + '.', 'success');
             await refreshShooters();
         });
-        tdActions.appendChild(save);
+        actionButtons.appendChild(save);
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'shooter-button shooter-button-danger';
+        del.textContent = 'Delete';
+        del.addEventListener('click', async () => {
+            if (!confirm(`Delete ${shooter.name}? This also deletes any scores they've submitted. This cannot be undone.`)) return;
+            del.disabled = true;
+            const res = await NADARL.deleteShooter(shooter.shooter_id);
+            if (!res.ok) {
+                del.disabled = false;
+                showEditMessage('Could not delete: ' + res.error, 'error');
+                return;
+            }
+            showEditMessage('Deleted ' + shooter.name + '.', 'success');
+            await refreshShooters();
+        });
+        actionButtons.appendChild(del);
+
         tr.appendChild(tdActions);
     }
 

@@ -187,6 +187,18 @@ const NADARL = (function () {
         return data;
     }
 
+    // Submission status (id + submitted only) for every match in a season -
+    // fixture_list doesn't expose this, and admin tooling that needs to
+    // skip already-submitted fixtures (e.g. filling test data) shouldn't
+    // have to fetch a full scorecard per match just to find out.
+    async function fetchSeasonMatchStatuses(seasonId) {
+        const { data, error } = await db().from('match')
+            .select('id,submitted')
+            .eq('season_id', seasonId);
+        if (error) { console.error('fetchSeasonMatchStatuses', error); return []; }
+        return data;
+    }
+
     // Confirm one side of a match (security definer checks permissions).
     async function confirmMatchSide(matchId, side) {
         const { data, error } = await db().rpc('confirm_match_side', { p_match: matchId, p_side: side });
@@ -286,6 +298,16 @@ const NADARL = (function () {
             .select('id,shooter_no,name,role,team_id');
         if (error) { console.error('updateShooter', error); return { ok: false, error: error.message }; }
         return { ok: true, shooter: data && data[0] };
+    }
+
+    // Delete a shooter (their scores go too, via cascade). Captain of that
+    // team or admin only - RLS enforces.
+    async function deleteShooter(shooterId) {
+        const { error } = await db().from('shooter')
+            .delete()
+            .eq('id', shooterId);
+        if (error) { console.error('deleteShooter', error); return { ok: false, error: error.message }; }
+        return { ok: true };
     }
 
     // All shooters' stats for one specific season (League Table season switcher).
@@ -1430,6 +1452,7 @@ const NADARL = (function () {
         subscribeMatchScores,
         unsubscribeChannel,
         fetchMatchStatus,
+        fetchSeasonMatchStatuses,
         confirmMatchSide,
         unconfirmMatchSide,
         resetMatchConfirm,
@@ -1440,6 +1463,7 @@ const NADARL = (function () {
         updateProfile,
         addShooter,
         updateShooter,
+        deleteShooter,
         fetchSeasons,
         reorderSeasons,
         setCurrentSeason,

@@ -112,6 +112,7 @@ const FixturesAdmin = (function () {
 
     function wire() {
         $('fxAddSeason').addEventListener('click', createSeason);
+        $('fxFillTestData').addEventListener('click', fillSeasonWithTestData);
         $('fxResetSeason').addEventListener('click', resetSeason);
         $('fxDeleteSeason').addEventListener('click', deleteSeason);
         $('fxSeasonSetCurrent').addEventListener('click', setCurrentSeason);
@@ -121,6 +122,118 @@ const FixturesAdmin = (function () {
             updateSeasonMoveButtons();
             loadAllocatedMatchDayInfo();
         });
+    }
+
+    // Tops a team's roster up to 7 shooters with dummy "Test Shooter N"
+    // entries if it has fewer, so every fixture has enough players for a
+    // full card, then returns the roster (existing + newly added).
+    async function ensureTeamRoster(teamId) {
+        const roster = await NADARL.fetchShootersForTeam(teamId);
+        while (roster.length < 7) {
+            const res = await NADARL.addShooter(teamId, { name: `Test Shooter ${roster.length + 1}`, role: null });
+            if (!res.ok) break; // don't loop forever if adding fails
+            roster.push(res.shooter);
+        }
+        return roster;
+    }
+
+    // A random 7-shot card (plausible air-rifle scores, 5-10 per shot) for
+    // up to 7 shooters from the given roster.
+    function randomCard(roster) {
+        return roster.slice(0, 7).map(s => {
+            const shots = Array.from({ length: 7 }, () => 5 + Math.floor(Math.random() * 6));
+            return {
+                shooter_id: s.id,
+                shots,
+                total: shots.reduce((a, b) => a + b, 0),
+                tens: shots.filter(v => v === 10).length
+            };
+        });
+    }
+
+    // Generates and submits a full scorecard for every not-yet-submitted
+    // fixture in the selected season - for testing season-to-season
+    // behaviour (stats, handicaps, personal bests) without waiting for a
+    // real season to be played. Already-submitted matches are left alone,
+    // as are BYE weeks (nothing to score).
+    async function fillSeasonWithTestData() {
+        const season = selectedSeason();
+        if (!season) { show('No season selected.', 'error'); return; }
+
+        if (!confirm(
+            'Fill season "' + season.name + '" with randomly generated test data? ' +
+            'This tops up any team with fewer than 7 players with dummy "Test Shooter" entries, then ' +
+            'generates and submits a full scorecard for every fixture in this season that isn\'t already ' +
+            'submitted. Already-submitted matches are left untouched. For testing only - use Reset Season ' +
+            'afterwards to clear it back out.'
+        )) return;
+
+        const btn = $('fxFillTestData');
+        btn.disabled = true;
+        show('Filling "' + season.name + '" with test data - this can take a while for a full season…', 'success');
+
+        const [teams, fixturesList, matchStatuses] = await Promise.all([
+            NADARL.fetchTeams(),
+            NADARL.fetchFixtures(season.id),
+            NADARL.fetchSeasonMatchStatuses(season.id)
+        ]);
+        const submittedIds = new Set(matchStatuses.filter(m => m.submitted).map(m => m.id));
+        const toFill = fixturesList.filter(f => !f.isBye && !submittedIds.has(f.id));
+
+        if (!toFill.length) {
+            btn.disabled = false;
+            show('Nothing to fill - every fixture in "' + season.name + '" is already submitted (or the season has no matches).', 'success');
+            return;
+        }
+
+        const teamIds = new Set();
+        toFill.forEach(f => {
+            const home = teams.find(t => t.name === f.homeTeam);
+            const away = teams.find(t => t.name === f.awayTeam);
+            if (home) teamIds.add(home.id);
+            if (away) teamIds.add(away.id);
+        });
+
+        const rosters = {};
+        for (const teamId of teamIds) {
+            rosters[teamId] = await ensureTeamRoster(teamId);
+        }
+
+        let filled = 0;
+        const failures = [];
+        for (const f of toFill) {
+            const home = teams.find(t => t.name === f.homeTeam);
+            const away = teams.find(t => t.name === f.awayTeam);
+            if (!home || !away) {
+                failures.push(`${f.homeTeam} vs ${f.awayTeam} (${f.date}): team not found`);
+                continue;
+            }
+
+            const homeRes = await NADARL.saveTeamScores(f.id, home.id, randomCard(rosters[home.id]));
+            const awayRes = await NADARL.saveTeamScores(f.id, away.id, randomCard(rosters[away.id]));
+            if (!homeRes.ok || !awayRes.ok) {
+                failures.push(`${f.homeTeam} vs ${f.awayTeam} (${f.date}): ` + (homeRes.error || awayRes.error));
+                continue;
+            }
+
+            await NADARL.confirmMatchSide(f.id, 'home');
+            await NADARL.confirmMatchSide(f.id, 'away');
+            const submitRes = await NADARL.submitMatch(f.id);
+            if (!submitRes.ok) {
+                failures.push(`${f.homeTeam} vs ${f.awayTeam} (${f.date}): could not submit`);
+                continue;
+            }
+            filled++;
+        }
+
+        btn.disabled = false;
+
+        if (failures.length) {
+            show(`Filled ${filled} of ${toFill.length} fixture(s). Failed: ` + failures.join('; '), filled ? 'success' : 'error');
+        } else {
+            show(`Filled and submitted ${filled} fixture(s) in "${season.name}" with test data.`, 'success');
+        }
+        await loadAllocatedMatchDayInfo();
     }
 
     // Every team needs to play every other team both home and away, once in
