@@ -242,6 +242,7 @@
 
 .timeline {
     position: relative;
+    margin-top: 25px;
     padding-left: 40px;
 }
 
@@ -266,8 +267,9 @@
 
 .timeline-marker {
     position: absolute;
-    left: -33px;
-    top: 8px;
+    left: -32px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 16px;
     height: 16px;
     background: #c41e3a;
@@ -341,7 +343,7 @@
     }
 
     .timeline-marker {
-        left: -28px;
+        left: -26px;
         width: 14px;
         height: 14px;
     }
