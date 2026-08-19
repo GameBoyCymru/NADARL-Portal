@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/table.css?v=20260808">
     <link rel="stylesheet" href="../CSS/team.css?v=20260808">
-    <link rel="stylesheet" href="../CSS/shooter.css?v=20260818">
+    <link rel="stylesheet" href="../CSS/shooter.css?v=20260819">
 </head>
 <body>
     <div class="container">
@@ -39,21 +39,20 @@
 
             <div class="stat-tiles" id="statTiles"></div>
 
-            <div class="table-wrapper">
-                <table class="league-table">
-                    <thead>
-                        <tr id="matchHistoryHead">
-                            <th data-sort="date">Date</th>
-                            <th data-sort="opponent_name">Opponent</th>
-                            <th data-sort="is_home">H/A</th>
-                            <th data-sort="total">Score</th>
-                            <th data-sort="tens">10's</th>
-                            <th>Shots</th>
-                        </tr>
-                    </thead>
-                    <tbody id="matchHistoryTable">
-                    </tbody>
-                </table>
+            <div class="compare-bar">
+                <button type="button" id="compareToggle" class="compare-toggle">Compare With&hellip;</button>
+                <div class="compare-search" id="compareSearch" hidden>
+                    <input type="text" id="compareSearchInput" class="compare-search-input" placeholder="Search by name or shooter number&hellip;" autocomplete="off">
+                    <div class="compare-results" id="compareResults" hidden></div>
+                </div>
+            </div>
+
+            <div class="compare-section" id="compareSection" hidden>
+                <div class="compare-heading-row">
+                    <h3 class="compare-heading">Comparing with <span id="compareShooterName"></span></h3>
+                    <button type="button" id="compareClear" class="compare-clear" aria-label="Remove comparison">&times;</button>
+                </div>
+                <div class="stat-tiles" id="compareStatTiles"></div>
             </div>
 
             <div class="shot-pattern-wrapper">
@@ -99,6 +98,24 @@
                     <canvas id="averageChartAllTime" height="220"></canvas>
                 </div>
                 <p class="shot-pattern-empty" id="averageEmptyAllTime" hidden>No results yet.</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="league-table">
+                    <thead>
+                        <tr id="matchHistoryHead">
+                            <th data-sort="date">Date</th>
+                            <th data-sort="opponent_name">Opponent</th>
+                            <th data-sort="shooter_name" id="shooterColumnHead" hidden>Shooter</th>
+                            <th data-sort="is_home">H/A</th>
+                            <th data-sort="total">Score</th>
+                            <th data-sort="tens">10's</th>
+                            <th>Shots</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchHistoryTable">
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -146,6 +163,6 @@
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
     <script src="../JS/data.js?v=20260818"></script>
-    <script src="../JS/shooter.js?v=20260818"></script>
+    <script src="../JS/shooter.js?v=20260819"></script>
 </body>
 </html>

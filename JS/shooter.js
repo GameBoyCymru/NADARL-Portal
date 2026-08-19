@@ -2,6 +2,21 @@ let currentShooter = null;
 let seasons = [];
 let seasonIndex = 0;
 
+let compareRoster = [];
+let compareShooter = null;
+let currentSeasonStatsRows = [];
+let compareHistoryRows = [];
+let compareAllTimeHistory = [];
+
+const COMPARE_PRIMARY_COLOR = '#d4a017';
+const COMPARE_SECONDARY_COLOR = '#4fc3f7';
+
+function padArray(arr, length) {
+    const padded = arr.slice();
+    while (padded.length < length) padded.push(null);
+    return padded;
+}
+
 let historyRows = [];
 let sortKey = null;
 let sortDir = 1;
@@ -24,9 +39,24 @@ function compareValues(aVal, bVal) {
     return Number(aVal) - Number(bVal);
 }
 
+// Combines the current shooter's matches with the compare shooter's (if
+// any) into one list, each row tagged with which shooter it belongs to.
+function combinedHistoryRows() {
+    if (!compareShooter) return historyRows;
+    const primary = historyRows.map(r => ({ ...r, shooter_name: currentShooter.name, is_compare_row: false }));
+    const compare = compareHistoryRows.map(r => ({ ...r, shooter_name: compareShooter.name, is_compare_row: true }));
+    return primary.concat(compare);
+}
+
 function sortedHistory() {
-    if (!sortKey) return historyRows;
-    return historyRows.slice().sort((a, b) => compareValues(a[sortKey], b[sortKey]) * sortDir);
+    const rows = combinedHistoryRows();
+    if (!sortKey) {
+        // With two shooters merged, default to chronological order so their
+        // matches interleave sensibly instead of listing one shooter's
+        // whole season then the other's.
+        return compareShooter ? rows.slice().sort((a, b) => compareValues(a.date, b.date)) : rows;
+    }
+    return rows.slice().sort((a, b) => compareValues(a[sortKey], b[sortKey]) * sortDir);
 }
 
 function updateSortIndicators() {
@@ -44,20 +74,28 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function matchTableColCount() {
+    return compareShooter ? 7 : 6;
+}
+
 function renderHistoryTable() {
     const tbody = document.getElementById('matchHistoryTable');
     const rows = sortedHistory();
+    const comparing = !!compareShooter;
+
+    document.getElementById('shooterColumnHead').hidden = !comparing;
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="6">No results for this season yet.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${matchTableColCount()}">No results for this season yet.</td></tr>`;
         return;
     }
 
     let html = '';
     rows.forEach(row => {
-        html += `<tr>
+        html += `<tr class="${row.is_compare_row ? 'compare-row' : ''}">
             <td>${formatDate(row.date)}</td>
             <td class="team-cell">${row.opponent_name}</td>
+            ${comparing ? `<td class="team-cell">${escapeHtml(row.shooter_name)}</td>` : ''}
             <td class="score-cell">${row.is_home ? 'Home' : 'Away'}</td>
             <td class="score-cell">${row.total}</td>
             <td class="score-cell">${row.tens}</td>
@@ -69,16 +107,23 @@ function renderHistoryTable() {
 
 const shotPatternCharts = {};
 
-function renderShotPatternChart(canvasId, emptyId, rows) {
-    const canvas = document.getElementById(canvasId);
-    const empty = document.getElementById(emptyId);
-
-    const shotCount = rows.reduce((max, r) => Math.max(max, (r.shots || []).length), 0);
+function shotAveragesFor(rows, shotCount) {
     const averages = [];
     for (let i = 0; i < shotCount; i++) {
         const values = rows.map(r => (r.shots || [])[i]).filter(v => v != null);
         averages.push(values.length ? values.reduce((a, b) => a + b, 0) / values.length : null);
     }
+    return averages;
+}
+
+function renderShotPatternChart(canvasId, emptyId, rows, compareRows, primaryLabel, compareLabel) {
+    const canvas = document.getElementById(canvasId);
+    const empty = document.getElementById(emptyId);
+
+    const shotCount = Math.max(
+        rows.reduce((max, r) => Math.max(max, (r.shots || []).length), 0),
+        (compareRows || []).reduce((max, r) => Math.max(max, (r.shots || []).length), 0)
+    );
 
     if (shotPatternCharts[canvasId]) {
         shotPatternCharts[canvasId].destroy();
@@ -93,30 +138,37 @@ function renderShotPatternChart(canvasId, emptyId, rows) {
     canvas.hidden = false;
     empty.hidden = true;
 
+    const datasets = [{ data: shotAveragesFor(rows, shotCount), label: primaryLabel, color: COMPARE_PRIMARY_COLOR }];
+    if (compareRows && compareRows.length) {
+        datasets.push({ data: shotAveragesFor(compareRows, shotCount), label: compareLabel, color: COMPARE_SECONDARY_COLOR });
+    }
+    const showLegend = datasets.length > 1;
+
     shotPatternCharts[canvasId] = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
-            labels: averages.map((_, i) => `Shot ${i + 1}`),
-            datasets: [{
-                data: averages,
-                borderColor: '#d4a017',
-                backgroundColor: '#d4a017',
+            labels: Array.from({ length: shotCount }, (_, i) => `Shot ${i + 1}`),
+            datasets: datasets.map(ds => ({
+                label: ds.label,
+                data: ds.data,
+                borderColor: ds.color,
+                backgroundColor: ds.color,
                 borderWidth: 2,
                 pointRadius: 4,
-                pointBackgroundColor: '#d4a017',
-                pointBorderColor: '#d4a017',
+                pointBackgroundColor: ds.color,
+                pointBorderColor: ds.color,
                 tension: 0,
                 spanGaps: true
-            }]
+            }))
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: { display: showLegend, labels: { color: '#e0d6c8' } },
                 tooltip: {
                     callbacks: {
-                        label: ctx => `Average: ${ctx.parsed.y.toFixed(2)}`
+                        label: ctx => `${showLegend ? ctx.dataset.label + ': ' : ''}${ctx.parsed.y.toFixed(2)}`
                     }
                 }
             },
@@ -144,7 +196,7 @@ function computeRunningAverages(rows) {
     });
 }
 
-function drawRunningAverageLine(canvasId, emptyId, labels, values) {
+function drawRunningAverageLine(canvasId, emptyId, labels, datasets) {
     const canvas = document.getElementById(canvasId);
     const empty = document.getElementById(emptyId);
 
@@ -153,7 +205,8 @@ function drawRunningAverageLine(canvasId, emptyId, labels, values) {
         delete shotPatternCharts[canvasId];
     }
 
-    if (!values.length) {
+    const allValues = datasets.flatMap(ds => ds.data).filter(v => v != null);
+    if (!labels.length || !allValues.length) {
         canvas.hidden = true;
         empty.hidden = false;
         return;
@@ -161,29 +214,33 @@ function drawRunningAverageLine(canvasId, emptyId, labels, values) {
     canvas.hidden = false;
     empty.hidden = true;
 
+    const showLegend = datasets.length > 1;
+
     shotPatternCharts[canvasId] = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [{
-                data: values,
-                borderColor: '#d4a017',
-                backgroundColor: '#d4a017',
+            datasets: datasets.map(ds => ({
+                label: ds.label,
+                data: ds.data,
+                borderColor: ds.color,
+                backgroundColor: ds.color,
                 borderWidth: 2,
                 pointRadius: 3,
-                pointBackgroundColor: '#d4a017',
-                pointBorderColor: '#d4a017',
-                tension: 0
-            }]
+                pointBackgroundColor: ds.color,
+                pointBorderColor: ds.color,
+                tension: 0,
+                spanGaps: true
+            }))
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
+                legend: { display: showLegend, labels: { color: '#e0d6c8' } },
                 tooltip: {
                     callbacks: {
-                        label: ctx => `Average: ${ctx.parsed.y.toFixed(2)}`
+                        label: ctx => `${showLegend ? ctx.dataset.label + ': ' : ''}${ctx.parsed.y.toFixed(2)}`
                     }
                 }
             },
@@ -193,8 +250,8 @@ function drawRunningAverageLine(canvasId, emptyId, labels, values) {
                     grid: { color: 'rgba(255, 255, 255, 0.08)' }
                 },
                 y: {
-                    min: Math.max(0, Math.min(...values) - 5),
-                    max: Math.min(70, Math.max(...values) + 5),
+                    min: Math.max(0, Math.min(...allValues) - 5),
+                    max: Math.min(70, Math.max(...allValues) + 5),
                     ticks: { color: '#a0a0a0' },
                     grid: { color: 'rgba(255, 255, 255, 0.08)' }
                 }
@@ -203,8 +260,26 @@ function drawRunningAverageLine(canvasId, emptyId, labels, values) {
     });
 }
 
-function renderRunningAverageChart(canvasId, emptyId, rows) {
-    drawRunningAverageLine(canvasId, emptyId, rows.map(row => formatDate(row.date)), computeRunningAverages(rows));
+// When comparing against another shooter, their matches fall on different
+// dates, so a shared date-based x-axis can't align the two lines
+// meaningfully - fall back to "Match N" (progression index) labels instead.
+function renderRunningAverageChart(canvasId, emptyId, rows, compareRows, primaryLabel, compareLabel) {
+    const primaryValues = computeRunningAverages(rows);
+
+    if (compareRows && compareRows.length) {
+        const compareValues = computeRunningAverages(compareRows);
+        const maxLen = Math.max(rows.length, compareRows.length);
+        const labels = Array.from({ length: maxLen }, (_, i) => `Match ${i + 1}`);
+        drawRunningAverageLine(canvasId, emptyId, labels, [
+            { data: padArray(primaryValues, maxLen), label: primaryLabel, color: COMPARE_PRIMARY_COLOR },
+            { data: padArray(compareValues, maxLen), label: compareLabel, color: COMPARE_SECONDARY_COLOR }
+        ]);
+        return;
+    }
+
+    drawRunningAverageLine(canvasId, emptyId, rows.map(row => formatDate(row.date)), [
+        { data: primaryValues, label: primaryLabel, color: COMPARE_PRIMARY_COLOR }
+    ]);
 }
 
 // The all-time average chart grows one point per match played, so unlike the
@@ -213,40 +288,52 @@ function renderRunningAverageChart(canvasId, emptyId, rows) {
 function renderAverageAllTimePage() {
     const nav = document.getElementById('averageAllTimePageNav');
     const total = allTimeAverageRows.length;
+    const hasCompare = !!(compareShooter && compareAllTimeHistory.length);
+    const pagedTotal = Math.max(total, hasCompare ? compareAllTimeHistory.length : 0);
 
-    if (!total) {
+    if (!pagedTotal) {
         nav.hidden = true;
         drawRunningAverageLine('averageChartAllTime', 'averageEmptyAllTime', [], []);
         return;
     }
 
-    const totalPages = Math.max(1, Math.ceil(total / AVERAGE_ALL_TIME_PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(pagedTotal / AVERAGE_ALL_TIME_PAGE_SIZE));
     allTimeAveragePage = Math.min(Math.max(allTimeAveragePage, 0), totalPages - 1);
 
     const start = allTimeAveragePage * AVERAGE_ALL_TIME_PAGE_SIZE;
-    const end = Math.min(start + AVERAGE_ALL_TIME_PAGE_SIZE, total);
+    const end = Math.min(start + AVERAGE_ALL_TIME_PAGE_SIZE, pagedTotal);
+    const windowLen = end - start;
 
     // Running average at each point still reflects the shooter's whole
-    // history - only the window of points drawn on screen is paged.
+    // history - only the window of points drawn on screen is paged. When
+    // comparing, both shooters' windows are aligned by match index (not
+    // calendar date), same as the season running-average chart.
     const fullAverages = computeRunningAverages(allTimeAverageRows);
     const pageRows = allTimeAverageRows.slice(start, end);
     const pageAverages = fullAverages.slice(start, end);
 
-    drawRunningAverageLine(
-        'averageChartAllTime',
-        'averageEmptyAllTime',
-        pageRows.map(row => formatDate(row.date)),
-        pageAverages
-    );
+    const datasets = [{ data: padArray(pageAverages, windowLen), label: currentShooter.name, color: COMPARE_PRIMARY_COLOR }];
+    let labels;
+
+    if (hasCompare) {
+        const compareFullAverages = computeRunningAverages(compareAllTimeHistory);
+        const comparePageAverages = compareFullAverages.slice(start, end);
+        labels = Array.from({ length: windowLen }, (_, i) => `Match ${start + i + 1}`);
+        datasets.push({ data: padArray(comparePageAverages, windowLen), label: compareShooter.name, color: COMPARE_SECONDARY_COLOR });
+    } else {
+        labels = pageRows.map(row => formatDate(row.date));
+    }
+
+    drawRunningAverageLine('averageChartAllTime', 'averageEmptyAllTime', labels, datasets);
 
     nav.hidden = totalPages <= 1;
     document.getElementById('averageAllTimePagePrev').disabled = allTimeAveragePage <= 0;
     document.getElementById('averageAllTimePageNext').disabled = allTimeAveragePage >= totalPages - 1;
-    document.getElementById('averageAllTimePageLabel').textContent = `${start + 1}–${end} of ${total}`;
+    document.getElementById('averageAllTimePageLabel').textContent = `${start + 1}–${end} of ${pagedTotal}`;
 }
 
-function renderStatTiles(stats) {
-    const container = document.getElementById('statTiles');
+function renderStatTiles(containerId, stats) {
+    const container = document.getElementById(containerId);
     const tiles = [
         { label: 'Matches Played', value: stats ? stats.matches_played : 0 },
         { label: 'Personal Best', value: stats ? stats.best : 0 },
@@ -263,6 +350,99 @@ function renderStatTiles(stats) {
     `).join('');
 }
 
+// ----------------------------------------------------------------------------
+// Compare with another shooter
+// ----------------------------------------------------------------------------
+
+function renderCompareResults(query) {
+    const resultsBox = document.getElementById('compareResults');
+    const q = query.trim().toLowerCase();
+
+    if (!q) {
+        resultsBox.hidden = true;
+        resultsBox.innerHTML = '';
+        return;
+    }
+
+    const matches = compareRoster
+        .filter(s => s.shooter_id !== currentShooter.id)
+        .filter(s => s.name.toLowerCase().includes(q) || String(s.shooter_no).includes(q))
+        .slice(0, 8);
+
+    resultsBox.hidden = false;
+    resultsBox.innerHTML = matches.length
+        ? matches.map(s => `
+            <button type="button" class="compare-result" data-id="${s.shooter_id}">
+                <span class="compare-result-no">#${s.shooter_no}</span>
+                <span class="compare-result-name">${escapeHtml(s.name)}</span>
+                <span class="compare-result-team">${escapeHtml(s.team_name || '')}</span>
+            </button>
+        `).join('')
+        : '<p class="compare-empty">No shooters found.</p>';
+}
+
+function renderCompareStats() {
+    const section = document.getElementById('compareSection');
+    if (!compareShooter) {
+        section.hidden = true;
+        return;
+    }
+
+    section.hidden = false;
+    document.getElementById('compareShooterName').textContent = compareShooter.name;
+
+    const stats = currentSeasonStatsRows.find(s => s.shooter_id === compareShooter.shooter_id) || null;
+    renderStatTiles('compareStatTiles', stats);
+}
+
+async function selectCompareShooter(shooterId) {
+    const shooter = compareRoster.find(s => s.shooter_id === shooterId);
+    if (!shooter) return;
+    compareShooter = shooter;
+
+    document.getElementById('compareSearchInput').value = '';
+    document.getElementById('compareResults').hidden = true;
+    document.getElementById('compareResults').innerHTML = '';
+    document.getElementById('compareSearch').hidden = true;
+
+    renderCompareStats();
+    await Promise.all([loadSeason(), loadAllTimeCharts()]);
+}
+
+async function clearCompareShooter() {
+    compareShooter = null;
+    compareHistoryRows = [];
+    compareAllTimeHistory = [];
+    renderCompareStats();
+    await Promise.all([loadSeason(), loadAllTimeCharts()]);
+}
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function wireCompare() {
+    document.getElementById('compareToggle').addEventListener('click', () => {
+        const search = document.getElementById('compareSearch');
+        search.hidden = !search.hidden;
+        if (!search.hidden) document.getElementById('compareSearchInput').focus();
+    });
+
+    document.getElementById('compareSearchInput').addEventListener('input', (e) => {
+        renderCompareResults(e.target.value);
+    });
+
+    document.getElementById('compareResults').addEventListener('click', (e) => {
+        const btn = e.target.closest('.compare-result');
+        if (!btn) return;
+        selectCompareShooter(btn.dataset.id);
+    });
+
+    document.getElementById('compareClear').addEventListener('click', clearCompareShooter);
+}
+
 async function loadSeason() {
     const season = seasons[seasonIndex];
     const label = document.getElementById('seasonLabel');
@@ -273,37 +453,49 @@ async function loadSeason() {
     prevButton.disabled = seasonIndex <= 0;
     nextButton.disabled = seasonIndex >= seasons.length - 1;
 
-    document.getElementById('matchHistoryTable').innerHTML = '<tr><td colspan="6">Loading&hellip;</td></tr>';
-    renderStatTiles(null);
+    document.getElementById('matchHistoryTable').innerHTML = `<tr><td colspan="${matchTableColCount()}">Loading&hellip;</td></tr>`;
+    renderStatTiles('statTiles', null);
 
     if (!season) {
         historyRows = [];
-        document.getElementById('matchHistoryTable').innerHTML = '<tr><td colspan="6">No results available.</td></tr>';
-        renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', []);
-        renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', []);
+        compareHistoryRows = [];
+        currentSeasonStatsRows = [];
+        renderCompareStats();
+        document.getElementById('shooterColumnHead').hidden = !compareShooter;
+        document.getElementById('matchHistoryTable').innerHTML = `<tr><td colspan="${matchTableColCount()}">No results available.</td></tr>`;
+        renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', [], [], currentShooter.name, null);
+        renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', [], [], currentShooter.name, null);
         return;
     }
 
-    const [seasonStatsRows, history] = await Promise.all([
+    const [seasonStatsRows, history, compareHistory] = await Promise.all([
         NADARL.fetchShooterStatsForSeason(season.id),
-        NADARL.fetchShooterMatchHistory(currentShooter.id, season.id)
+        NADARL.fetchShooterMatchHistory(currentShooter.id, season.id),
+        compareShooter ? NADARL.fetchShooterMatchHistory(compareShooter.shooter_id, season.id) : Promise.resolve([])
     ]);
 
+    currentSeasonStatsRows = seasonStatsRows;
     const stats = seasonStatsRows.find(s => s.shooter_id === currentShooter.id) || null;
-    renderStatTiles(stats);
+    renderStatTiles('statTiles', stats);
+    renderCompareStats();
 
     historyRows = history;
+    compareHistoryRows = compareHistory;
     sortKey = null;
     sortDir = 1;
     updateSortIndicators();
     renderHistoryTable();
-    renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', historyRows);
-    renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', historyRows);
+    renderShotPatternChart('shotPatternChart', 'shotPatternEmpty', historyRows, compareHistoryRows, currentShooter.name, compareShooter ? compareShooter.name : null);
+    renderRunningAverageChart('averageChartSeason', 'averageEmptySeason', historyRows, compareHistoryRows, currentShooter.name, compareShooter ? compareShooter.name : null);
 }
 
 async function loadAllTimeCharts() {
-    const allTimeHistory = await NADARL.fetchShooterMatchHistoryAllTime(currentShooter.id);
-    renderShotPatternChart('shotPatternChartAllTime', 'shotPatternEmptyAllTime', allTimeHistory);
+    const [allTimeHistory, compareAllTime] = await Promise.all([
+        NADARL.fetchShooterMatchHistoryAllTime(currentShooter.id),
+        compareShooter ? NADARL.fetchShooterMatchHistoryAllTime(compareShooter.shooter_id) : Promise.resolve([])
+    ]);
+    compareAllTimeHistory = compareAllTime;
+    renderShotPatternChart('shotPatternChartAllTime', 'shotPatternEmptyAllTime', allTimeHistory, compareAllTimeHistory, currentShooter.name, compareShooter ? compareShooter.name : null);
 
     allTimeAverageRows = allTimeHistory;
     allTimeAveragePage = Math.max(0, Math.ceil(allTimeHistory.length / AVERAGE_ALL_TIME_PAGE_SIZE) - 1);
@@ -387,6 +579,9 @@ async function initShooterPage() {
         allTimeAveragePage++;
         renderAverageAllTimePage();
     });
+
+    wireCompare();
+    NADARL.fetchAllShooterStats().then(rows => { compareRoster = rows; });
 
     await Promise.all([loadSeason(), loadAllTimeCharts()]);
 }
