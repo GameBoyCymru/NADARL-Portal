@@ -717,10 +717,11 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
         tbody.appendChild(buildEditRow(shooterList, null, teamId));
     }
 
-    // Filling the active box auto-advances focus to the next one, so
-    // sequential entry stays quick despite the boxes ahead being locked. It's
-    // debounced so a two-digit "10" has time to finish before advancing -
-    // typing "1" alone doesn't instantly jump away and strand the "0".
+    // Filling the active box auto-advances focus to the next one (or, on the
+    // row's last shot, blurs out of the input entirely), so sequential entry
+    // stays quick despite the boxes ahead being locked. It's debounced so a
+    // two-digit "10" has time to finish before advancing - typing "1" alone
+    // doesn't instantly jump away and strand the "0".
     let advanceTimer = null;
     function scheduleAdvance(tr, input) {
         if (advanceTimer) clearTimeout(advanceTimer);
@@ -730,6 +731,7 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
             const shotInputs = Array.from(tr.querySelectorAll('.shot-input'));
             const nextInput = shotInputs[shotInputs.indexOf(input) + 1];
             if (nextInput && !nextInput.disabled) nextInput.focus();
+            else if (!nextInput) input.blur();
         }, SHOT_ADVANCE_DELAY_MS);
     }
 
@@ -766,6 +768,7 @@ function renderEditableGrid(tbodyId, matchId, teamId, shooterList, existingRows,
                     const shotInputs = Array.from(tr.querySelectorAll('.shot-input'));
                     const nextInput = shotInputs[shotInputs.indexOf(e.target) + 1];
                     if (nextInput && !nextInput.disabled) nextInput.focus();
+                    else if (!nextInput) e.target.blur();
                 }
             }
             scheduleSave();
