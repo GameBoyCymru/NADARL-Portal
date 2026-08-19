@@ -340,7 +340,7 @@ function renderStatTiles(containerId, stats) {
         { label: 'Season Best', value: stats ? stats.season_best : 0 },
         { label: "10's", value: stats ? stats.tens : 0 },
         { label: 'Average', value: stats ? Number(stats.average).toFixed(1) : '0.0' },
-        { label: 'Handicap', value: stats && stats.handicap != null ? stats.handicap : 'N/A' }
+        { label: 'Handicap', value: stats && stats.handicap != null ? Number(stats.handicap).toFixed(1) : 'N/A' }
     ];
     container.innerHTML = tiles.map(t => `
         <div class="stat-tile">

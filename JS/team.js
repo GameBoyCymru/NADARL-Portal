@@ -274,7 +274,7 @@ function buildRow(shooter, canEdit) {
 
     tdAppendStat(tr, shooter.tens);
     tdAppendStat(tr, Number(shooter.average).toFixed(1));
-    tdAppendStat(tr, shooter.handicap == null ? 'N/A' : shooter.handicap);
+    tdAppendStat(tr, shooter.handicap == null ? 'N/A' : Number(shooter.handicap).toFixed(1));
 
     // Actions (only when editing)
     if (canEdit) {

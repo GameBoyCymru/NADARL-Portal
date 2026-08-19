@@ -59,7 +59,7 @@ function effectiveScore(total, hc) {
 function hcDisplay(shooterId) {
     if (!isHandicapMatch || !shooterId) return 'N/A';
     const hc = handicapMap[shooterId];
-    return hc == null ? 'N/A' : hc;
+    return hc == null ? 'N/A' : Number(hc).toFixed(1);
 }
 
 function showHandicapBanner() {

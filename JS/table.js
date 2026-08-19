@@ -103,7 +103,7 @@ function renderStatsPage() {
             <td class="score-cell">${shooter.season_best}</td>
             <td class="score-cell">${shooter.tens}</td>
             <td class="score-cell">${Number(shooter.average).toFixed(1)}</td>
-            <td class="score-cell">${shooter.handicap == null ? 'N/A' : shooter.handicap}</td>
+            <td class="score-cell">${shooter.handicap == null ? 'N/A' : Number(shooter.handicap).toFixed(1)}</td>
         </tr>`;
     });
 
