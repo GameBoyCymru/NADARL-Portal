@@ -10,6 +10,43 @@
     gap: 20px;
 }
 
+.sale-enquiry-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 18px 20px;
+}
+
+.sale-enquiry-name {
+    color: #ffffff;
+    font-size: 1.1rem;
+    margin: 0 0 8px;
+}
+
+.sale-enquiry-price {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.sale-enquiry-description {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d0d0d0;
+    margin: 0;
+}
+
+.locked-field {
+    pointer-events: none;
+    opacity: 0.75;
+    cursor: not-allowed;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;

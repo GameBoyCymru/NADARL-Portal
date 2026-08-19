@@ -1286,6 +1286,17 @@ const NADARL = (function () {
         }));
     }
 
+    // A single for-sale item by id, for the pre-filled sales enquiry page
+    // (join.html?type=sale&item=...).
+    async function fetchSaleItemById(id) {
+        const { data, error } = await db().from('sale_item')
+            .select('id,name,price,description')
+            .eq('id', id)
+            .maybeSingle();
+        if (error) { console.error('fetchSaleItemById', error); return null; }
+        return data;
+    }
+
     // Add a for-sale item with one or more images. Each filename must match
     // an image already uploaded to Images/sales/ on the server. Admin only
     // - RLS enforces.
@@ -1425,6 +1436,7 @@ const NADARL = (function () {
         deleteTrophyItem,
         reorderTrophyItems,
         fetchSaleItems,
+        fetchSaleItemById,
         addSaleItem,
         updateSaleItem,
         deleteSaleItem,

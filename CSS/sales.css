@@ -294,19 +294,6 @@
     line-height: 1;
 }
 
-.sale-price-tag {
-    position: absolute;
-    left: 10px;
-    bottom: 10px;
-    padding: 3px 12px;
-    border-radius: 12px;
-    background: linear-gradient(90deg, #c41e3a, #d4a017);
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 700;
-    pointer-events: none;
-}
-
 .sale-body {
     display: flex;
     align-items: flex-start;
@@ -327,10 +314,42 @@
     margin: 0 0 6px;
 }
 
+.sale-price {
+    display: block;
+    width: fit-content;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
 .sale-description-text {
+    display: block;
     font-size: 0.9rem;
     line-height: 1.6;
     color: #d0d0d0;
+}
+
+.sale-enquire-button {
+    display: block;
+    width: fit-content;
+    margin-top: 14px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: linear-gradient(90deg, #c41e3a, #d4a017);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.sale-enquire-button:hover {
+    opacity: 0.9;
 }
 
 .sale-edit-button {

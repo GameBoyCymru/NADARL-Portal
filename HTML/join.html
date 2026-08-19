@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newport & District Air Rifle League - Join Our League</title>
     <link rel="stylesheet" href="../styles.css?v=20260806">
-    <link rel="stylesheet" href="../CSS/join.css?v=20260806">
+    <link rel="stylesheet" href="../CSS/join.css?v=20260819">
 </head>
 <body>
     <div class="container">
@@ -14,18 +14,27 @@
             <h1>Newport & District Air Rifle League</h1>
         </header>
 
-        <section class="section">
-            <h2 class="section-title">Interested in Joining?</h2>
+        <section class="section" id="joinIntroSection">
+            <h2 class="section-title" id="joinIntroTitle">Interested in Joining?</h2>
             <div class="welcome-content">
                 <div class="welcome-logo">
                     <img src="../Images/assets/nadarl-logo.png" alt="NADARL Logo">
                 </div>
                 <div class="welcome-text">
-                    <p class="join-intro">
+                    <p class="join-intro" id="joinIntroText">
                         Whether you're an individual shooter looking to join a team, or simply interested in learning more about our league, we'd love to hear from you. Fill out the form below and a member 
                         of our committee will get back to you.
                     </p>
                 </div>
+            </div>
+        </section>
+
+        <section class="section" id="saleEnquirySection" hidden>
+            <h2 class="section-title">Item Details</h2>
+            <div class="sale-enquiry-card">
+                <h3 class="sale-enquiry-name" id="saleEnquiryName"></h3>
+                <span class="sale-enquiry-price" id="saleEnquiryPrice" hidden></span>
+                <p class="sale-enquiry-description" id="saleEnquiryDescription"></p>
             </div>
         </section>
 
@@ -53,6 +62,7 @@
                         <option value="" disabled selected>Select an option</option>
                         <option value="individual">Joining as an Individual</option>
                         <option value="club">Entering a Club/Team</option>
+                        <option value="sale">Item For Sale Enquiry</option>
                         <option value="general">General Enquiry</option>
                     </select>
                 </div>
@@ -96,6 +106,10 @@
         </footer>
     </div>
 
-    <script src="../JS/join.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../JS/supabase-keys.js"></script>
+    <script src="../JS/supabase-config.js"></script>
+    <script src="../JS/data.js?v=20260819"></script>
+    <script src="../JS/join.js?v=20260819"></script>
 </body>
 </html>

@@ -32,7 +32,9 @@ function buildViewHtml(item) {
         <div class="sale-body">
             <div class="sale-body-text">
                 <h3 class="sale-name">${escapeHtml(item.name || '')}</h3>
+                ${item.price ? `<span class="sale-price">${escapeHtml(item.price)}</span>` : ''}
                 <span class="sale-description-text">${escapeHtml(item.description || '')}</span>
+                <a href="join.html?type=sale&amp;item=${encodeURIComponent(item.id)}" class="sale-enquire-button">Enquire</a>
             </div>
             ${isAdmin ? `<button type="button" class="sale-edit-button sale-item-edit" data-id="${item.id}">Edit</button>` : ''}
         </div>
@@ -102,12 +104,10 @@ function renderSaleItems(items) {
     grid.innerHTML = items.map((item, index) => {
         const images = item.images || [];
         const countBadge = images.length > 1 ? `<span class="sale-photo-count"><span class="sale-photo-count-icon" aria-hidden="true">&#128247;</span>${images.length}</span>` : '';
-        const priceTag = item.price ? `<span class="sale-price-tag">${escapeHtml(item.price)}</span>` : '';
         return `
         <div class="sale-item${reorderMode ? ' reorder-active' : ''}" data-id="${item.id}">
             <div class="sale-photo-wrap">
                 <img class="sale-photo" src="../Images/sales/${escapeHtml(images[0] || '')}" alt="${escapeHtml(item.name || '')}" loading="lazy">
-                ${priceTag}
                 ${countBadge}
             </div>
             ${reorderMode ? buildReorderControlsHtml(item, index, items.length) : (editingItemId === item.id ? buildEditFormHtml(item) : buildViewHtml(item))}
