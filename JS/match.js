@@ -26,6 +26,18 @@ function isToday(dateStr) {
     return dateStr === `${y}-${m}-${d}`;
 }
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function setTeamNameLink(elementId, teamName) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.innerHTML = `<a class="shooter-link" href="team.html?team=${encodeURIComponent(teamName)}">${escapeHtml(teamName)}</a>`;
+}
+
 function setMatchBadge(selector, teamName, slugMap) {
     const el = document.querySelector(selector);
     if (!el) return;
@@ -188,8 +200,8 @@ function renderTeamSummary(tbodyId, scores, opponentScores) {
 }
 
 function renderMatchSummary(homeTeam, homeScores, awayTeam, awayScores) {
-    document.getElementById('homeSummaryTitle').textContent = homeTeam;
-    document.getElementById('awaySummaryTitle').textContent = awayTeam;
+    setTeamNameLink('homeSummaryTitle', homeTeam);
+    setTeamNameLink('awaySummaryTitle', awayTeam);
     renderTeamSummary('homeSummary', homeScores, awayScores);
     renderTeamSummary('awaySummary', awayScores, homeScores);
 }
@@ -1004,8 +1016,8 @@ async function initMatchPage() {
     }
 
     document.title = `${params.home} vs ${params.away} - Newport & District Air Rifle League`;
-    document.getElementById('homeTeamName').textContent = params.home;
-    document.getElementById('awayTeamName').textContent = params.away;
+    setTeamNameLink('homeTeamName', params.home);
+    setTeamNameLink('awayTeamName', params.away);
 
     const slugMap = await NADARL.fetchTeamSlugMap();
     setMatchBadge('.home-team .team-badge-large', params.home, slugMap);

@@ -155,7 +155,7 @@ function renderStandingsTableRows(tbodyId) {
     let html = '';
     sortedRows.forEach(team => {
         html += `<tr>
-            <td class="team-cell">${team.team_name}</td>
+            <td class="team-cell"><a href="team.html?team=${encodeURIComponent(team.team_name)}">${team.team_name}</a></td>
             <td class="score-cell">${team.matches_played}</td>
             <td class="score-cell">${team.wins}</td>
             <td class="score-cell">${team.draws}</td>
