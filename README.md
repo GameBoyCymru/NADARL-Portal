@@ -173,18 +173,40 @@ sudo ln -s /etc/nginx/sites-available/nadarl-portal /etc/nginx/sites-enabled/nad
 sudo rm -f /etc/nginx/sites-enabled/default   # optional: remove the default nginx welcome page
 ```
 
-If you have a domain pointed at the server, edit
-`/etc/nginx/sites-available/nadarl-portal` and replace `server_name _;` with
-`server_name yourdomain.com;`. Then test and reload:
+You need a domain pointed at the server before the HTTPS step below will
+work. Edit `/etc/nginx/sites-available/nadarl-portal` and replace
+`server_name _;` with `server_name yourdomain.com;`. Then test and reload:
 
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Visit `http://<server-ip>/` — you should see the portal.
+Visit `http://<server-ip>/` — you should see the portal (over plain HTTP for now; the next step enables HTTPS).
 
-**4. Enable the deploy script**
+**4. Enable HTTPS (required)**
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com --redirect --hsts
+```
+
+Certbot obtains a free Let's Encrypt certificate, duplicates the server
+block into a new `listen 443 ssl` block (carrying over the security headers
+from step 3 automatically), rewrites the port-80 block to redirect
+everything to HTTPS (`--redirect`), and adds a `Strict-Transport-Security`
+header (`--hsts`). It also installs a systemd timer that renews the
+certificate automatically — confirm it's active with:
+
+```bash
+sudo systemctl status certbot.timer
+```
+
+Visit `https://yourdomain.com/` and confirm the padlock shows a valid
+certificate, then re-run `sudo nginx -t && sudo systemctl reload nginx` if
+you edited anything by hand afterwards.
+
+**5. Enable the deploy script**
 
 ```bash
 chmod +x /var/www/nadarl-portal/deploy/deploy.sh
@@ -201,7 +223,7 @@ merges, since this directory is deploy-only and should never diverge from
 git -C /var/www/nadarl-portal log -1 --oneline
 ```
 
-**5. Schedule it with cron**
+**6. Schedule it with cron**
 
 ```bash
 crontab -e
@@ -216,18 +238,40 @@ sudo touch /var/log/nadarl-deploy.log
 sudo chown $USER:$USER /var/log/nadarl-deploy.log
 ```
 
-**6. Test the full loop**
+**7. Test the full loop**
 
 Push a small change to `main`, wait up to 5 minutes, then confirm
 `git -C /var/www/nadarl-portal log -1` shows the new commit and the site
 reflects it in a browser. `/var/log/nadarl-deploy.log` should log one line
 per actual deploy and stay silent on no-op ticks.
 
-**7. Optional hardening**
+**8. Optional hardening**
 
 - **Firewall**: `sudo ufw allow 'Nginx Full'` and enable `ufw` with a default-deny inbound policy.
-- **HTTPS**: once a domain points at the server, run `sudo apt install -y certbot python3-certbot-nginx` then `sudo certbot --nginx -d yourdomain.com`.
 - **Slower polling**: once confident it's working, widen the cron interval (e.g. `*/10`) to reduce log noise.
+
+## Security
+
+The app follows OWASP secure coding practices appropriate to a static,
+no-build-step frontend backed by Supabase:
+
+| Practice | How it's applied |
+| --- | --- |
+| **Transport security** | HTTPS is required for self-hosted deployments (see [Deployment](#deployment) step 4) — Let's Encrypt via certbot, auto-renewing, with HTTP→HTTPS redirect and HSTS. GitHub Pages serves HTTPS by default. |
+| **XSS prevention (A03)** | Every page renders Supabase-sourced data (names, descriptions, captions, etc.) through a local `escapeHtml()` helper before interpolating into HTML — never raw. |
+| **No inline scripts** | No `<script>` blocks or `onclick`/`onerror`-style inline handler attributes anywhere in the app — all event wiring uses `addEventListener`/event delegation, so the CSP's `script-src` doesn't need `'unsafe-inline'`. |
+| **Content-Security-Policy** | Set via nginx (`deploy/nadarl-portal.nginx.conf`): scripts restricted to `'self'` plus the two pinned CDN libraries, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`. |
+| **Subresource Integrity** | The Supabase JS SDK and Chart.js are loaded from jsDelivr pinned to an exact version with a `sha384` `integrity` hash and `crossorigin="anonymous"` — a compromised or swapped CDN artifact won't execute. |
+| **Security headers** | `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` disabling unused browser features, `server_tokens off`. |
+| **Authorization (A01)** | All writes are enforced server-side by Postgres Row Level Security policies in `supabase/schema.sql`/`migrations/`, keyed off `auth.uid()` — client-side role checks (`admin`/`captain`/`generic`) only drive UI visibility, never actual permission. |
+| **Secrets** | `JS/supabase-keys.js` holds only the public anon key (RLS-protected by design, safe to expose) — no service-role key or credentials exist anywhere in the repo. |
+| **Uploads** | No client-side file upload path exists (gallery/sales/rules/competition documents are placed server-side by admins), so there's no upload-based attack surface. The admin JSON backup importer is admin-only, gated behind a size check and a confirmation prompt, and wrapped in try/catch around `JSON.parse`. |
+
+**Known trade-off:** `style-src` includes `'unsafe-inline'` because the app
+uses inline `style=""` attributes throughout (not inline `<script>`s) —
+CSS injection has a much smaller blast radius than script injection, and
+removing it would require a large, low-value refactor of every render
+function to move styling into CSS classes.
 
 ## Data Model
 

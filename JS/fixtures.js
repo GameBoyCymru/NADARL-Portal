@@ -11,7 +11,17 @@ let highlightDate = null;   // date shown in "Today's Fixtures" (today's, or the
 function teamBadgeHtml(teamName) {
     const slug = slugMap[teamName];
     if (!slug) return `<div class="team-badge">\uD83C\uDFAF</div>`;
-    return `<div class="team-badge"><img src="../Images/teams/${slug}.png" alt="${escapeHtml(teamName)} logo" onerror="this.parentElement.textContent='\uD83C\uDFAF'"></div>`;
+    return `<div class="team-badge"><img class="team-badge-img" src="../Images/teams/${slug}.png" alt="${escapeHtml(teamName)} logo"></div>`;
+}
+
+// Attaches the emoji-fallback onerror handler as a JS property (not an
+// inline HTML attribute) to every team badge image under `root`, and wires
+// up navigation for any element carrying data-href via delegation - both so
+// the CSP doesn't need 'unsafe-inline' for scripts.
+function wireFixtureInteractions(root) {
+    root.querySelectorAll('.team-badge-img').forEach(img => {
+        img.onerror = () => { img.parentElement.textContent = '\uD83C\uDFAF'; };
+    });
 }
 
 function escapeHtml(s) {
@@ -153,6 +163,7 @@ function renderTodayFixtures() {
             container.innerHTML += createFixtureCardGroup(date, groupedFixtures[date], true);
         });
     }
+    wireFixtureInteractions(container);
 }
 
 function createFixtureCard(fixture) {
@@ -166,7 +177,7 @@ function createFixtureCard(fixture) {
     if (fixture.isCompetition || fixture.isEvent) {
         const cardClass = fixture.isCompetition ? 'fixture-competition-item' : 'fixture-event-item';
         return `
-            <div class="fixture-item ${cardClass}" onclick="window.location.href='${fixtureUrl(fixture)}'" style="cursor:pointer;">
+            <div class="fixture-item ${cardClass}" data-href="${fixtureUrl(fixture)}" style="cursor:pointer;">
                 <div class="fixture-teams">
                     <div class="team-name">${escapeHtml(fixture.name)}</div>
                 </div>
@@ -185,9 +196,8 @@ function createFixtureCard(fixture) {
             </div>
         `;
     }
-    const clickAttr = `onclick="window.location.href='${matchUrl(fixture)}'" style="cursor:pointer;"`;
     return `
-        <div class="fixture-item" ${clickAttr}>
+        <div class="fixture-item" data-href="${matchUrl(fixture)}" style="cursor:pointer;">
             <div class="fixture-teams">
                 <div class="team">
                     ${teamBadgeHtml(fixture.homeTeam)}
@@ -209,13 +219,13 @@ function createFixtureCard(fixture) {
 function createFixtureCardGroup(date, fixtureList, alwaysExpanded = false) {
     const fixtureItems = fixtureList.map(f => createFixtureCard(f)).join('');
     const clickableClass = alwaysExpanded ? '' : 'clickable';
-    const onClickAttr = alwaysExpanded ? '' : 'onclick="toggleFixtureGroup(this)"';
+    const toggleAttr = alwaysExpanded ? '' : 'data-toggle="fixture-group"';
     const expandIcon = alwaysExpanded ? '' : '<span class="expand-icon">▼</span>';
     const contentClass = alwaysExpanded ? 'fixture-content always-expanded' : 'fixture-content';
 
     return `
         <div class="fixture-card">
-            <div class="fixture-header ${clickableClass}" ${onClickAttr}>
+            <div class="fixture-header ${clickableClass}" ${toggleAttr}>
                 <span class="fixture-date">${formatDate(date)} | 8:00pm</span>
                 ${expandIcon}
             </div>
@@ -233,6 +243,16 @@ function toggleFixtureGroup(header) {
     content.classList.toggle('expanded');
     icon.classList.toggle('rotated');
 }
+
+// Delegated so cards/rows created via innerHTML (data-href / data-toggle)
+// don't need inline onclick attributes, keeping the CSP script-src clean.
+document.addEventListener('click', (e) => {
+    const toggle = e.target.closest('[data-toggle="fixture-group"]');
+    if (toggle) { toggleFixtureGroup(toggle); return; }
+
+    const link = e.target.closest('[data-href]');
+    if (link) { window.location.href = link.dataset.href; }
+});
 
 function renderSeasonFixtures() {
     const tbody = document.getElementById('seasonFixtures');
@@ -408,7 +428,7 @@ function renderMobileSeasonFixtures() {
             } else if (fixture.isCompetition || fixture.isEvent) {
                 const typeClass = fixture.isCompetition ? 'mobile-fixture-competition' : 'mobile-fixture-event';
                 html += `
-                    <div class="mobile-fixture-item fixture-clickable ${typeClass}" onclick="window.location.href='${fixtureUrl(fixture)}'">
+                    <div class="mobile-fixture-item fixture-clickable ${typeClass}" data-href="${fixtureUrl(fixture)}">
                         <div class="mobile-fixture-teams">
                             <span class="mobile-team">${escapeHtml(fixture.name)}</span>
                         </div>
@@ -429,7 +449,7 @@ function renderMobileSeasonFixtures() {
                 // match); admins can also open future ones to set up scoring.
                 const canOpen = isAdmin || fixture.date <= today;
                 const clickAttrs = canOpen
-                    ? `class="mobile-fixture-item fixture-clickable" onclick="window.location.href='${matchUrl(fixture)}'"`
+                    ? `class="mobile-fixture-item fixture-clickable" data-href="${matchUrl(fixture)}"`
                     : `class="mobile-fixture-item"`;
                 html += `
                     <div ${clickAttrs}>

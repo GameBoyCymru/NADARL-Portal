@@ -43,7 +43,12 @@ function setMatchBadge(selector, teamName, slugMap) {
     if (!el) return;
     const slug = slugMap[teamName];
     if (!slug) { el.textContent = '\uD83C\uDFAF'; return; }
-    el.innerHTML = `<img src="../Images/teams/${slug}.png" alt="${teamName} logo" onerror="this.parentElement.textContent='\uD83C\uDFAF'">`;
+    el.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = `../Images/teams/${slug}.png`;
+    img.alt = `${teamName} logo`;
+    img.onerror = () => { el.textContent = '\uD83C\uDFAF'; };
+    el.appendChild(img);
 }
 
 // ---------------------------------------------------------------------

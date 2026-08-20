@@ -1,3 +1,9 @@
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 async function renderTeamCards() {
     const grid = document.getElementById('teamsGrid');
     if (!grid) return;
@@ -15,17 +21,23 @@ async function renderTeamCards() {
             <a href="team.html?team=${encodeURIComponent(team.name)}" class="team-card-link">
                 <div class="team-card">
                     <div class="team-badge-placeholder">
-                        <img src="../Images/teams/${team.slug}.png" alt="${team.name} logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <span class="badge-fallback" style="display:none;">${team.name.split(' ').map(w => w[0]).join('')}</span>
+                        <img class="team-badge-img" src="../Images/teams/${team.slug}.png" alt="${escapeHtml(team.name)} logo">
+                        <span class="badge-fallback" style="display:none;">${escapeHtml(team.name.split(' ').map(w => w[0]).join(''))}</span>
                     </div>
-                    <p class="team-name">${team.name}</p>
-                    <p class="team-venue">${team.venue}</p>
+                    <p class="team-name">${escapeHtml(team.name)}</p>
+                    <p class="team-venue">${escapeHtml(team.venue)}</p>
                 </div>
             </a>
         `;
     });
 
     grid.innerHTML = html;
+    grid.querySelectorAll('.team-badge-img').forEach(img => {
+        img.onerror = () => {
+            img.style.display = 'none';
+            img.nextElementSibling.style.display = 'flex';
+        };
+    });
     equalizeCardHeights(grid);
 }
 

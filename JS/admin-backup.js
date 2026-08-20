@@ -55,9 +55,15 @@ document.addEventListener('DOMContentLoaded', () => {
         importBtn.disabled = !fileInput.files.length;
     });
 
+    const MAX_IMPORT_BYTES = 50 * 1024 * 1024; // 50MB - generous headroom over a real export, guards against picking the wrong file
+
     importBtn.addEventListener('click', async () => {
         const file = fileInput.files[0];
         if (!file) return;
+        if (file.size > MAX_IMPORT_BYTES) {
+            showMessage('File is too large to be a valid backup (' + Math.round(file.size / 1024 / 1024) + 'MB).', 'error');
+            return;
+        }
         if (!confirm(
             'Import data from "' + file.name + '"? This inserts every row from the file into ' +
             'the current database. Only run this against a freshly-created, empty database ' +
