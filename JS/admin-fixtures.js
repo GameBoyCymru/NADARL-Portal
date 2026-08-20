@@ -137,11 +137,11 @@ const FixturesAdmin = (function () {
         return roster;
     }
 
-    // A random 7-shot card (plausible air-rifle scores, 5-10 per shot) for
-    // up to 7 shooters from the given roster.
+    // A random 7-shot card (0-10 per shot) for up to 7 shooters from the
+    // given roster.
     function randomCard(roster) {
         return roster.slice(0, 7).map(s => {
-            const shots = Array.from({ length: 7 }, () => 5 + Math.floor(Math.random() * 6));
+            const shots = Array.from({ length: 7 }, () => Math.floor(Math.random() * 11));
             return {
                 shooter_id: s.id,
                 shots,
