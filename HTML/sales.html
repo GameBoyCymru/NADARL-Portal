@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="../styles.css?v=20260806">
     <link rel="stylesheet" href="../CSS/sales.css?v=20260819">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -21,9 +23,9 @@
                     <button type="button" id="addSaleButton" class="sale-button" hidden>Add Item</button>
                 </div>
             </div>
-            <p class="sale-intro">
+            <!-- <p class="sale-intro">
                 Equipment and league merchandise available for purchase from members.
-            </p>
+            </p> -->
 
             <div id="saleMessage" class="sale-message" role="alert" hidden></div>
 
@@ -33,11 +35,13 @@
                     <div class="sale-form-row">
                         <div>
                             <label for="saleNameInput">Item name</label>
-                            <input type="text" id="saleNameInput" class="sale-input" maxlength="120" placeholder="e.g. Feinwerkbau 800 Air Rifle">
+                            <input type="text" id="saleNameInput" class="sale-input" maxlength="120"
+                                placeholder="e.g. Feinwerkbau 800 Air Rifle">
                         </div>
                         <div>
                             <label for="salePriceInput">Price</label>
-                            <input type="text" id="salePriceInput" class="sale-input" maxlength="40" placeholder="e.g. &pound;450 ono">
+                            <input type="text" id="salePriceInput" class="sale-input" maxlength="40"
+                                placeholder="e.g. &pound;450 ono">
                         </div>
                     </div>
                     <label for="saleCategoryInput" class="wizard-spaced-label">Category</label>
@@ -46,7 +50,8 @@
                         <option value="private">Private Sales</option>
                     </select>
                     <label for="saleDescriptionInput" class="wizard-spaced-label">Description</label>
-                    <textarea id="saleDescriptionInput" class="sale-textarea" maxlength="500" rows="3" placeholder="e.g. Good condition, includes case and diabolo pellets."></textarea>
+                    <textarea id="saleDescriptionInput" class="sale-textarea" maxlength="500" rows="3"
+                        placeholder="e.g. Good condition, includes case and diabolo pellets."></textarea>
                     <div class="wizard-actions">
                         <button type="button" id="wizardCancel1" class="sale-button-secondary">Cancel</button>
                         <button type="button" id="wizardNext" class="sale-button">Next</button>
@@ -57,8 +62,10 @@
                     <h3 class="wizard-step-title">Step 2 of 2: Image Files</h3>
                     <label>Image filenames</label>
                     <div class="sale-filename-list" id="wizardFilenameList"></div>
-                    <button type="button" id="wizardAddFilename" class="sale-button-secondary sale-add-filename-button">+ Add Another Image</button>
-                    <p class="wizard-hint">Each image file must already be uploaded to the <code>Images/sales</code> folder on the server with the exact filename entered.</p>
+                    <button type="button" id="wizardAddFilename"
+                        class="sale-button-secondary sale-add-filename-button">+ Add Another Image</button>
+                    <p class="wizard-hint">Each image file must already be uploaded to the <code>Images/sales</code>
+                        folder on the server with the exact filename entered.</p>
                     <div class="wizard-actions">
                         <button type="button" id="wizardBack" class="sale-button-secondary">Back</button>
                         <button type="button" id="wizardSave" class="sale-button">Save Item</button>
@@ -69,9 +76,11 @@
             <div class="sale-category">
                 <div class="sale-category-header">
                     <h3 class="sale-category-title">League Merchandise</h3>
-                    <button type="button" id="reorderLeagueButton" class="sale-button-secondary" hidden>Reorder Items</button>
+                    <button type="button" id="reorderLeagueButton" class="sale-button-secondary" hidden>Reorder
+                        Items</button>
                 </div>
-                <p class="sale-category-description">Equipment recommended by the league for shooters to use. Other brands and models can be used instead &mdash; these are simply the items the league suggests. Some of these items are sold by individual league members at a reduced cost compared to typical RRP; as with private sales, these listings are posted on behalf of the member selling the item, and the league is not involved in and takes no responsibility for any sale, its condition, payment, or delivery. Buyers and sellers arrange and complete transactions between themselves, at their own risk.</p>
+                <p class="sale-category-description">Equipment recommended by the league for shooters to use. Other
+                    brands and models can be used instead &mdash; these are simply the items the league recommends.</p>
                 <div id="reorderToolbarLeague" class="reorder-toolbar" hidden>
                     <p class="reorder-hint">Use the arrows to move items, then save your new order.</p>
                     <div class="reorder-toolbar-actions">
@@ -85,9 +94,10 @@
             <div class="sale-category">
                 <div class="sale-category-header">
                     <h3 class="sale-category-title">Private Sales</h3>
-                    <button type="button" id="reorderPrivateButton" class="sale-button-secondary" hidden>Reorder Items</button>
+                    <button type="button" id="reorderPrivateButton" class="sale-button-secondary" hidden>Reorder
+                        Items</button>
                 </div>
-                <p class="sale-category-description">A noticeboard for members to let others know they have something to sell &mdash; listings here are posted on behalf of the individual member selling the item, not by the league. Interested buyers should use the Enquire button to contact the seller directly. The league is not involved in and takes no responsibility for any sale, its condition, payment, or delivery; buyers and sellers arrange and complete transactions between themselves, at their own risk.</p>
+                <p class="sale-category-description">All private sales through the NADARL portal are at risk of the buyer and seller. NADARL takes no responsibility for these items.</p>
                 <div id="reorderToolbarPrivate" class="reorder-toolbar" hidden>
                     <p class="reorder-hint">Use the arrows to move items, then save your new order.</p>
                     <div class="reorder-toolbar-actions">
@@ -102,10 +112,13 @@
         <div class="sale-lightbox" id="saleLightbox" hidden>
             <div class="sale-lightbox-backdrop" id="saleLightboxBackdrop"></div>
             <div class="sale-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Item view">
-                <button type="button" class="sale-lightbox-close" id="saleLightboxClose" aria-label="Close">&times;</button>
-                <button type="button" class="sale-lightbox-nav sale-lightbox-prev" id="saleLightboxPrev" aria-label="Previous image" hidden>&#8249;</button>
+                <button type="button" class="sale-lightbox-close" id="saleLightboxClose"
+                    aria-label="Close">&times;</button>
+                <button type="button" class="sale-lightbox-nav sale-lightbox-prev" id="saleLightboxPrev"
+                    aria-label="Previous image" hidden>&#8249;</button>
                 <img class="sale-lightbox-image" id="saleLightboxImage" src="" alt="">
-                <button type="button" class="sale-lightbox-nav sale-lightbox-next" id="saleLightboxNext" aria-label="Next image" hidden>&#8250;</button>
+                <button type="button" class="sale-lightbox-nav sale-lightbox-next" id="saleLightboxNext"
+                    aria-label="Next image" hidden>&#8250;</button>
                 <div class="sale-lightbox-caption">
                     <span class="sale-lightbox-name" id="saleLightboxName"></span>
                     <span class="sale-lightbox-price" id="saleLightboxPrice"></span>
@@ -132,11 +145,19 @@
                     <a href="join.html">Enquiries</a>
                 </div>
                 <div class="footer-social">
-                    <a href="https://www.facebook.com/NADARL/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    <a href="https://www.facebook.com/NADARL/" target="_blank" rel="noopener noreferrer"
+                        aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
                     </a>
-                    <a href="https://www.instagram.com/nadarl.1907/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                    <a href="https://www.instagram.com/nadarl.1907/" target="_blank" rel="noopener noreferrer"
+                        aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                        </svg>
                     </a>
                 </div>
                 <div class="footer-copyright">
@@ -146,11 +167,14 @@
         </footer>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3" integrity="sha384-l8ah+VgaWtk1mvOe9VC+OirC6qHFF4yH7l7mKRidV9MSti3E9F463bMp6ZVN4kuC" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"
+        integrity="sha384-l8ah+VgaWtk1mvOe9VC+OirC6qHFF4yH7l7mKRidV9MSti3E9F463bMp6ZVN4kuC"
+        crossorigin="anonymous"></script>
     <script src="../JS/supabase-keys.js"></script>
     <script src="../JS/supabase-config.js"></script>
     <script src="../JS/data.js?v=20260809"></script>
     <script src="../JS/sales.js?v=20260819"></script>
     <script src="../JS/footer-year.js"></script>
 </body>
+
 </html>
