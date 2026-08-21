@@ -214,6 +214,15 @@
     margin-top: 8px;
 }
 
+.timeline-reorder-summary {
+    text-align: center;
+}
+
+.timeline-reorder-summary .timeline-heading,
+.timeline-reorder-summary .timeline-year {
+    margin-bottom: 0;
+}
+
 .timeline-reorder-controls {
     display: flex;
     justify-content: center;

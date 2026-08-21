@@ -56,6 +56,10 @@ function buildEditFormHtml(item) {
 
 function buildReorderControlsHtml(item, index, total) {
     return `
+        <div class="timeline-reorder-summary">
+            ${item.year ? `<span class="timeline-year">${escapeHtml(item.year)}</span>` : ''}
+            <h3 class="timeline-heading">${escapeHtml(item.heading || '')}</h3>
+        </div>
         <div class="timeline-reorder-controls">
             <button type="button" class="timeline-move-button timeline-move-up" data-id="${item.id}" ${index === 0 ? 'disabled' : ''}>&#8593; Up</button>
             <button type="button" class="timeline-move-button timeline-move-down" data-id="${item.id}" ${index === total - 1 ? 'disabled' : ''}>&#8595; Down</button>
