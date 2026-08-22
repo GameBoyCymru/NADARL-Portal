@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         measure.style.display = 'flex';
         document.body.appendChild(measure);
 
-        const TOPNAV_GAP = 10;
+        const TOPNAV_GAP = 20;
         const SAFETY_MARGIN = 8;
         const TITLE_BASE_SIZE = 0.85;
         const TITLE_MIN_SIZE = 0.6;

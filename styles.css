@@ -309,7 +309,7 @@ h1 {
     z-index: 20;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 20px;
     margin: -20px -20px 20px;
     padding: 10px 20px;
     background: rgba(24, 24, 27, 0.92);
@@ -328,7 +328,6 @@ h1 {
 }
 
 .nav-brand {
-    margin-right: auto;
     flex-shrink: 0;
     white-space: nowrap;
     font-size: 0.9rem;
@@ -368,6 +367,8 @@ h1 {
 
 .topnav.nav-fit .nav-links {
     display: flex;
+    flex: 1;
+    justify-content: space-between;
 }
 
 .nav-links a {
