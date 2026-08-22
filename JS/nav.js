@@ -12,11 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return document.title
             .replace(/Newport & District Air Rifle League/i, '')
-            .replace(/^[-–—]\s*/, '')
-            .replace(/\s*[-–—]$/, '')
+            .replace(/^\s*[-–—]\s*/, '')
+            .replace(/\s*[-–—]\s*$/, '')
             .trim();
     };
-    const pageName = getPageName();
+    let pageName = getPageName();
 
     if (topnav && links) {
         const measure = links.cloneNode(true);
@@ -88,6 +88,19 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(updateNavLayout, 100);
         });
+
+        // Dynamic pages (team, match, shooter, event, competition) set
+        // document.title asynchronously once their data has loaded, well
+        // after DOMContentLoaded. Watch for that so the navbar title
+        // updates from the generic fallback to the real page name.
+        const titleEl = document.querySelector('title');
+        if (titleEl) {
+            const titleObserver = new MutationObserver(() => {
+                pageName = getPageName();
+                updateNavLayout();
+            });
+            titleObserver.observe(titleEl, { childList: true });
+        }
     }
 
     if (!toggle || !menu) return;
