@@ -302,3 +302,134 @@ h1 {
 .venue-map-link:hover {
     color: #c41e3a;
 }
+
+.topnav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -20px -20px 20px;
+    padding: 10px 20px;
+    background: rgba(24, 24, 27, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* .container caps at 1200px inside body's 20px padding, so the navbar
+   (which bleeds past the container by that same 20px) stays flush with
+   the viewport up to 1240px and floats short of it beyond that. */
+@media (min-width: 1241px) {
+    .topnav {
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
+.nav-brand {
+    margin-right: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+    text-decoration: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.nav-brand-yellow {
+    color: #f4c430;
+}
+
+.nav-brand-red {
+    color: #c41e3a;
+}
+
+.nav-links {
+    display: none;
+    gap: 2px;
+}
+
+.topnav.nav-fit .nav-links {
+    display: flex;
+}
+
+.nav-links a {
+    white-space: nowrap;
+    color: #c9c9ce;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 7px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-links a:hover {
+    background: rgba(196, 30, 58, 0.18);
+    color: #ffffff;
+}
+
+.nav-links a.current {
+    color: #ffffff;
+    background: rgba(196, 30, 58, 0.28);
+}
+
+.nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.topnav.nav-fit .nav-toggle {
+    display: none;
+}
+
+.nav-mobile {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 2px;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    background: rgba(20, 20, 24, 0.98);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    padding: 8px 20px 12px;
+}
+
+.nav-mobile.open {
+    display: flex;
+}
+
+.nav-mobile a {
+    color: #c9c9ce;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 7px;
+}
+
+.nav-mobile a:hover,
+.nav-mobile a.current {
+    background: rgba(196, 30, 58, 0.22);
+    color: #ffffff;
+}
