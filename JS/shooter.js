@@ -597,6 +597,12 @@ async function initShooterPage() {
         backLink.href = teamLink.href;
         backLink.textContent = `← Back to ${team.name}`;
     }
+    backLink.addEventListener('click', (event) => {
+        if (window.history.length > 1) {
+            event.preventDefault();
+            window.history.back();
+        }
+    });
 
     const logoImg = document.getElementById('teamLogo');
     const fallback = document.getElementById('logoFallback');
