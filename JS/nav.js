@@ -4,6 +4,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const topnav = document.querySelector('.topnav');
     const brand = topnav ? topnav.querySelector('.nav-brand') : null;
     const links = topnav ? topnav.querySelector('.nav-links') : null;
+    const pageTitle = document.getElementById('navPageTitle');
+
+    const getPageName = () => {
+        const current = topnav ? topnav.querySelector('.nav-links a.current') : null;
+        if (current) return current.textContent.trim();
+
+        return document.title
+            .replace(/Newport & District Air Rifle League/i, '')
+            .replace(/^[-–—]\s*/, '')
+            .replace(/\s*[-–—]$/, '')
+            .trim();
+    };
+    const pageName = getPageName();
 
     if (topnav && links) {
         const measure = links.cloneNode(true);
@@ -16,8 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const TOPNAV_GAP = 10;
         const SAFETY_MARGIN = 8;
+        const TITLE_BASE_SIZE = 0.85;
+        const TITLE_MIN_SIZE = 0.6;
+        const TITLE_STEP = 0.05;
 
-        const updateNavMode = () => {
+        const updateNavLayout = () => {
+            if (pageTitle) {
+                pageTitle.style.display = 'none';
+                pageTitle.style.fontSize = '';
+                pageTitle.textContent = '';
+            }
+
             const available = topnav.clientWidth - brand.offsetWidth - TOPNAV_GAP - SAFETY_MARGIN;
             const fits = measure.scrollWidth <= available;
             topnav.classList.toggle('nav-fit', fits);
@@ -25,14 +47,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 menu.classList.remove('open');
                 if (toggle) toggle.setAttribute('aria-expanded', 'false');
             }
+
+            // Only fill the empty space next to the hamburger button with the
+            // page name. When the full link list already fits (desktop),
+            // there's no empty space to fill, so leave it hidden.
+            if (!fits && pageName && pageTitle) {
+                pageTitle.textContent = pageName;
+                pageTitle.style.display = 'block';
+
+                // The title is centred over the whole bar, independent of
+                // flex flow, so check for actual overlap with its neighbours
+                // rather than overall bar overflow.
+                const overlaps = () => {
+                    const titleRect = pageTitle.getBoundingClientRect();
+                    const brandRect = brand.getBoundingClientRect();
+                    const toggleRect = toggle ? toggle.getBoundingClientRect() : null;
+                    return titleRect.left < brandRect.right + SAFETY_MARGIN
+                        || (toggleRect && titleRect.right > toggleRect.left - SAFETY_MARGIN);
+                };
+
+                let size = TITLE_BASE_SIZE;
+                pageTitle.style.fontSize = `${size}rem`;
+                while (overlaps() && size > TITLE_MIN_SIZE) {
+                    size = Math.round((size - TITLE_STEP) * 100) / 100;
+                    pageTitle.style.fontSize = `${size}rem`;
+                }
+
+                if (overlaps()) {
+                    pageTitle.style.display = 'none';
+                    pageTitle.style.fontSize = '';
+                    pageTitle.textContent = '';
+                }
+            }
         };
 
-        updateNavMode();
+        updateNavLayout();
 
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(updateNavMode, 100);
+            resizeTimer = setTimeout(updateNavLayout, 100);
         });
     }
 
