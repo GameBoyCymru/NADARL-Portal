@@ -17,6 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .trim();
     };
     let pageName = getPageName();
+    // Dynamic pages (team, match, shooter, event, competition) declare
+    // their generic name via this meta tag (e.g. "Match"), since by the
+    // time this script runs, the page's own script may already have
+    // overwritten document.title with the specific name (it sets it
+    // synchronously before nav.js's DOMContentLoaded listener runs).
+    // Used as a fallback when the specific name doesn't fit.
+    const fallbackMeta = document.querySelector('meta[name="nav-page-name"]');
+    const fallbackPageName = fallbackMeta ? fallbackMeta.content.trim() : pageName;
 
     if (topnav && links) {
         const measure = links.cloneNode(true);
@@ -51,10 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Only fill the empty space next to the hamburger button with the
             // page name. When the full link list already fits (desktop),
             // there's no empty space to fill, so leave it hidden.
-            if (!fits && pageName && pageTitle) {
-                pageTitle.textContent = pageName;
-                pageTitle.style.display = 'block';
-
+            if (!fits && pageTitle) {
                 // The title is centred over the whole bar, independent of
                 // flex flow, so check for actual overlap with its neighbours
                 // rather than overall bar overflow.
@@ -66,17 +71,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         || (toggleRect && titleRect.right > toggleRect.left - SAFETY_MARGIN);
                 };
 
-                let size = TITLE_BASE_SIZE;
-                pageTitle.style.fontSize = `${size}rem`;
-                while (overlaps() && size > TITLE_MIN_SIZE) {
-                    size = Math.round((size - TITLE_STEP) * 100) / 100;
-                    pageTitle.style.fontSize = `${size}rem`;
-                }
+                // Try to fit the given text, shrinking it down to the min
+                // size. Returns true if it ended up fitting.
+                const tryFitTitle = (text) => {
+                    if (!text) return false;
 
-                if (overlaps()) {
-                    pageTitle.style.display = 'none';
-                    pageTitle.style.fontSize = '';
-                    pageTitle.textContent = '';
+                    pageTitle.textContent = text;
+                    pageTitle.style.display = 'block';
+
+                    let size = TITLE_BASE_SIZE;
+                    pageTitle.style.fontSize = `${size}rem`;
+                    while (overlaps() && size > TITLE_MIN_SIZE) {
+                        size = Math.round((size - TITLE_STEP) * 100) / 100;
+                        pageTitle.style.fontSize = `${size}rem`;
+                    }
+
+                    if (overlaps()) {
+                        pageTitle.style.display = 'none';
+                        pageTitle.style.fontSize = '';
+                        pageTitle.textContent = '';
+                        return false;
+                    }
+                    return true;
+                };
+
+                // Prefer the specific page name (e.g. a match's teams); if
+                // that doesn't fit even at the smallest size, fall back to
+                // the page's generic name (e.g. "Match") rather than
+                // showing nothing.
+                if (!tryFitTitle(pageName) && fallbackPageName !== pageName) {
+                    tryFitTitle(fallbackPageName);
                 }
             }
         };
