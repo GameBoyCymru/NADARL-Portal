@@ -80,6 +80,19 @@ function formatDate(dateStr) {
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+// Chart.js renders an array tick label as stacked lines, so the average
+// charts' x-axis can show day/month/year on their own lines instead of one
+// cramped "22 Aug 2026" string per point.
+function formatDateStack(dateStr) {
+    if (!dateStr) return [''];
+    const d = new Date(dateStr + 'T00:00:00');
+    return [
+        d.toLocaleDateString('en-GB', { day: '2-digit' }),
+        d.toLocaleDateString('en-GB', { month: 'short' }),
+        d.toLocaleDateString('en-GB', { year: 'numeric' })
+    ];
+}
+
 function matchTableColCount() {
     return compareShooter ? 7 : 6;
 }
@@ -257,6 +270,12 @@ function drawRunningAverageLine(canvasId, emptyId, labels, datasets) {
                 legend: { display: showLegend, labels: { color: '#e0d6c8' } },
                 tooltip: {
                     callbacks: {
+                        // Stacked date labels are [day, month, year] arrays for the
+                        // axis; join them back into one line for the tooltip title.
+                        title: ctx => {
+                            const label = ctx[0] && ctx[0].label;
+                            return Array.isArray(label) ? label.join(' ') : label;
+                        },
                         label: ctx => `${showLegend ? ctx.dataset.label + ': ' : ''}${ctx.parsed.y.toFixed(2)}`
                     }
                 }
@@ -297,7 +316,7 @@ function renderRunningAverageChart(canvasId, emptyId, seriesList) {
         return;
     }
 
-    drawRunningAverageLine(canvasId, emptyId, (primary.rows || []).map(row => formatDate(row.date)), [
+    drawRunningAverageLine(canvasId, emptyId, (primary.rows || []).map(row => formatDateStack(row.date)), [
         { data: primaryValues, label: primary.label, color: primary.color, dashed: primary.dashed }
     ]);
 }
@@ -341,7 +360,7 @@ function renderAverageAllTimePage() {
         labels = Array.from({ length: windowLen }, (_, i) => `Match ${start + i + 1}`);
         datasets.push({ data: padArray(comparePageAverages, windowLen), label: compareShooter.name, color: COMPARE_SECONDARY_COLOR });
     } else {
-        labels = pageRows.map(row => formatDate(row.date));
+        labels = pageRows.map(row => formatDateStack(row.date));
     }
 
     drawRunningAverageLine('averageChartAllTime', 'averageEmptyAllTime', labels, datasets);
