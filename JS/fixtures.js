@@ -30,6 +30,20 @@ function escapeHtml(s) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+function venueMapsUrl(venue) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+}
+
+// Wraps a venue name in a link to Google Maps. Used inside cards/rows that
+// are themselves clickable (navigate to the match/fixture page), so callers
+// must guard their own click handling to let this real <a> take over instead
+// of triggering the card's own navigation - see wireFixtureInteractions and
+// the delegated click listener below.
+function venueLinkHtml(venue) {
+    if (!venue) return '';
+    return `<a class="venue-map-link" href="${venueMapsUrl(venue)}" target="_blank" rel="noopener">${escapeHtml(venue)}</a>`;
+}
+
 function matchUrl(fixture) {
     return `match.html?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}&date=${encodeURIComponent(fixture.date)}&venue=${encodeURIComponent(fixture.venue)}`;
 }
@@ -181,7 +195,7 @@ function createFixtureCard(fixture) {
                 <div class="fixture-teams">
                     <div class="team-name">${escapeHtml(fixture.name)}</div>
                 </div>
-                ${fixture.venue ? `<div class="fixture-venue">${escapeHtml(fixture.venue)}</div>` : ''}
+                ${fixture.venue ? `<div class="fixture-venue">${venueLinkHtml(fixture.venue)}</div>` : ''}
             </div>
         `;
     }
@@ -211,7 +225,7 @@ function createFixtureCard(fixture) {
                     <div class="venue-cell">Away</div>
                 </div>
             </div>
-            <div class="fixture-venue">${fixture.venue}</div>
+            <div class="fixture-venue">${venueLinkHtml(fixture.venue)}</div>
         </div>
     `;
 }
@@ -247,6 +261,10 @@ function toggleFixtureGroup(header) {
 // Delegated so cards/rows created via innerHTML (data-href / data-toggle)
 // don't need inline onclick attributes, keeping the CSP script-src clean.
 document.addEventListener('click', (e) => {
+    // A real <a> (e.g. a venue's Google Maps link) inside a clickable
+    // card/row should follow its own href, not the card's data-href.
+    if (e.target.closest('a[href]')) return;
+
     const toggle = e.target.closest('[data-toggle="fixture-group"]');
     if (toggle) { toggleFixtureGroup(toggle); return; }
 
@@ -333,17 +351,17 @@ function renderSeasonFixtures() {
                 row.className = 'fixture-row fixture-detail-row fixture-clickable' + typeRowClass + mixedClass
                     + (isLastInGroup ? ' fixture-group-end' : '') + altClass + highlightClass
                     + (highlightClass && isLastInGroup ? ' fixture-current-row-end' : '');
-                row.addEventListener('click', () => { window.location.href = fixtureUrl(fixture); });
+                row.addEventListener('click', (e) => { if (!e.target.closest('a[href]')) window.location.href = fixtureUrl(fixture); });
                 row.innerHTML = `
                     <td class="teams-cell" colspan="2">${escapeHtml(fixture.name)}</td>
-                    <td class="venue-cell">${fixture.venue ? escapeHtml(fixture.venue) : '-'}</td>
+                    <td class="venue-cell">${fixture.venue ? venueLinkHtml(fixture.venue) : '-'}</td>
                 `;
                 tbody.appendChild(row);
                 return;
             }
 
             const awayTeamDisplay = fixture.isBye ? '<span class="bye-badge">BYE</span>' : fixture.awayTeam;
-            const venueDisplay = fixture.isBye ? '-' : fixture.venue;
+            const venueDisplay = fixture.isBye ? '-' : venueLinkHtml(fixture.venue);
             const vsLabel = fixture.isBye ? '' : '<span class="vs-label">vs</span>';
 
             row.className = 'fixture-row fixture-detail-row' + mixedClass + (isLastInGroup ? ' fixture-group-end' : '')
@@ -352,7 +370,7 @@ function renderSeasonFixtures() {
             // match); admins can also open future ones to set up scoring.
             if (!fixture.isBye && (isAdmin || fixture.date <= today)) {
                 row.classList.add('fixture-clickable');
-                row.addEventListener('click', () => { window.location.href = matchUrl(fixture); });
+                row.addEventListener('click', (e) => { if (!e.target.closest('a[href]')) window.location.href = matchUrl(fixture); });
             }
             // Home/away/vs live in one flex cell (colspan 2, like the
             // competition/event rows above) rather than two separate <td>s -
@@ -432,7 +450,7 @@ function renderMobileSeasonFixtures() {
                         <div class="mobile-fixture-teams">
                             <span class="mobile-team">${escapeHtml(fixture.name)}</span>
                         </div>
-                        ${fixture.venue ? `<div class="mobile-fixture-venue">${escapeHtml(fixture.venue)}</div>` : ''}
+                        ${fixture.venue ? `<div class="mobile-fixture-venue">${venueLinkHtml(fixture.venue)}</div>` : ''}
                     </div>
                 `;
             } else if (fixture.isBye) {
@@ -460,7 +478,7 @@ function renderMobileSeasonFixtures() {
                         <div class="mobile-fixture-teams">
                             <span class="mobile-team">${fixture.awayTeam}</span>
                         </div>
-                        <div class="mobile-fixture-venue">${fixture.venue}</div>
+                        <div class="mobile-fixture-venue">${venueLinkHtml(fixture.venue)}</div>
                     </div>
                 `;
             }

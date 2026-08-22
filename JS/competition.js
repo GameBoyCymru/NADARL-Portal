@@ -11,6 +11,16 @@ function competitionPdfUrl(filename) {
     return '../Documents/competitions/' + encodeURIComponent(filename);
 }
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function venueMapsUrl(venue) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+}
+
 // Renders one PDF page to an offscreen canvas at the given target width
 // (in CSS pixels, scaled for device pixel ratio) and returns a plain <img>
 // with the rendered page as its source - same approach as the Summer
@@ -82,7 +92,8 @@ async function initCompetitionPage() {
 
     document.title = `${competition.name} - Newport & District Air Rifle League`;
     $('compName').textContent = competition.name;
-    $('compMeta').textContent = formatDate(competition.date) + (competition.venue ? ' · ' + competition.venue : '');
+    $('compMeta').innerHTML = escapeHtml(formatDate(competition.date))
+        + (competition.venue ? ' · <a class="venue-map-link" href="' + venueMapsUrl(competition.venue) + '" target="_blank" rel="noopener">' + escapeHtml(competition.venue) + '</a>' : '');
     $('compDescription').textContent = competition.description || '';
 
     await loadResultsPdf(competition);

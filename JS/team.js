@@ -9,6 +9,16 @@ function padNo(n) {
     return n == null ? '' : String(n).padStart(4, '0');
 }
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function venueMapsUrl(venue) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+}
+
 let currentTeam = null;
 let seasons = [];
 let seasonIndex = 0;
@@ -82,7 +92,9 @@ async function initTeamPage() {
 
     document.title = `${team.name} - Newport & District Air Rifle League`;
     document.getElementById('teamName').textContent = team.name;
-    document.getElementById('teamVenue').textContent = team.venue;
+    document.getElementById('teamVenue').innerHTML = team.venue
+        ? `<a class="venue-map-link" href="${venueMapsUrl(team.venue)}" target="_blank" rel="noopener">${escapeHtml(team.venue)}</a>`
+        : '';
 
     const logoImg = document.getElementById('teamLogo');
     const fallback = document.getElementById('logoFallback');

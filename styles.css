@@ -291,3 +291,14 @@ h1 {
         width: 160px;
     }
 }
+
+.venue-map-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+}
+
+.venue-map-link:hover {
+    color: #c41e3a;
+}

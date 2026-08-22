@@ -3,6 +3,16 @@ function formatDate(dateStr) {
         .toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function venueMapsUrl(venue) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+}
+
 async function initEventPage() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id') || '';
@@ -16,7 +26,8 @@ async function initEventPage() {
 
     document.title = `${event.name} - Newport & District Air Rifle League`;
     document.getElementById('evName').textContent = event.name;
-    document.getElementById('evMeta').textContent = formatDate(event.date) + (event.venue ? ' · ' + event.venue : '');
+    document.getElementById('evMeta').innerHTML = escapeHtml(formatDate(event.date))
+        + (event.venue ? ' · <a class="venue-map-link" href="' + venueMapsUrl(event.venue) + '" target="_blank" rel="noopener">' + escapeHtml(event.venue) + '</a>' : '');
 
     const hasAttire = !!(event.attire && event.attire.trim());
     const hasDescription = !!(event.description && event.description.trim());
